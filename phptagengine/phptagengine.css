@@ -1,0 +1,103 @@
+/*
+// Copyright (c) 2006-2007 Alex King. All rights reserved.
+// http://alexking.org/projects/php-tag-engine
+//
+// Released under the LGPL license
+// http://www.opensource.org/licenses/lgpl-license.php
+//
+// **********************************************************************
+// This program is distributed in the hope that it will be useful, but
+// WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. 
+// **********************************************************************
+*/
+
+/**
+ * Default CSS for PHP Tag Engine
+ */
+
+div.pte_tags_form {
+	font: 10px Verdana, sans-serif;
+	margin: 4px 0;
+	padding: 0;
+}
+div.pte_tags_form label
+, div.pte_tags_form ul.pte_tags_list
+, div.pte_tags_form ul.pte_tags_list li
+, div.pte_tags_form fieldset.pte_tags_edit
+, div.pte_tags_form fieldset.pte_tags_edit div.pte_edit_wrapper
+, div.pte_tags_form span.pte_tags_saving
+, div.pte_tags_form img.pte_button_edit
+, div.pte_tags_form img.pte_button_delete {
+	display: inline;
+	vertical-align: middle;
+}
+div.pte_tags_form ul.pte_tags_list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+div.pte_tags_form ul.pte_tags_list li {
+	color: #666;
+	margin: 0;
+	padding: 0 3px 0 0;
+}
+div.pte_tags_form ul.pte_tags_list li.pte_edit a {
+	color: #444;
+}
+div.pte_tags_form span.pte_tags_saving {
+	color: #666;
+}
+div.pte_tags_form fieldset.pte_tags_edit, div.pte_tags_form span.pte_tags_saving {
+	display: none;
+}
+div.pte_tags_form fieldset.pte_tags_edit {
+	border: 0;
+	margin: 0;
+	padding: 0;
+}
+div.pte_tags_form img.pte_button_edit, div.pte_tags_form img.pte_button_delete {
+	border: 0;
+}
+ul.pte_tags_list_all {
+	border: 1px solid #ccc;
+	border-bottom: 0;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+ul.pte_tags_list_all li {
+	border-bottom: 1px solid #ccc;
+	margin: 0;
+	padding: 3px 4px;
+}
+ul.pte_tags_list_all li a {
+	vertical-align: middle;
+}
+ul.pte_tags_list_all li input.pte_image_button {
+	float: right;
+	margin-left: 4px;
+	vertical-align: middle;
+}
+div.yac_list {
+	position: absolute;
+	width: 450px;
+}
+div.yac_list ul {
+	background: #fff;
+	border: 1px solid #ccc;
+	border-top: 0;
+	color: #000;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+div.yac_list ul li {
+	cursor: pointer;
+	cursor: hand;
+	margin: 0;
+	padding: 2px;
+}
+div.yac_list ul li.yui-ac-highlight {
+	background: #D9E7FF;
+}

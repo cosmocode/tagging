@@ -39,7 +39,10 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         require_once 'adodb/adodb.inc.php';
         require_once 'tagging_phptagengine.php';
-        $this->pte = new tagging_phptagengine(ADONewConnection($this->getConf('db_dsn')),
+        if (!$this->getConf('db_dsn')) return;
+        $db = ADONewConnection($this->getConf('db_dsn'));
+        if (!$db) return;
+        $this->pte = new tagging_phptagengine($db,
                                               $this->getConf('db_prefix'),
                                               $this->getLang('search_section_title'),
                                               isset($_SERVER['REMOTE_USER']) ? $_SERVER['REMOTE_USER'] : '',
@@ -68,7 +71,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             return;
         }
         $this->init_pte();
-        $this->pte->html_head($param);
+        if ($this->pte) $this->pte->html_head($param);
     }
 
     /**
@@ -81,6 +84,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         case 'search':
             global $QUERY;
             $this->init_pte();
+            if (!$this->pte) return;
             $result = $this->pte->browse_tag($QUERY);
             if ($result === false) {
                 return;
@@ -94,6 +98,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         case 'show':
             global $ID;
             $this->init_pte();
+            if (!$this->pte) return;
             if (isset($_SERVER['REMOTE_USER'])) {
                 $this->pte->html_item_tags($ID);
             }
@@ -124,6 +129,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         }
         if (isset($_SERVER['REMOTE_USER'])) {
             $this->init_pte();
+            if (!$this->pte) return;
             $this->pte->ajax_engine();
         }
         $event->stopPropagation();

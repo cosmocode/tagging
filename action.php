@@ -39,7 +39,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         require_once 'adodb/adodb.inc.php';
         require_once 'tagging_phptagengine.php';
-        if (!$this->getConf('db_dsn')) return;
+        if ($this->getConf('db_dsn') !== '') return;
         $db = ADONewConnection($this->getConf('db_dsn'));
         if (!$db) return;
         $this->pte = new tagging_phptagengine($db,

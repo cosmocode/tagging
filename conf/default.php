@@ -1,4 +1,4 @@
 <?php
 
-$conf['db_dsn'] = 'mysql://username:passwd@host/database';
-$conf['db_prefix'] = 'tagging_';
+$conf['db_dsn'] = '';
+$conf['db_prefix'] = '';

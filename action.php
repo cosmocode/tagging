@@ -62,6 +62,9 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     function echo_head(&$event, $param) {
         global $ACT;
         if (!in_array($ACT, array('search', 'show'))) {
+            ?><script type="text/javascript" charset="utf-8"><!--//--><![CDATA[//><!--
+                var pte = {};
+            //--><!]]></script><?php
             return;
         }
         $this->init_pte();
@@ -96,10 +99,13 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             }
             list($min, $max, $data_arr) = $this->pte->tagcloud($ID, 10);
 
+            $div = log($max) - log($min);
+            $factor = ($div === 0) ? 10 : (10 * $div);
+
             echo '<ul class="tagcloud">';
             foreach($data_arr as $tag => $number) {
                 echo '<li class="t' .
-                     round(10 * (log($number) - log($min)) / (log($max) - log($min))) . '">' .
+                     round($factor * (log($number) - log($min))) . '">' .
                      '<a href="' . $this->pte->tag_browse_url($tag) . '">' . $tag . '</a>' .
 //                         ' (' . $number . ')' .
                      '</li> ';

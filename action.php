@@ -146,7 +146,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         cloud_weight($data_arr, $min, $max, 10);
 
-        echo '<ul class="tagcloud">';
+        echo '<ul class="tagcloud" id="tagging_tagcloud">';
         foreach ($data_arr as $tag => $size) {
             echo '<li class="t' .
                  $size . '">' .

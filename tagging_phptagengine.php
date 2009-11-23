@@ -26,7 +26,6 @@ require_once 'phptagengine/phptagengine.class.inc.php';
  * @package phptagengine
  */
 class tagging_phptagengine extends phptagengine {
-
     public function __construct($db, $table_prefix, $section_title, $user, $lang) {
         // -- database info
             $this->db = $db; // where $db is your ADOdb instance

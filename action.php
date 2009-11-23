@@ -131,8 +131,8 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         }
         if (isset($_SERVER['REMOTE_USER'])) {
             $this->init_pte();
-            if (!$this->pte) return;
-            $this->pte->ajax_engine();
+            if (!action_plugin_tagging::$pte) return;
+            action_plugin_tagging::$pte->ajax_engine();
         }
         $event->stopPropagation();
         $event->preventDefault();

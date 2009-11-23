@@ -137,31 +137,31 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $event->stopPropagation();
         $event->preventDefault();
     }
-}
 
-function tpl_tagging_tagcloud() {
-    global $ID;
-    if (!action_plugin_tagging::$pte) return;
-    $pte = action_plugin_tagging::$pte;
-    list($min, $max, $data_arr) = $pte->tagcloud($ID, 10);
+    function tpl_tagcloud() {
+        global $ID;
+        if (!action_plugin_tagging::$pte) return;
+        $pte = action_plugin_tagging::$pte;
+        list($min, $max, $data_arr) = $pte->tagcloud($ID, 10);
 
-    $div = log($max) - log($min);
-    $factor = ($div === 0) ? 10 : (10 * $div);
+        $div = log($max) - log($min);
+        $factor = ($div === 0) ? 10 : (10 * $div);
 
-    echo '<ul class="tagcloud">';
-    foreach ($data_arr as $tag => $number) {
-        echo '<li class="t' .
-             round($factor * (log($number) - log($min))) . '">' .
-             '<a href="' . $pte->tag_browse_url($tag) . '">' .
-             $tag . '</a>' . '</li> ';
+        echo '<ul class="tagcloud">';
+        foreach ($data_arr as $tag => $number) {
+            echo '<li class="t' .
+                 round($factor * (log($number) - log($min))) . '">' .
+                 '<a href="' . $pte->tag_browse_url($tag) . '">' .
+                 $tag . '</a>' . '</li> ';
+        }
+        echo '</ul>';
     }
-    echo '</ul>';
-}
 
-function tpl_tagging_tagedit() {
-    global $ID;
-    if (!action_plugin_tagging::$pte) return;
-    if (isset($_SERVER['REMOTE_USER'])) {
-        action_plugin_tagging::$pte->html_item_tags($ID);
+    function tpl_tagedit() {
+        global $ID;
+        if (!action_plugin_tagging::$pte) return;
+        if (isset($_SERVER['REMOTE_USER'])) {
+            action_plugin_tagging::$pte->html_item_tags($ID);
+        }
     }
 }

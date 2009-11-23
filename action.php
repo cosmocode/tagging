@@ -144,13 +144,12 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $pte = action_plugin_tagging::$pte;
         list($min, $max, $data_arr) = $pte->tagcloud($ID, 10);
 
-        $div = log($max) - log($min);
-        $factor = ($div === 0) ? 10 : (10 * $div);
+        cloud_weight($data_arr, $min, $max, 10);
 
         echo '<ul class="tagcloud">';
-        foreach ($data_arr as $tag => $number) {
+        foreach ($data_arr as $tag => $size) {
             echo '<li class="t' .
-                 round($factor * (log($number) - log($min))) . '">' .
+                 $size . '">' .
                  '<a href="' . $pte->tag_browse_url($tag) . '">' .
                  $tag . '</a>' . '</li> ';
         }
@@ -162,6 +161,25 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         if (!action_plugin_tagging::$pte) return;
         if (isset($_SERVER['REMOTE_USER'])) {
             action_plugin_tagging::$pte->html_item_tags($ID);
+        }
+    }
+}
+
+function cloud_weight(&$tags,$min,$max,$levels){
+    // calculate tresholds
+    $tresholds = array();
+    for($i=0; $i<=$levels; $i++){
+        $tresholds[$i] = pow($max - $min + 1, $i/$levels) + $min - 1;
+    }
+
+    // assign weights
+    foreach($tags as $tag => $cnt){
+        foreach($tresholds as $tresh => $val){
+            if($cnt <= $val){
+                $tags[$tag] = $tresh;
+                break;
+            }
+            $tags[$tag] = $levels;
         }
     }
 }

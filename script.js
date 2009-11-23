@@ -37,4 +37,5 @@ addInitEvent(function () {
         }
     }
     taglist.appendChild(editbtn);
+    form.removeChild(form.getElementsByTagName('label')[0]);
 });

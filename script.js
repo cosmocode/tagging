@@ -9,9 +9,15 @@ addInitEvent(function () {
     var cloud = $('tagging_tagcloud');
 
     var taglist = $('pte_tags_list_start');
+    var editbtn = null;
     while (taglist.hasChildNodes()) {
         var cur = taglist.childNodes[0];
         if (!cur.tagName) {
+            taglist.removeChild(cur);
+            continue;
+        }
+        if (cur.className === 'pte_edit') {
+            editbtn = cur;
             taglist.removeChild(cur);
             continue;
         }
@@ -30,4 +36,5 @@ addInitEvent(function () {
             cur.className += ' t0 tagging_owntag';
         }
     }
+    taglist.appendChild(editbtn);
 });

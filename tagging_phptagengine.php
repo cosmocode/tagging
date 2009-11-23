@@ -37,10 +37,10 @@ class tagging_phptagengine extends phptagengine {
 
         $dict = NewDataDictionary($db);
         $tables = $dict->MetaTables();
-        $is_installed = false;
-        foreach($tables as $table) {
-            if (strpos($table, $table_prefix) === 0) {
-                $is_installed = true;
+        $is_installed = true;
+        foreach(array($this->table_tags, $this->table_tag_names) as $table) {
+            if (!in_array($table, $tables)) {
+                $is_installed = false;
             }
         }
         if (!$is_installed) {

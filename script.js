@@ -14,11 +14,11 @@ function getCloudItem(tag) {
 }
 
 addInitEvent(function () {
-    var form = $('pte_tag_edit_form_' + INFO.id);
+    var form = $('pte_tag_edit_form_' + JSINFO.id);
     if (!form) return;
 
     var cloud = $('tagging_tagcloud');
-    var taglist = $('pte_tags_list_' + INFO.id);
+    var taglist = $('pte_tags_list_' + JSINFO.id);
     var editbtn = null;
     while (taglist.hasChildNodes()) {
         var cur = taglist.childNodes[0];

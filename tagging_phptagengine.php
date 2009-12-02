@@ -150,39 +150,29 @@ class tagging_phptagengine extends phptagengine {
     /**
      * Print the CSS and JS needed in the HTML output
      */
-    function html_head($state) {
-        if (!$state || $state === 'before') {
-            ?>
-            <script type="text/javascript" charset="utf-8"><!--//--><![CDATA[//><!--
-            var pte = {
-                req : false
-                , ajax_handler : '<?php print($this->ajax_handler); ?>'
-                , tag_browse_url : '<?php print($this->tag_browse_url); ?>'
-                , strings : {
-                <?php
-                // put language strings into the JS scope
-                foreach ($this->strings as $k => $v) {
-                    echo "'$k': '" . $this->slash($v) . "',\n";
-                }
-                ?>
-                }
-                , show_remove_links : <?php echo $this->show_remove_links ? 'true' : 'false'; ?>
-                , edit_button_display : '<?php print($this->edit_button_display); ?>'
-                , edit_button_image_url : '<?php print($this->edit_button_image_url); ?>'
-                , delete_button_display : '<?php print($this->delete_button_display); ?>'
-                , delete_button_image_url : '<?php print($this->delete_button_image_url); ?>'
-            };
-            //--><!]]></script><?php
+    function html_pte() {
+        require_once DOKU_INC . '/inc/JSON.php';
+        $json = new JSON();
+        $keys = array('ajax_handler', 'tag_browse_url', 'strings',
+                      'show_remove_links', 'edit_button_display',
+                      'edit_button_image_url', 'delete_button_display',
+                      'delete_button_image_url');
+        $data = array();
+        foreach($keys as $key) {
+            $data[$key] = $this->$key;
         }
+        $data['req'] = false;
+        echo 'var pte = ' . $json->encode($data) . ';' . DOKU_LF;
+    }
 
-        if (!$state || $state === 'after') {
-            ?><script type="text/javascript" charset="utf-8"><!--//--><![CDATA[//><!--
-                var tags = ['<?php echo implode("','", $this->get_all_tags()); ?>'];
-                var yac_tags = new YAHOO.widget.DS_JSArray(tags);
-            //--><!]]></script>
-            <style type="text/css">
-                @import url('<?php echo $this->base_url; ?>phptagengine.css?version=<?php echo $this->version; ?>');
-            </style><?php
-        }
+    function html_head() {
+        require_once DOKU_INC . '/inc/JSON.php';
+        $json = new JSON();
+        ?><script type="text/javascript" charset="utf-8"><!--//--><![CDATA[//><!--
+        var tagging_tags = <?php echo $json->encode(array_values($this->get_all_tags())); ?>;
+        //--><!]]></script>
+        <style type="text/css">
+            @import url('<?php echo $this->base_url; ?>phptagengine.css?version=<?php echo $this->version; ?>');
+        </style><?php
     }
 }

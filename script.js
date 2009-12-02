@@ -13,6 +13,8 @@ function getCloudItem(tag) {
     return null;
 }
 
+var yac_tags = new YAHOO.widget.DS_JSArray(tagging_tags);
+
 addInitEvent(function () {
     var form = $('pte_tag_edit_form_' + JSINFO.id);
     if (!form) return;
@@ -22,7 +24,7 @@ addInitEvent(function () {
     var editbtn = null;
     while (taglist.hasChildNodes()) {
         var cur = taglist.childNodes[0];
-        if (!cur.tagName) {
+        if (!cur.tagName || cur.innerHTML.match(/\s*\(none\)\s*/)) {
             taglist.removeChild(cur);
             continue;
         }

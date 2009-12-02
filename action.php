@@ -55,10 +55,10 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      * Register handlers
      */
     function register(&$controller) {
-        $controller->register_hook('TPL_METAHEADER_OUTPUT', 'AFTER', $this,
-                                   'echo_head', 'after');
         $controller->register_hook('TPL_METAHEADER_OUTPUT', 'BEFORE', $this,
-                                   'echo_head', 'before');
+                                   'echo_head');
+        $controller->register_hook('TOOLBAR_DEFINE', 'AFTER', $this,
+                                   'echo_pte');
         $controller->register_hook('TPL_ACT_RENDER', 'AFTER', $this,
                                    'echo_searchresults');
         $controller->register_hook('TPL_ACT_RENDER', 'BEFORE', $this,
@@ -71,21 +71,27 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      * Include phptagengine’s css and javascript
      */
     function echo_head(&$event, $param) {
+        $this->init_pte();
+        if (!action_plugin_tagging::$pte) {
+            throw new Exception();
+        }
+        action_plugin_tagging::$pte->html_head();
+    }
+
+    /**
+     * Include phptagengine’s css and javascript
+     */
+    function echo_pte(&$event, $param) {
         global $ACT;
         try {
-            if (!in_array($ACT, array('search', 'show')) && $param === 'before') {
-                throw new Exception();
-            }
             $this->init_pte();
             if (!action_plugin_tagging::$pte) {
                 throw new Exception();
             }
-            action_plugin_tagging::$pte->html_head($param);
+            action_plugin_tagging::$pte->html_pte();
         } catch (Exception $e) {
             // Assure that pte is defined to avoid JavaScript errors.
-            ?><script type="text/javascript" charset="utf-8"><!--//--><![CDATA[//><!--
-                var pte = {};
-            //--><!]]></script><?php
+            echo 'var pte = {};';
         }
     }
 

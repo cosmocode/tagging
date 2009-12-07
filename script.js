@@ -24,7 +24,7 @@ addInitEvent(function () {
     var editbtn = null;
     while (taglist.hasChildNodes()) {
         var cur = taglist.childNodes[0];
-        if (!cur.tagName || cur.innerHTML.match(/\s*\(none\)\s*/)) {
+        if (!cur.tagName || cur.innerHTML.match(/\s*\([^\s)]+\)\s*/)) {
             taglist.removeChild(cur);
             continue;
         }

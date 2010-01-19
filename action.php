@@ -153,6 +153,10 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         cloud_weight($data_arr, $min, $max, 10);
 
         echo '<ul class="tagcloud" id="tagging_tagcloud">';
+        if (count($data_arr) === 0) {
+            // Produce valid XHTML (ul needs a child)
+            echo '<li>' . $this->getLang('notags') . '</li>';
+        }
         foreach ($data_arr as $tag => $size) {
             echo '<li class="t' .
                  $size . '">' .

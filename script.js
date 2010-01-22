@@ -39,7 +39,7 @@ addInitEvent(function () {
             taglist.removeChild(cur);
         } else {
             cloud.appendChild(cur);
-            cur.className += ' t0 tagging_owntag';
+            cur.className += ' t0 tagging_owntag tagging_only_owntag';
         }
     }
     taglist.appendChild(editbtn);
@@ -79,17 +79,24 @@ pte.save_tags_handler = function() {
             cloud.removeChild(cloud.childNodes[n]);
         } else if (cloud.childNodes[n].className) {
             // Own tag
-            cloud.childNodes[n].className = cloud.childNodes[n].className.replace(/(^|\s+)tagging_owntag($|\s+)/, '');
+            if (cloud.childNodes[n].className.match(/(^|\s+)tagging_only_owntag($|\s+)/)) {
+                cloud.removeChild(cloud.childNodes[n]);
+            } else {
+                cloud.childNodes[n].className = cloud.childNodes[n].className.replace(/(^|\s+)tagging_owntag($|\s+)/, '');
+            }
         }
     }
 
     for (var i = 0; i < tags.length; i++) {
+        if (tags[i].replace(/\s/g, '') === '') {
+            continue;
+        }
         var clouditem = getCloudItem(tags[i]);
         if (clouditem) {
             clouditem.className += ' tagging_owntag';
         } else {
             var tag_node = pte.create_tag_nodes([tags[i]], result)[0];
-            tag_node.className += ' t0 tagging_owntag';
+            tag_node.className += ' t0 tagging_owntag tagging_only_owntag';
             cloud.appendChild(tag_node);
         }
     }

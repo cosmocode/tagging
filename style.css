@@ -45,3 +45,7 @@ ul.tagcloud li.t9 {
 ul.tagcloud li.t10 {
     font-size: 1.8em;
 }
+
+ul.tagcloud li.tagging_owntag a {
+    color: red;
+}

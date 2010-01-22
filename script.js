@@ -74,9 +74,11 @@ pte.save_tags_handler = function() {
     var cloud = $('tagging_tagcloud');
 
     for (var n = 0; n < cloud.childNodes.length ; ++n) {
-        if (cloud.childNodes[n].id && cloud.childNodes[n].id.match(/pte_tag_/)) {
+        if ((cloud.childNodes[n].id && cloud.childNodes[n].id.match(/pte_tag_/)) ||
+            cloud.childNodes[n].innerHTML === LANG.plugins.tagging.notags) {
             cloud.removeChild(cloud.childNodes[n]);
         } else if (cloud.childNodes[n].className) {
+            // Own tag
             cloud.childNodes[n].className = cloud.childNodes[n].className.replace(/(^|\s+)tagging_owntag($|\s+)/, '');
         }
     }
@@ -91,6 +93,11 @@ pte.save_tags_handler = function() {
             cloud.appendChild(tag_node);
         }
     }
+
+    if (cloud.childNodes.length === 0) {
+        cloud.innerHTML = '<li>' + LANG.plugins.tagging.notags + '</li>';
+    }
+
     pte.item_tag_view(item, 'view');
 };
 

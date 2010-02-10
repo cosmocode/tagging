@@ -118,6 +118,36 @@ class tagging_phptagengine extends phptagengine {
     }
 
     /**
+     * Return data for a user-specific tagcloud
+     */
+    function user_tagcloud($user, $maxcount = 20) {
+        $result = $this->db->Execute("
+            SELECT COUNT(t.item) AS N, tn.name as NAME
+            FROM $this->table_tag_names tn
+            LEFT OUTER JOIN $this->table_tags t
+            ON tn.id = t.tag
+            WHERE t.user = '$user'
+            GROUP BY t.tag
+            ORDER BY N DESC
+            LIMIT $maxcount
+        ") or die(throw_error($this->db->ErrorMsg(), __FILE__, __LINE__));
+
+        $data_arr = array();
+        $max = -1;
+        $min = -1;
+
+        while ($data = $result->FetchNextObject()) {
+            $data_arr[$data->NAME] = $data->N;
+            if ($max < $data->N) $max = $data->N;
+            if ($min > $data->N || $min === -1) $min = $data->N;
+        }
+
+        ksort($data_arr);
+
+        return array($min, $max, $data_arr);
+    }
+
+    /**
      * Return data for a page-specific tagcloud
      */
     function tagcloud($page, $maxcount = 20) {

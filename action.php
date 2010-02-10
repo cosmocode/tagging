@@ -8,48 +8,9 @@
 if(!defined('DOKU_INC')) die();
 if(!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
 require_once DOKU_PLUGIN.'action.php';
+require_once DOKU_PLUGIN.'tagging/common.php';
 
 class action_plugin_tagging extends DokuWiki_Action_Plugin {
-
-    public static $pte; // An instance of phptagengine
-
-    /**
-     * return some info
-     */
-    function getInfo(){
-        return array(
-             'author' => 'Adrian Lang',
-             'email'  => 'lang@cosmocode.de',
-             'date'   => '2009-11-17',
-             'name'   => 'Tagging plugin',
-             'desc'   => 'Allow users to tag wiki pages',
-             'url'    => '',
-             );
-    }
-
-    /**
-     * Initialize the phptagengine instance
-     */
-    public function init_pte() {
-        if (isset(action_plugin_tagging::$pte)) {
-            return;
-        }
-
-        global $conf;
-
-        require_once 'adodb/adodb.inc.php';
-        require_once 'tagging_phptagengine.php';
-
-        if ($this->getConf('db_dsn') === '') return;
-        $db = ADONewConnection($this->getConf('db_dsn'));
-        if (!$db) return;
-        action_plugin_tagging::$pte = new tagging_phptagengine(
-                  $db,
-                  $this->getConf('db_prefix'),
-                  $this->getLang('search_section_title'),
-                  isset($_SERVER['REMOTE_USER']) ? $_SERVER['REMOTE_USER'] : '',
-                  isset($conf['lang']) ? $conf['lang'] : 'en');
-    }
 
     /**
      * Register handlers
@@ -71,11 +32,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      * Include phptagengine’s css and javascript
      */
     function echo_head(&$event, $param) {
-        $this->init_pte();
-        if (!action_plugin_tagging::$pte) {
+        $pte = tagging_get_pte($this);
+        if (is_null($pte)) {
             throw new Exception();
         }
-        action_plugin_tagging::$pte->html_head();
+        $pte->html_head();
     }
 
     /**
@@ -84,11 +45,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     function echo_pte(&$event, $param) {
         global $ACT;
         try {
-            $this->init_pte();
-            if (!action_plugin_tagging::$pte) {
+            $pte = tagging_get_pte($this);
+            if (is_null($pte)) {
                 throw new Exception();
             }
-            action_plugin_tagging::$pte->html_pte();
+            $pte->html_pte();
         } catch (Exception $e) {
             // Assure that pte is defined to avoid JavaScript errors.
             echo 'var pte = {};';
@@ -105,9 +66,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             return;
         }
         global $QUERY;
-        $this->init_pte();
-        if (!action_plugin_tagging::$pte) return;
-        $result = action_plugin_tagging::$pte->browse_tag($QUERY);
+        $pte = tagging_get_pte($this);
+        if (is_null($pte)) {
+            return;
+        }
+        $result = $pte->browse_tag($QUERY);
         if ($result === false) {
             return;
         }
@@ -125,7 +88,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         if ($ACT !== 'show') {
             return;
         }
-        $this->init_pte();
+        tagging_get_pte($this);
     }
 
     /**
@@ -136,9 +99,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             return;
         }
         if (isset($_SERVER['REMOTE_USER'])) {
-            $this->init_pte();
-            if (!action_plugin_tagging::$pte) return;
-            action_plugin_tagging::$pte->ajax_engine();
+            $pte = tagging_get_pte($this);
+            if (is_null($pte)) {
+                return;
+            }
+            $pte->ajax_engine();
         }
         $event->stopPropagation();
         $event->preventDefault();
@@ -146,8 +111,10 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
     function tpl_tagcloud() {
         global $ID;
-        if (!action_plugin_tagging::$pte) return;
-        $pte = action_plugin_tagging::$pte;
+        $pte = tagging_get_pte($this);
+        if (is_null($pte)) {
+            return;
+        }
         list($min, $max, $data_arr) = $pte->tagcloud($ID, 10);
 
         cloud_weight($data_arr, $min, $max, 10);
@@ -169,28 +136,12 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
     function tpl_tagedit() {
         global $ID;
-        if (!action_plugin_tagging::$pte) return;
-        if (isset($_SERVER['REMOTE_USER'])) {
-            action_plugin_tagging::$pte->html_item_tags($ID);
+        $pte = tagging_get_pte($this);
+        if (is_null($pte)) {
+            return;
         }
-    }
-}
-
-function cloud_weight(&$tags,$min,$max,$levels){
-    // calculate tresholds
-    $tresholds = array();
-    for($i=0; $i<=$levels; $i++){
-        $tresholds[$i] = pow($max - $min + 1, $i/$levels) + $min - 1;
-    }
-
-    // assign weights
-    foreach($tags as $tag => $cnt){
-        foreach($tresholds as $tresh => $val){
-            if($cnt <= $val){
-                $tags[$tag] = $tresh;
-                break;
-            }
-            $tags[$tag] = $levels;
+        if (isset($_SERVER['REMOTE_USER'])) {
+            $pte->html_item_tags($ID);
         }
     }
 }

@@ -1,0 +1,7 @@
+base   tagging
+author Adrian Lang
+email  lang@cosmocode.de
+date   2010-02-09
+name   tagging plugin
+desc   allow users to tag wiki pages
+url    http://www.dokuwiki.org/plugin:tagging

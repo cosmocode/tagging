@@ -74,6 +74,10 @@ class tagging_phptagengine extends phptagengine {
         require_once 'phptagengine/languages/english.inc.php';
         include_once "phptagengine/languages/$lang.inc.php";
         $this->strings = $pte->strings;
+        if ($lang === 'german') {
+            $this->strings['action_save'] = 'Speichern';
+            $this->strings['action_saving'] = 'Speichern…';
+        }
 
         // -- buttons
 
@@ -87,6 +91,92 @@ class tagging_phptagengine extends phptagengine {
         // -- Yahoo! Auto-Complete
         $this->yac = true;
     }
+
+        // Clean $item an add class 'button' to the buttons
+        function html_item_tags($item, $type = null, $user = null, $use_cache = false, $read_only = false) {
+                $user = $this->default_value('user', $user);
+                $type = $this->default_value('type', $type);
+                $tags = $this->get_tags($item, $type, $user, $use_cache);
+                if (count($tags) > 0) {
+                        $tags_class = ' pte_has_tags';
+                }
+                else {
+                        $tags_class = '';
+                }
+                $item = str_replace(array(':', '.'), '_', $item);
+                print('
+                        <!-- PHP Tag Engine html_item_tags for '.$item.' - begin -->
+                        <div id="pte_tag_form_'.$item.'" class="pte_tags_form'.$tags_class.'">
+                                <form id="pte_tag_edit_form_'.$item.'" action="'.$this->ajax_handler.'" onsubmit="pte.save_tags(\''.$user.'\', \''.$item.'\', this.tags.value, this.type.value); return false;">
+                                        <label for="pte_tags_'.$item.'">'.$this->strings['label_tags'].'</label>
+                                        <ul id="pte_tags_list_'.$item.'" class="pte_tags_list">
+                ');
+                if (count($tags) > 0) {
+                        foreach ($tags as $id => $tag) {
+                                print('
+                                                <li id="pte_tag_'.$item.'_'.$tag.'"><a href="'.$this->tag_browse_url($tag, $type).'">'.$this->html($tag).'</a>
+                                ');
+                                if ($this->show_remove_links && !$read_only) {
+                                        print('
+                                                        <a href="javascript:void(pte.remove_tag(\''.$item.'\', \''.$tag.'\', \''.$type.'\'));" title="'.$this->strings['action_delete'].'">'.$this->button_display('delete').'</a>
+                                        ');
+                                }
+                                print('
+                                                </li>
+                                ');
+                        }
+                        $edit_value = implode(' ', $tags).' ';
+                }
+                else {
+                        print('
+                                                <li>'.$this->strings['data_none'].'</li>
+                        ');
+                        $edit_value = '';
+                }
+                if ($read_only) {
+                        print('
+                                        </ul>
+                                </form>
+                        ');
+                }
+                else {
+                        print('
+                                                <li class="pte_edit"><a href="javascript:void(pte.item_tag_view(\''.$item.'\', \'edit\'));">'.$this->button_display('edit').'</a></li>
+                                        </ul>
+                                        <fieldset id="pte_tags_edit_'.$item.'" class="pte_tags_edit">
+                                                <div class="pte_edit_wrapper">
+                                                        <input type="text" id="pte_tags_edit_field_'.$item.'" class="pte_tags_edit_field" name="tags" value="'.$edit_value.'" />
+                        ');
+                        if ($this->yac) {
+                                print('
+                                                        <div id="yac_container_'.$item.'" class="yac_list"></div>
+                                ');
+                        }
+                        print('
+                                                </div>
+                                                <input class="button" type="submit" name="submit_button" value="'.$this->strings['action_save'].'" />
+                                                <input class="button" type="button" name="cancel_button" value="'.$this->strings['action_cancel'].'" onclick="pte.item_tag_view(\''.$item.'\', \'view\')" />
+                                                <input type="hidden" id="pte_tags_edit_type_'.$item.'" name="type" value="'.$type.'" />
+                                        </fieldset>
+                                        <span id="pte_tags_saving_'.$item.'" class="pte_tags_saving">'.$this->strings['action_saving'].'</span>
+                                </form>
+                        </div>
+                        ');
+                        if ($this->yac) {
+                                print('
+                                <script type="text/javascript"><!--
+                                yac_'.$item.' = new YAHOO.widget.AutoComplete("pte_tags_edit_field_'.$item.'","yac_container_'.$item.'", yac_tags);
+                                yac_'.$item.'.delimChar = " ";
+                                yac_'.$item.'.maxResultsDisplayed = 20;
+                                yac_'.$item.'.queryDelay = 0;
+                                // --></script>
+                                ');
+                        }
+                }
+                print('<!-- PHP Tag Engine html_item_tags for '.$item.' - end -->'."\n");
+        }
+
+
 
     /**
      * Set a tag to lowercase and remove spaces, could be extended in the future

@@ -103,18 +103,18 @@ class tagging_phptagengine extends phptagengine {
                 else {
                         $tags_class = '';
                 }
-                $item = str_replace(array(':', '.'), '_', $item);
+                $item_esc = str_replace(array(':', '.'), '_', $item);
                 print('
                         <!-- PHP Tag Engine html_item_tags for '.$item.' - begin -->
-                        <div id="pte_tag_form_'.$item.'" class="pte_tags_form'.$tags_class.'">
-                                <form id="pte_tag_edit_form_'.$item.'" action="'.$this->ajax_handler.'" onsubmit="pte.save_tags(\''.$user.'\', \''.$item.'\', this.tags.value, this.type.value); return false;">
-                                        <label for="pte_tags_'.$item.'">'.$this->strings['label_tags'].'</label>
-                                        <ul id="pte_tags_list_'.$item.'" class="pte_tags_list">
+                        <div id="pte_tag_form_'.$item_esc.'" class="pte_tags_form'.$tags_class.'">
+                                <form id="pte_tag_edit_form_'.$item_esc.'" action="'.$this->ajax_handler.'" onsubmit="pte.save_tags(\''.$user.'\', \''.$item.'\', this.tags.value, this.type.value); return false;">
+                                        <label for="pte_tags_'.$item_esc.'">'.$this->strings['label_tags'].'</label>
+                                        <ul id="pte_tags_list_'.$item_esc.'" class="pte_tags_list">
                 ');
                 if (count($tags) > 0) {
                         foreach ($tags as $id => $tag) {
                                 print('
-                                                <li id="pte_tag_'.$item.'_'.$tag.'"><a href="'.$this->tag_browse_url($tag, $type).'">'.$this->html($tag).'</a>
+                                                <li id="pte_tag_'.$item_esc.'_'.$tag.'"><a href="'.$this->tag_browse_url($tag, $type).'">'.$this->html($tag).'</a>
                                 ');
                                 if ($this->show_remove_links && !$read_only) {
                                         print('
@@ -143,32 +143,32 @@ class tagging_phptagengine extends phptagengine {
                         print('
                                                 <li class="pte_edit"><a href="javascript:void(pte.item_tag_view(\''.$item.'\', \'edit\'));">'.$this->button_display('edit').'</a></li>
                                         </ul>
-                                        <fieldset id="pte_tags_edit_'.$item.'" class="pte_tags_edit">
+                                        <fieldset id="pte_tags_edit_'.$item_esc.'" class="pte_tags_edit">
                                                 <div class="pte_edit_wrapper">
-                                                        <input type="text" id="pte_tags_edit_field_'.$item.'" class="pte_tags_edit_field" name="tags" value="'.$edit_value.'" />
+                                                        <input type="text" id="pte_tags_edit_field_'.$item_esc.'" class="pte_tags_edit_field" name="tags" value="'.$edit_value.'" />
                         ');
                         if ($this->yac) {
                                 print('
-                                                        <div id="yac_container_'.$item.'" class="yac_list"></div>
+                                                        <div id="yac_container_'.$item_esc.'" class="yac_list"></div>
                                 ');
                         }
                         print('
                                                 </div>
                                                 <input class="button" type="submit" name="submit_button" value="'.$this->strings['action_save'].'" />
                                                 <input class="button" type="button" name="cancel_button" value="'.$this->strings['action_cancel'].'" onclick="pte.item_tag_view(\''.$item.'\', \'view\')" />
-                                                <input type="hidden" id="pte_tags_edit_type_'.$item.'" name="type" value="'.$type.'" />
+                                                <input type="hidden" id="pte_tags_edit_type_'.$item_esc.'" name="type" value="'.$type.'" />
                                         </fieldset>
-                                        <span id="pte_tags_saving_'.$item.'" class="pte_tags_saving">'.$this->strings['action_saving'].'</span>
+                                        <span id="pte_tags_saving_'.$item_esc.'" class="pte_tags_saving">'.$this->strings['action_saving'].'</span>
                                 </form>
                         </div>
                         ');
                         if ($this->yac) {
                                 print('
                                 <script type="text/javascript"><!--
-                                yac_'.$item.' = new YAHOO.widget.AutoComplete("pte_tags_edit_field_'.$item.'","yac_container_'.$item.'", yac_tags);
-                                yac_'.$item.'.delimChar = " ";
-                                yac_'.$item.'.maxResultsDisplayed = 20;
-                                yac_'.$item.'.queryDelay = 0;
+                                yac_'.$item_esc.' = new YAHOO.widget.AutoComplete("pte_tags_edit_field_'.$item_esc.'","yac_container_'.$item_esc.'", yac_tags);
+                                yac_'.$item_esc.'.delimChar = " ";
+                                yac_'.$item_esc.'.maxResultsDisplayed = 20;
+                                yac_'.$item_esc.'.queryDelay = 0;
                                 // --></script>
                                 ');
                         }

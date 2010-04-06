@@ -20,6 +20,10 @@
 
 require_once 'phptagengine/phptagengine.class.inc.php';
 
+function throw_error($str, $int, $int2) {
+        trigger_error($str);
+}
+
 /**
  * The phptagengine class, all the good stuff happens here.
  *

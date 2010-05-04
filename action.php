@@ -74,13 +74,31 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         if ($result === false) {
             return;
         }
-        $sec = '===== ' . $this->getLang('search_section_title') . " =====\n";
+
+        $data_arr = array();
+        $max = -1;
+        $min = -1;
+
         while ($data = $result->FetchNextObject()) {
-            $sec .= '  * [[' . $data->ITEM . ']] ' .
-                    sprintf($this->getLang('search_nr_users'), $data->N) .
-                    DOKU_LF;
+            $data_arr[$data->ITEM] = $data->N;
+            if ($max < $data->N) $max = $data->N;
+            if ($min > $data->N || $min === -1) $min = $data->N;
         }
-        echo p_render('xhtml', p_get_instructions($sec), $info);
+        ksort($data_arr);
+        cloud_weight($data_arr, $min, $max, 10);
+
+        $R = p_get_renderer('xhtml');
+        $R->header($this->getLang('search_section_title'), 2);
+        $R->section_open(2);
+        $R->doc .= '<ul class="tagcloud">';
+        foreach ($data_arr as $id => $size) {
+            $R->doc .= '<li class="t' . $size . '">';
+            $R->internallink($id);
+            $R->doc .='</li> ';
+        }
+        $R->doc .= '</ul>';
+        $R->section_close();
+        echo $R->doc;
     }
 
     function init_pte_on_show(&$event, $param) {

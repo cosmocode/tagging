@@ -88,7 +88,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         cloud_weight($data_arr, $min, $max, 10);
 
         $R = p_get_renderer('xhtml');
-        $R->header($this->getLang('search_section_title'), 2);
+        $R->header($this->getLang('search_section_title'), 2, 1);
         $R->section_open(2);
         $R->doc .= '<ul class="tagcloud">';
         foreach ($data_arr as $id => $size) {

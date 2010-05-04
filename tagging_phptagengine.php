@@ -54,7 +54,7 @@ class tagging_phptagengine extends phptagengine {
 
         $this->base_url = DOKU_URL . 'lib/plugins/tagging/phptagengine/';
         $this->ajax_handler = DOKU_URL . 'lib/exe/ajax.php?call=tagging';
-        $this->tag_browse_url = '?do=search&amp;id=<tag>#' . str_replace(' ', '_', strtolower($section_title));
+        $this->tag_browse_url = '?do=search&id=<tag>#' . str_replace(' ', '_', strtolower($section_title));
 
         // -- default values (optional)
 
@@ -113,7 +113,7 @@ class tagging_phptagengine extends phptagengine {
                 if (count($tags) > 0) {
                         foreach ($tags as $id => $tag) {
                                 print('
-                                                <li id="pte_tag_'.$item.'_'.$tag.'"><a href="'.$this->tag_browse_url($tag, $type).'">'.$this->html($tag).'</a>
+                                                <li id="pte_tag_'.$item.'_'.$tag.'"><a href="'.hsc($this->tag_browse_url($tag, $type)).'">'.$this->html($tag).'</a>
                                 ');
                                 if ($this->show_remove_links && !$read_only) {
                                         print('

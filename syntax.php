@@ -78,7 +78,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
             foreach ($data_arr as $tag => $size) {
                 $renderer->doc .=  '<li class="t' .
                      $size . '">' .
-                     '<a href="' . $pte->tag_browse_url($tag) . '">' .
+                     '<a href="' . hsc($pte->tag_browse_url($tag)) . '">' .
                      $tag . '</a>' . '</li> ';
             }
             $renderer->doc .= '</ul>';

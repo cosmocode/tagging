@@ -146,7 +146,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         foreach ($data_arr as $tag => $size) {
             echo '<li class="t' .
                  $size . '">' .
-                 '<a href="' . $pte->tag_browse_url($tag) . '">' .
+                 '<a href="' . hsc($pte->tag_browse_url($tag)) . '">' .
                  $tag . '</a>' . '</li> ';
         }
         echo '</ul>';

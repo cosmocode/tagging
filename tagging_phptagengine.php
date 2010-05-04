@@ -186,7 +186,7 @@ class tagging_phptagengine extends phptagengine {
     function normalize($value, $type = 'tag') {
         switch ($type) {
             case 'tag':
-                $value = mb_strtolower($value, 'UTF-8');
+                $value = utf8_strtolower($value, 'UTF-8');
                 $value = preg_replace('|[^\w\dßäüö_.\-@#$%*!&]|i', '', $value);
                 break;
         }

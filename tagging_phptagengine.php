@@ -164,10 +164,10 @@ class tagging_phptagengine extends phptagengine {
                         if ($this->yac) {
                                 print('
                                 <script type="text/javascript"><!--
-                                yac_'.$item.' = new YAHOO.widget.AutoComplete("pte_tags_edit_field_'.$item.'","yac_container_'.$item.'", yac_tags);
-                                yac_'.$item.'.delimChar = " ";
-                                yac_'.$item.'.maxResultsDisplayed = 20;
-                                yac_'.$item.'.queryDelay = 0;
+                                yac = new YAHOO.widget.AutoComplete("pte_tags_edit_field_'.$item.'","yac_container_'.$item.'", yac_tags);
+                                yac.delimChar = " ";
+                                yac.maxResultsDisplayed = 20;
+                                yac.queryDelay = 0;
                                 // --></script>
                                 ');
                         }

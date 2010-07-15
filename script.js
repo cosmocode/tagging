@@ -108,3 +108,16 @@ pte.save_tags_handler = function() {
     pte.item_tag_view(item, 'view');
 };
 
+pte.create_edit_node = function(item) {
+    var edit_link = document.createElement('a');
+    // Remove square brackets
+    edit_link.innerHTML = pte.button_display('edit');
+    edit_link.href = "javascript:void(pte.item_tag_view('" + item + "', 'edit'));";
+
+    var edit_node = document.createElement('li');
+    edit_node.className = 'pte_edit';
+    edit_node.appendChild(edit_link);
+
+    return edit_node;
+};
+

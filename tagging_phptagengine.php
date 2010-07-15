@@ -298,4 +298,35 @@ class tagging_phptagengine extends phptagengine {
             @import url('<?php echo $this->base_url; ?>phptagengine.css?version=<?php echo $this->version; ?>');
         </style><?php
     }
+
+    // Remove square brackets
+    function button_display($type) {
+        $display = '';
+        switch ($type) {
+            case 'edit':
+                $case = $this->edit_button_display;
+                $url = $this->edit_button_image_url;
+                break;
+            case 'delete':
+                $case = $this->delete_button_display;
+                $url = $this->delete_button_image_url;
+                break;
+            default:
+                return $display;
+        }
+        switch ($case) {
+            case 'text':
+                if (isset($this->strings['action_'.$type.'_text_icon'])) {
+                    $display = $this->strings['action_'.$type.'_text_icon'];
+                }
+                else {
+                    $display = $this->strings['action_'.$type];
+                }
+                break;
+            case 'image':
+                $display = '<img src="'.$url.'" alt="'.$this->slash($this->strings['action_'.$type]).'" class="pte_button_'.$type.'" />';
+                break;
+        }
+        return $display;
+    }
 }

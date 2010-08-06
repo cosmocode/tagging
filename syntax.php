@@ -9,13 +9,6 @@
 // must be run within Dokuwiki
 if (!defined('DOKU_INC')) die();
 
-if (!defined('DOKU_LF')) define('DOKU_LF', "\n");
-if (!defined('DOKU_TAB')) define('DOKU_TAB', "\t");
-if (!defined('DOKU_PLUGIN')) define('DOKU_PLUGIN',DOKU_INC.'lib/plugins/');
-
-require_once DOKU_PLUGIN.'syntax.php';
-require_once DOKU_PLUGIN.'tagging/common.php';
-
 class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
 
     function getType() {
@@ -56,7 +49,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
             return false;
         }
 
-        $pte = tagging_get_pte($this);
+        $hlp = plugin_load('helper', 'tagging');
 
         switch($data['cmd']) {
         case 'user':
@@ -64,24 +57,8 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
             if (!isset($data['user'])) {
                 $data['user'] = $_SERVER['REMOTE_USER'];
             }
-            if (is_null($pte)) return;
-            list($min, $max, $data_arr) = $pte->user_tagcloud($data['user'], 10);
-
-            cloud_weight($data_arr, $min, $max, 10);
-
-            $renderer->doc .= '<ul class="tagcloud" id="tagging_tagcloud">';
-            if (count($data_arr) === 0) {
-                // Produce valid XHTML (ul needs a child)
-                $this->setupLocale();
-                $renderer->doc .=  '<li>' . $this->lang['js']['notags'] . '</li>';
-            }
-            foreach ($data_arr as $tag => $size) {
-                $renderer->doc .=  '<li class="t' .
-                     $size . '">' .
-                     '<a href="' . hsc($pte->tag_browse_url($tag)) . '">' .
-                     $tag . '</a>' . '</li> ';
-            }
-            $renderer->doc .= '</ul>';
+            $tags = $hlp->getTags(array('tagger' => $data['user']), 'tag');
+            $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
 
             break;
         }

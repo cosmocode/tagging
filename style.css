@@ -1,51 +1,51 @@
-ul.tagcloud li {
+form#tagging_edit div label span {
+    display: none;
+}
+
+ul.tagging_cloud li {
     display: inline;
 }
 
-ul.tagcloud li.t0 {
+ul.tagging_cloud li.t0 {
     font-size: 0.8em;
 }
 
-ul.tagcloud li.t1 {
+ul.tagging_cloud li.t1 {
     font-size: 0.9em;
 }
 
-ul.tagcloud li.t2 {
+ul.tagging_cloud li.t2 {
     font-size: 1.0em;
 }
 
-ul.tagcloud li.t3 {
+ul.tagging_cloud li.t3 {
     font-size: 1.1em;
 }
 
-ul.tagcloud li.t4 {
+ul.tagging_cloud li.t4 {
     font-size: 1.2em;
 }
 
-ul.tagcloud li.t5 {
+ul.tagging_cloud li.t5 {
     font-size: 1.3em;
 }
 
-ul.tagcloud li.t6 {
+ul.tagging_cloud li.t6 {
     font-size: 1.4em;
 }
 
-ul.tagcloud li.t7 {
+ul.tagging_cloud li.t7 {
     font-size: 1.5em;
 }
 
-ul.tagcloud li.t8 {
+ul.tagging_cloud li.t8 {
     font-size: 1.6em;
 }
 
-ul.tagcloud li.t9 {
+ul.tagging_cloud li.t9 {
     font-size: 1.7em;
 }
 
-ul.tagcloud li.t10 {
+ul.tagging_cloud li.t10 {
     font-size: 1.8em;
-}
-
-ul.tagcloud li.tagging_owntag a {
-    color: red;
 }

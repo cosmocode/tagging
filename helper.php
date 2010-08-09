@@ -48,7 +48,8 @@ class helper_plugin_tagging extends DokuWiki_Action_Plugin {
         }
         $db = $this->getDB();
         $res = $db->query('SELECT ' . $return . ', COUNT(*) ' .
-                          'FROM taggings WHERE ' . $where . ' GROUP BY ' . $return,
+                          'FROM taggings WHERE ' . $where . ' GROUP BY ' . $return .
+                          ' ORDER BY tag',
                           array_values($search));
 
         $res = $db->res2arr($res);
@@ -89,7 +90,7 @@ class helper_plugin_tagging extends DokuWiki_Action_Plugin {
 
     public function html_cloud($tags, $type, $func, $wrap = true, $return = false) {
         $ret = '';
-        if ($wrap) $ret .= '<ul class="tagging_cloud">';
+        if ($wrap) $ret .= '<ul class="tagging_cloud clearfix">';
         if (count($tags) === 0) {
             // Produce valid XHTML (ul needs a child)
             $this->setupLocale();

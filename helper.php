@@ -99,7 +99,7 @@ class helper_plugin_tagging extends DokuWiki_Action_Plugin {
             foreach ($tags as $val => $size) {
                 $ret .= '<li class="t' . $size . '"><div class="li">';
                 $ret .= call_user_func($func, $val);
-                $ret .= '</div></li> ';
+                $ret .= '</div></li>';
             }
         }
         if ($wrap) $ret .= '</ul>';

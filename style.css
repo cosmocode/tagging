@@ -2,6 +2,11 @@ form#tagging_edit div label span {
     display: none;
 }
 
+ul.tagging_cloud div.li {
+    float: left;
+    margin: 0 3px;
+}
+
 ul.tagging_cloud li {
     display: inline;
 }

@@ -7,8 +7,8 @@ addInitEvent(function() {
     if (typeof addAutoCompletion !== undefined) {
         addAutoCompletion(input, 'tagging_auto', true, null, function (ul, input) {
             // Overwrite to fix the width
-            ul.style.top = (findPosY(input) + input.offsetHeight - 1) + 'px';
-            ul.style.left = findPosX(input) + 'px';
+            ul.style.top = (input.offsetTop + input.offsetHeight - 1) + 'px';
+            ul.style.left = input.offsetLeft + 'px';
             ul.style.minWidth = (input.offsetWidth - 8) + 'px';
         });
     }

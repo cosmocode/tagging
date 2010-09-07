@@ -1,7 +1,7 @@
 <?php
 
 if(!defined('DOKU_INC')) die();
-class helper_plugin_tagging extends DokuWiki_Action_Plugin {
+class helper_plugin_tagging extends DokuWiki_Plugin {
 
     private function getDB() {
         static $db;
@@ -124,8 +124,8 @@ class helper_plugin_tagging extends DokuWiki_Action_Plugin {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
             echo html_btn('tagging_edit', $ID, '', array());
             $form = new Doku_Form(array('id' => 'tagging_edit', 'style' => 'display: none;'));
-            $form->addHidden('id', $ID);
-            $form->addElement(form_makeTextField('tags', implode(', ', array_keys($this->getTags(array('pid' => $ID, 'tagger' => $_SERVER['REMOTE_USER']), 'tag')))));
+            $form->addHidden('tagging[id]', $ID);
+            $form->addElement(form_makeTextField('tagging[tags]', implode(', ', array_keys($this->getTags(array('pid' => $ID, 'tagger' => $_SERVER['REMOTE_USER']), 'tag')))));
             $form->addElement(form_makeButton('submit', 'save', $lang['btn_save'], array('id' => 'tagging_edit_save')));
             $form->addElement(form_makeButton('submit', 'cancel', $lang['btn_cancel'], array('id' => 'tagging_edit_cancel')));
             $form->printForm();

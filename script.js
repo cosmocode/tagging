@@ -2,10 +2,9 @@ addInitEvent(function() {
     var form = $('tagging_edit');
     if (!form) return;
 
-
     var input = form.getElementsByTagName('input')[2];
     if (typeof addAutoCompletion !== undefined) {
-        addAutoCompletion(input, 'tagging_auto', true, null, function (ul, input) {
+        addAutoCompletion(input, 'plugin_tagging_auto', true, null, function (ul, input) {
             // Overwrite to fix the width
             ul.style.top = (input.offsetTop + input.offsetHeight - 1) + 'px';
             ul.style.left = input.offsetLeft + 'px';
@@ -30,9 +29,9 @@ addInitEvent(function() {
     addEvent($('tagging_edit_save'), 'click', function () {
         form.previousSibling.style.display = 'inline';
         form.style.display = 'none';
-        ajax_loader.sack_new_form(form, 'tagging', function () {
-            form.previousSibling.previousSibling.innerHTML = this.response;
-        });
+        var ajax = doku_ajax('plugin_tagging_save', serialize_form(form));
+        ajax.elementObj = form.previousSibling.previousSibling;
+        ajax.runAJAX();
         return false;
     });
 

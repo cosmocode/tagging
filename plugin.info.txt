@@ -1,0 +1,7 @@
+base	tagging
+author	Adrian Lang
+email	mail@adrianlang.de
+date	2010-09-23
+name	Tagging Plugin
+desc	Allow users to annotate pages with tags, search for tags and show all tags one user has used.
+url	http://ickewiki.de/dokumentation/tagging

@@ -40,7 +40,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     public function getTags($search, $return) {
         $where = '1=1';
         foreach($search as $k => $v) {
-            if (strpos($v, '%') === 0 || strrpos($v, '%') === strlen($v)) {
+            if (strpos($v, '%') === 0 || strrpos($v, '%') === strlen($v) - 1) {
                 $where .= " AND $k LIKE ?";
             } else {
                 $where .= " AND $k = ?";

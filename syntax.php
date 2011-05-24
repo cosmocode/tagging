@@ -39,6 +39,11 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                 $data['user'] = trim($matches[2]);
             }
             break;
+        case 'ns':
+            if (count($matches) > 2) {
+                $data['ns'] = trim($matches[2]);
+            }
+            break;
         }
 
         return $data;
@@ -58,6 +63,23 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                 $data['user'] = $_SERVER['REMOTE_USER'];
             }
             $tags = $hlp->getTags(array('tagger' => $data['user']), 'tag');
+            $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
+
+            break;
+        case 'ns':
+            $renderer->info['cache'] = false;
+            if (!isset($data['ns'])) {
+                global $INFO;
+                $data['ns'] = $INFO['namespace'];
+            }
+            global $ID;
+            $data['ns'] = resolve_id(getNS($ID), $data['ns'] . ':');
+            if ($data['ns'] !== '') {
+                // Do not match nsbla, only ns:bla
+                $data['ns'] .= ':';
+            }
+            $data['ns'] .= '%';
+            $tags = $hlp->getTags(array('pid' => $data['ns']), 'tag');
             $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
 
             break;

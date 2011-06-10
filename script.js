@@ -5,10 +5,16 @@ addInitEvent(function() {
     var input = form.getElementsByTagName('input')[2];
     if (typeof addAutoCompletion !== undefined) {
         addAutoCompletion(input, 'plugin_tagging_auto', true, null, function (ul, input) {
-            // Overwrite to fix the width
-            ul.style.top = (input.offsetTop + input.offsetHeight - 1) + 'px';
-            ul.style.left = input.offsetLeft + 'px';
-            ul.style.minWidth = (input.offsetWidth - 8) + 'px';
+            // Hack the styling. This only looks nice in ICKE template
+            if (navigator.userAgent.indexOf('MSIE') != -1 &&
+                {6:1,7:1}[parseFloat(navigator.userAgent.substring(navigator.userAgent.indexOf('MSIE')+5))] === 1) {
+                /*IE 6 & 7*/
+                ul.style.top = (input.offsetHeight + 5) + 'px';
+                ul.style.left = -input.offsetWidth + 'px';
+            } else {
+                ul.style.top = '-7px';
+            }
+            ul.style.minWidth = (input.offsetWidth - 9) + 'px';
         });
     }
 

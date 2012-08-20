@@ -40,12 +40,23 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     public function getTags($search, $return) {
         $where = '1=1';
         foreach($search as $k => $v) {
-            if (strpos($v, '%') === 0 || strrpos($v, '%') === strlen($v) - 1) {
-                $where .= " AND $k LIKE ?";
+            if ($k === 'tag') {
+                $k = 'UPPER(tag)';
+            }
+
+            if ($this->useLike($v)) {
+                $where .= " AND $k LIKE";
             } else {
-                $where .= " AND $k = ?";
+                $where .= " AND $k =";
+            }
+
+            if ($k === 'UPPER(tag)') {
+                $where .= ' UPPER(?)';
+            } else {
+                $where .= ' ?';
             }
         }
+
         $db = $this->getDB();
         $res = $db->query('SELECT ' . $return . ', COUNT(*) ' .
                           'FROM taggings WHERE ' . $where . ' GROUP BY ' . $return .
@@ -58,6 +69,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $ret[$v[$return]] = $v['COUNT(*)'];
         }
         return $ret;
+    }
+
+    private function useLike($v) {
+        return strpos($v, '%') === 0 || strrpos($v, '%') === strlen($v) - 1;
     }
 
     public function getTagSearchURL($tag) {

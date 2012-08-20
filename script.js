@@ -3,7 +3,7 @@ addInitEvent(function() {
     if (!form) return;
 
     var input = form.getElementsByTagName('input')[2];
-    if (typeof addAutoCompletion !== undefined) {
+    if (typeof addAutoCompletion !== undefined && typeof addAutoCompletion !== "undefined") {
         addAutoCompletion(input, 'plugin_tagging_auto', true, null, function (ul, input) {
             // Hack the styling. This only looks nice in ICKE template
             if (navigator.userAgent.indexOf('MSIE') != -1 &&

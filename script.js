@@ -47,3 +47,16 @@ addInitEvent(function() {
         return false;
     });
 });
+
+jQuery(function() {
+    var availableTags = [];
+
+    jQuery(".tagslist").each(function(i, selected){
+        availableTags[i] = (jQuery(selected).text()).trim();
+
+    });
+
+    jQuery("#tagging_tags").autocomplete({
+        source: availableTags
+    });
+});

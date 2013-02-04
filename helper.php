@@ -146,4 +146,46 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $form->printForm();
         }
     }
+
+    public function getAllTags(){
+
+        $db = $this->getDb();
+        $res = $db->query('SELECT pid, tag FROM taggings ORDER BY tag');
+
+        $tags_tmp = $db->res2arr($res);
+        $tags = array();
+        foreach ($tags_tmp as $tag) {
+
+            $tags[$tag['tag']]['pid'][] = $tag['pid'];
+
+            if (isset($tags[$tag['tag']]['count'])) {
+                $tags[$tag['tag']]['count']++;
+            } else {
+                $tags[$tag['tag']]['count'] = 1;
+            }
+        }
+        return $tags;
+    }
+
+    public function renameTag($formerTagName, $newTagName) {
+
+        if(empty($formerTagName) || empty($newTagName)) {
+            return "admin enter tag names";
+        }
+
+        $db = $this->getDb();
+
+        $res = $db->query('SELECT pid FROM taggings WHERE tag="'. $formerTagName .'"');
+        $check = $db->res2arr($res);
+
+        if (empty($check)) {
+            return "admin tag does not exists";
+        }
+
+        $res = $db->query("UPDATE taggings SET tag='".$newTagName."' WHERE tag='" . $formerTagName . "'");
+        $db->res2arr($res);
+
+        return "admin saved";
+    }
+
 }

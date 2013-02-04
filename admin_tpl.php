@@ -5,7 +5,7 @@ if (!empty($this->message)) {
     msg($this->getLang(($this->message)));
 }
 ?>
-<form action="doku.php" method="post">
+<form action="<?php echo script(); ?>" method="post">
     <div class="no">
         <input type="hidden" name="do" value="admin"/>
         <input type="hidden" name="page" value="tagging"/>
@@ -20,7 +20,7 @@ if (!empty($this->message)) {
             <th></th>
         </tr>
         <tr>
-            <td><input id="tags" type="text" name="action[formerTagName]" class="edit" /></td>
+            <td><input id="tagging_tags" type="text" name="action[formerTagName]" class="edit" /></td>
             <td><input type="text" name="action[newTagName]" /></td>
             <td><input type="submit" name="action[rename]" value="<?php echo $this->getLang('admin save')?>" class="button"/></td>
         </tr>

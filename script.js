@@ -52,11 +52,11 @@ jQuery(function() {
     var availableTags = [];
 
     jQuery(".tagslist").each(function(i, selected){
-        availableTags[i] = jQuery(selected).text();
+        availableTags[i] = (jQuery(selected).text()).trim();
 
     });
 
-    jQuery("#tags").autocomplete({
+    jQuery("#tagging_tags").autocomplete({
         source: availableTags
     });
 });

@@ -5,7 +5,7 @@ if (!defined('DOKU_INC')) die();
 class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
 
     private $hlp;
-    var $message;
+    private $message;
 
     function forAdminOnly() { return false; }
 
@@ -14,8 +14,10 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
 
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (checkSecurityToken()) {
-                if (isset($_POST['action']['rename'])) {
-                    $this->message = $this->hlp->renameTag($_POST['action']['formerTagName'], $_POST['action']['newTagName']);
+                global $INPUT;
+                $input = $INPUT->post->arr('action');
+                if (isset($input['rename'])) {
+                    $this->message = $this->hlp->renameTag($input['formerTagName'], $input['newTagName']);
                 }
             }
         }

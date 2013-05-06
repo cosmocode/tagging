@@ -14,10 +14,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             msg('The tagging plugin needs the sqlite plugin', -1);
             return false;
         }
-        if($db->init('tagging',dirname(__FILE__).'/db/')){
-            return $db;
-        }
-        return false;
+        $db->init('tagging',dirname(__FILE__).'/db/');
+        return $db;
     }
 
     public function replaceTags($id, $user, $tags) {

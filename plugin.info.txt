@@ -1,7 +1,7 @@
-base	tagging
-author	Adrian Lang
-email	mail@adrianlang.de
-date	2013-02-04
-name	Tagging Plugin
-desc	Allow users to annotate pages with tags, search for tags and show useful tag clouds.
-url	http://ickewiki.de/dokumentation/tagging
+base    tagging
+author  Adrian Lang
+email   mail@adrianlang.de
+date    2013-05-06
+name    Tagging Plugin
+desc    Allow users to annotate pages with tags, search for tags and show useful tag clouds.
+url     http://ickewiki.de/dokumentation/tagging

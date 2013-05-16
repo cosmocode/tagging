@@ -1,62 +1,90 @@
-addInitEvent(function() {
-    var form = $('tagging_edit');
-    if (!form) return;
+jQuery(function () {
 
-    var input = form.getElementsByTagName('input')[2];
-    if (typeof addAutoCompletion !== undefined && typeof addAutoCompletion !== "undefined") {
-        addAutoCompletion(input, 'plugin_tagging_auto', true, null, function (ul, input) {
-            // Hack the styling. This only looks nice in ICKE template
-            if (navigator.userAgent.indexOf('MSIE') != -1 &&
-                {6:1,7:1}[parseFloat(navigator.userAgent.substring(navigator.userAgent.indexOf('MSIE')+5))] === 1) {
-                /*IE 6 & 7*/
-                ul.style.top = (input.offsetHeight + 5) + 'px';
-                ul.style.left = -input.offsetWidth + 'px';
-            } else {
-                ul.style.top = '-7px';
-            }
-            ul.style.minWidth = (input.offsetWidth - 9) + 'px';
-        });
-    }
+    var $form = jQuery('#tagging__edit').hide();
+    if (!$form.length) return;
 
-    var buttons = getElementsByClass('btn_tagging_edit', document, 'form');
+    var $btn = jQuery('form.btn_tagging_edit');
 
-    for (var i = 0; i < buttons.length ; ++i) {
-        addEvent(buttons[i], 'submit', function () {
-            this.style.display = 'none';
-            form.style.display = 'inline';
-            input.focus();
-            if (!input.value.match(/(^|, )$/)) {
-                input.value += ', ';
-            }
-            return false;
-        });
-    }
+    $btn.submit(function (e) {
+        $btn.hide();
+        $form.show();
 
-    addEvent($('tagging_edit_save'), 'click', function () {
-        form.previousSibling.style.display = 'inline';
-        form.style.display = 'none';
-        var ajax = doku_ajax('plugin_tagging_save', serialize_form(form));
-        ajax.elementObj = form.previousSibling.previousSibling;
-        ajax.runAJAX();
+        e.preventDefault();
+        e.stopPropagation();
         return false;
     });
 
-    addEvent($('tagging_edit_cancel'), 'click', function () {
-        form.previousSibling.style.display = 'inline';
-        form.style.display = 'none';
+    jQuery('#tagging__edit_save').click(function (e) {
+        jQuery('ul.tagging_cloud').load(
+            DOKU_BASE + 'lib/exe/ajax.php',
+            $form.serialize()
+        );
+        $btn.show();
+        $form.hide();
+
+        e.preventDefault();
+        e.stopPropagation();
         return false;
     });
-});
 
-jQuery(function() {
-    var availableTags = [];
+    jQuery('#tagging__edit_cancel').click(function (e) {
+        $btn.show();
+        $form.hide();
 
-    jQuery(".tagslist").each(function(i, selected){
-        availableTags[i] = (jQuery(selected).text()).trim();
-
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
     });
 
-    jQuery("#tagging_tags").autocomplete({
-        source: availableTags
-    });
+
+    /**
+     * below follows auto completion as described on  http://jqueryui.com/autocomplete/#multiple-remote
+     */
+
+    function split(val) {
+        return val.split(/,\s*/);
+    }
+
+    function extractLast(term) {
+        return split(term).pop();
+    }
+
+    $form.find('input[type="text"]')
+        // don't navigate away from the field on tab when selecting an item
+        .bind("keydown", function (event) {
+            if (event.keyCode === jQuery.ui.keyCode.TAB &&
+                jQuery(this).data("ui-autocomplete").menu.active) {
+                event.preventDefault();
+            }
+        })
+        .autocomplete({
+            source: function (request, response) {
+                jQuery.getJSON(DOKU_BASE + 'lib/exe/ajax.php?call=plugin_tagging_autocomplete', {
+                    term: extractLast(request.term)
+                }, response);
+            },
+            search: function () {
+                // custom minLength
+                var term = extractLast(this.value);
+                if (term.length < 2) {
+                    return false;
+                }
+                return true;
+            },
+            focus: function () {
+                // prevent value inserted on focus
+                return false;
+            },
+            select: function (event, ui) {
+                var terms = split(this.value);
+                // remove the current input
+                terms.pop();
+                // add the selected item
+                terms.push(ui.item.value);
+                // add placeholder to get the comma-and-space at the end
+                terms.push("");
+                this.value = terms.join(", ");
+                return false;
+            }
+        });
 });

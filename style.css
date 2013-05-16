@@ -1,5 +1,9 @@
-form#tagging_edit div label span {
+form#tagging__edit div label span {
     display: none;
+}
+
+form#tagging__edit input.edit {
+    width: 95%;
 }
 
 ul.tagging_cloud div.li {

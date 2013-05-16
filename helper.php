@@ -3,7 +3,10 @@
 if(!defined('DOKU_INC')) die();
 class helper_plugin_tagging extends DokuWiki_Plugin {
 
-    private function getDB() {
+    /**
+     * @return helper_plugin_sqlite
+     */
+    public function getDB() {
         static $db;
         if (!is_null($db)) {
             return $db;
@@ -136,11 +139,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         if (isset($_SERVER['REMOTE_USER']) && $INFO['writable']) {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
             echo html_btn('tagging_edit', $ID, '', array());
-            $form = new Doku_Form(array('id' => 'tagging_edit', 'style' => 'display: none;'));
+            $form = new Doku_Form(array('id' => 'tagging__edit'));
             $form->addHidden('tagging[id]', $ID);
+            $form->addHidden('call', 'plugin_tagging_save');
             $form->addElement(form_makeTextField('tagging[tags]', implode(', ', array_keys($this->getTags(array('pid' => $ID, 'tagger' => $_SERVER['REMOTE_USER']), 'tag')))));
-            $form->addElement(form_makeButton('submit', 'save', $lang['btn_save'], array('id' => 'tagging_edit_save')));
-            $form->addElement(form_makeButton('submit', 'cancel', $lang['btn_cancel'], array('id' => 'tagging_edit_cancel')));
+            $form->addElement(form_makeButton('submit', 'save', $lang['btn_save'], array('id' => 'tagging__edit_save')));
+            $form->addElement(form_makeButton('submit', 'cancel', $lang['btn_cancel'], array('id' => 'tagging__edit_cancel')));
             $form->printForm();
         }
     }

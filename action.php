@@ -7,7 +7,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      */
     function register(&$controller) {
         $controller->register_hook(
-            'TPL_ACT_RENDER', 'AFTER', $this,
+            'TPL_CONTENT_DISPLAY', 'BEFORE', $this,
             'echo_searchresults'
         );
 
@@ -101,6 +101,9 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         // FIXME own tags
         $tags = $hlp->getTags(array('tag' => $QUERY), 'pid');
 
+
+
+        ob_start();
         $R = p_get_renderer('xhtml');
         $R->header($this->getLang('search_section_title'), 2, 1);
         $R->section_open(2);
@@ -109,5 +112,9 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $hlp->html_cloud($tags, 'page', 'html_wikilink');
         $R->section_close();
         echo $R->doc;
+        $results = ob_get_contents();
+        ob_end_clean();
+
+        $event->data = preg_replace('/(<h2.*?>)/', $results."\n\\1", $event->data, 1);
     }
 }

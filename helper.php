@@ -181,19 +181,18 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     public function tpl_tags() {
-        global $ID;
         global $INFO;
         global $lang;
-        $tags = $this->findItems(array('pid' => $ID), 'tag');
+        $tags = $this->findItems(array('pid' => $INFO['id']), 'tag');
         $this->html_cloud($tags, 'tag', array($this, 'linkToSearch'));
 
         if (isset($_SERVER['REMOTE_USER']) && $INFO['writable']) {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
-            echo html_btn('tagging_edit', $ID, '', array());
+            echo html_btn('tagging_edit', $INFO['id'], '', array());
             $form = new Doku_Form(array('id' => 'tagging__edit'));
-            $form->addHidden('tagging[id]', $ID);
+            $form->addHidden('tagging[id]', $INFO['id']);
             $form->addHidden('call', 'plugin_tagging_save');
-            $form->addElement(form_makeTextField('tagging[tags]', implode(', ', array_keys($this->findItems(array('pid' => $ID, 'tagger' => $_SERVER['REMOTE_USER']), 'tag')))));
+            $form->addElement(form_makeTextField('tagging[tags]', implode(', ', array_keys($this->findItems(array('pid' => $INFO['id'], 'tagger' => $_SERVER['REMOTE_USER']), 'tag')))));
             $form->addElement(form_makeButton('submit', 'save', $lang['btn_save'], array('id' => 'tagging__edit_save')));
             $form->addElement(form_makeButton('submit', 'cancel', $lang['btn_cancel'], array('id' => 'tagging__edit_cancel')));
             $form->printForm();

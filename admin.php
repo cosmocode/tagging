@@ -80,7 +80,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
             $taggers = join(', ', $taggers);
 
             echo '<tr>';
-            echo '<td><a class="tagslist" href="?do=search&amp;id=' . rawurlencode($tagname) . '">' . hsc($tagname) . '</a></td>';
+            echo '<td><a class="tagslist" href="' . $this->hlp->getTagSearchURL($tagname) . '">' . hsc($tagname) . '</a></td>';
             echo '<td>' . $taginfo['count'] . '</td>';
             echo '<td>' . hsc($taggers) . '</td>';
             echo '</tr>';

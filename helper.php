@@ -7,19 +7,34 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return helper_plugin_sqlite
      */
     public function getDB() {
-        static $db;
+        static $db = null;
         if (!is_null($db)) {
             return $db;
         }
 
+        /** @var helper_plugin_sqlite $db */
         $db = plugin_load('helper', 'sqlite');
         if (is_null($db)) {
             msg('The tagging plugin needs the sqlite plugin', -1);
             return false;
         }
         $db->init('tagging',dirname(__FILE__).'/db/');
+        $db->create_function('CLEANTAG', array($this, 'cleanTag'), 1);
         return $db;
     }
+
+    /**
+     * Canonicalizes the tag to its lower case nospace form
+     *
+     * @param $tag
+     * @return string
+     */
+    public function cleanTag($tag) {
+        $tag = str_replace(' ', '', $tag);
+        $tag = utf8_strtolower($tag);
+        return $tag;
+    }
+
 
     public function replaceTags($id, $user, $tags) {
         $db = $this->getDB();
@@ -42,7 +57,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $where = '1=1';
         foreach($search as $k => $v) {
             if ($k === 'tag') {
-                $k = 'UPPER(tag)';
+                $k = 'CLEANTAG(tag)';
             }
 
             if ($this->useLike($v)) {
@@ -51,8 +66,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                 $where .= " AND $k =";
             }
 
-            if ($k === 'UPPER(tag)') {
-                $where .= ' UPPER(?)';
+            if ($k === 'CLEANTAG(tag)') {
+                $where .= ' CLEANTAG(?)';
             } else {
                 $where .= ' ?';
             }
@@ -76,9 +91,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return strpos($v, '%') === 0 || strrpos($v, '%') === strlen($v) - 1;
     }
 
+    /**
+     * Constructs the URL to search for a tag
+     *
+     * @param $tag
+     * @return string
+     */
     public function getTagSearchURL($tag) {
-        return '?do=search&id=' . $tag . '#' .
-               str_replace(' ', '_', strtolower($this->getLang('search_section_title')));
+        return '?do=search&id=' . rawurlencode($tag);
     }
 
     public function cloudData($tags, $levels = 10) {
@@ -124,7 +144,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         echo $ret;
     }
 
-    private function linkToSearch($tag) {
+    protected function linkToSearch($tag) {
         return '<a href="' . hsc($this->getTagSearchURL($tag)) . '">' .
                $tag . '</a>';
     }
@@ -160,15 +180,16 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $tags_tmp = $db->res2arr($res);
         $tags = array();
         foreach ($tags_tmp as $tag) {
+            $tid = $this->cleanTag($tag['tag']);
 
-            $tags[$tag['tag']]['pid'][] = $tag['pid'];
+            //$tags[$tid]['pid'][] = $tag['pid'];
 
-            if (isset($tags[$tag['tag']]['count'])) {
-                $tags[$tag['tag']]['count']++;
-                $tags[$tag['tag']]['tagger'][] = $tag['tagger'];
+            if (isset($tags[$tid]['count'])) {
+                $tags[$tid]['count']++;
+                $tags[$tid]['tagger'][] = $tag['tagger'];
             } else {
-                $tags[$tag['tag']]['count'] = 1;
-                $tags[$tag['tag']]['tagger'] = array($tag['tagger']);
+                $tags[$tid]['count'] = 1;
+                $tags[$tid]['tagger'] = array($tag['tagger']);
             }
         }
         return $tags;
@@ -189,7 +210,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $db = $this->getDb();
 
-        $res = $db->query('SELECT pid FROM taggings WHERE tag="'. $formerTagName .'"');
+        $res = $db->query('SELECT pid FROM taggings WHERE tag= ?', $formerTagName);
         $check = $db->res2arr($res);
 
         if (empty($check)) {
@@ -197,7 +218,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             return;
         }
 
-        $res = $db->query("UPDATE taggings SET tag='".$newTagName."' WHERE tag='" . $formerTagName . "'");
+        $res = $db->query("UPDATE taggings SET tag = ? WHERE tag = ?", $newTagName, $formerTagName);
         $db->res2arr($res);
 
         msg($this->getLang("admin saved"), 1);

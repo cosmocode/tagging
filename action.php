@@ -90,16 +90,20 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      */
     function echo_searchresults(Doku_Event &$event, $param) {
         global $ACT;
-        if($ACT !== 'search') {
-            return;
-        }
         global $QUERY;
+
+        if($ACT !== 'search') return;
+
+        // parse the search query and use the first found word as term
+        $terms = ft_queryParser(idx_get_indexer(), $QUERY);
+        if(!isset($terms['and'][0])) return;
+        $tag = $terms['and'][0];
 
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
 
-        // FIXME own tags
-        $tags = $hlp->getTags(array('tag' => $QUERY), 'pid');
+        // FIXME filter by namspace
+        $tags = $hlp->getTags(array('tag' => $tag), 'pid');
 
 
 

@@ -14,6 +14,6 @@ $lang['admin enter tag names']     = 'Please enter the current and the new tag n
 $lang['admin tag does not exists'] = 'The tag name you entered does not exist.';
 $lang['admin renamed']             = 'Your tag has been renamed';
 
-$lang['search_section_title'] = 'Tagged pages';
+$lang['search_section_title'] = 'Tagged pages:';
 $lang['js']['notags']         = 'No tags yet';
 $lang['js']['nopages']        = 'No pages with this tag yet';

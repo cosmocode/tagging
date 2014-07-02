@@ -97,28 +97,31 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         // parse the search query and use the first found word as term
         $terms = ft_queryParser(idx_get_indexer(), $QUERY);
         if(!isset($terms['and'][0])) return;
-        $tag = $terms['and'][0];
+
+        // create filter from term and namespace
+        $filter = array( 'tag' => $terms['and'][0]);
+        if(isset($terms['ns'][0])) {
+            $filter['pid'] = $terms['ns'][0].':%';
+        }
 
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
+        $pages = $hlp->findItems($filter, 'pid');
+        if(!count($pages)) return;
 
-        // FIXME filter by namspace
-        $tags = $hlp->findItems(array('tag' => $tag), 'pid');
+        // create output HTML
+        $results = '<h3>'.$this->getLang('search_section_title').'</h3>';
+        $results .= '<div class="search_quickresults">';
+        $results .= '<ul class="search_quickhits">';
+        foreach($pages as $page => $cnt) {
+            $results .= '<li><div class="li">';
+            $results .= html_wikilink($page);
+            $results .= '</div></li>';
+        }
+        $results .= '</ul>';
+        $results .= '</div>';
 
-
-
-        ob_start();
-        $R = p_get_renderer('xhtml');
-        $R->header($this->getLang('search_section_title'), 2, 1);
-        $R->section_open(2);
-        echo $R->doc;
-        $R->doc = '';
-        $hlp->html_cloud($tags, 'page', 'html_wikilink');
-        $R->section_close();
-        echo $R->doc;
-        $results = ob_get_contents();
-        ob_end_clean();
-
-        $event->data = preg_replace('/(<h2.*?>)/', $results."\n\\1", $event->data, 1);
+        // insert it right after second level headline
+        $event->data = preg_replace('/(<\/h2>)/', "\\1\n".$results, $event->data, 1);
     }
 }

@@ -91,7 +91,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $orderby = 'CLEANTAG(tag)';
         } else {
             $groupby = $type;
-            $groupby = "cnt DESC, $type";
+            $orderby = "cnt DESC, $type";
         }
 
         // create SQL

@@ -149,10 +149,13 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         }
     }
 
+    /**
+     * @return array
+     */
     public function getAllTags(){
 
         $db = $this->getDb();
-        $res = $db->query('SELECT pid, tag FROM taggings ORDER BY tag');
+        $res = $db->query('SELECT pid, tag, tagger FROM taggings ORDER BY tag');
 
         $tags_tmp = $db->res2arr($res);
         $tags = array();
@@ -162,17 +165,26 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
             if (isset($tags[$tag['tag']]['count'])) {
                 $tags[$tag['tag']]['count']++;
+                $tags[$tag['tag']]['tagger'][] = $tag['tagger'];
             } else {
                 $tags[$tag['tag']]['count'] = 1;
+                $tags[$tag['tag']]['tagger'] = array($tag['tagger']);
             }
         }
         return $tags;
     }
 
+    /**
+     * Renames a tag
+     *
+     * @param string $formerTagName
+     * @param string $newTagName
+     */
     public function renameTag($formerTagName, $newTagName) {
 
         if(empty($formerTagName) || empty($newTagName)) {
-            return "admin enter tag names";
+            msg($this->getLang("admin enter tag names"), -1);
+            return;
         }
 
         $db = $this->getDb();
@@ -181,13 +193,15 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $check = $db->res2arr($res);
 
         if (empty($check)) {
-            return "admin tag does not exists";
+            msg($this->getLang("admin tag does not exists"), -1);
+            return;
         }
 
         $res = $db->query("UPDATE taggings SET tag='".$newTagName."' WHERE tag='" . $formerTagName . "'");
         $db->res2arr($res);
 
-        return "admin saved";
+        msg($this->getLang("admin saved"), 1);
+        return;
     }
 
 }

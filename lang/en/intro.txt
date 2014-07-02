@@ -1,0 +1,3 @@
+====== View and change Tags ======
+
+This page lists all the used tags in your wiki. The form at the top allows you to rename existing tags. Tags can be merged by renaming a tag to an already existing one.

@@ -53,6 +53,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return $db->query('COMMIT TRANSACTION');
     }
 
+    /**
+     * Get a list of Tags or Pages matching a search criteria
+     *
+     * @param array  $search What to search for array('field' => 'searchterm')
+     * @param string $return What field to return 'tag'|'pid'
+     * @return array associative array in form of value => count
+     * @todo this is a really ugly function. It should be split into separate ones
+     */
     public function getTags($search, $return) {
         $where = '1=1';
         foreach($search as $k => $v) {
@@ -73,9 +81,15 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             }
         }
 
+        if($return == 'tag') {
+            $groupby = 'CLEANTAG(tag)';
+        } else {
+            $groupby = $return;
+        }
+
         $db = $this->getDB();
         $res = $db->query('SELECT ' . $return . ', COUNT(*) ' .
-                          'FROM taggings WHERE ' . $where . ' GROUP BY ' . $return .
+                          'FROM taggings WHERE ' . $where . ' GROUP BY ' . $groupby .
                           ' ORDER BY tag',
                           array_values($search));
 

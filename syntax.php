@@ -54,6 +54,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
             return false;
         }
 
+        /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
 
         switch($data['cmd']) {

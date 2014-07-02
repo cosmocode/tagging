@@ -58,7 +58,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             )
         );
 
-        $tags = $hlp->getTags(array('pid' => $id), 'tag');
+        $tags = $hlp->findItems(array('pid' => $id), 'tag');
         $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), false);
     }
 
@@ -72,7 +72,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $hlp = plugin_load('helper', 'tagging');
 
         $search = $INPUT->str('term');
-        $tags = $hlp->getTags(array('tag' => '%' . $hlp->getDB()->escape_string($search) . '%'), 'tag');
+        $tags = $hlp->findItems(array('tag' => '%' . $hlp->getDB()->escape_string($search) . '%'), 'tag');
         arsort($tags);
         $tags = array_keys($tags);
 
@@ -103,7 +103,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $hlp = plugin_load('helper', 'tagging');
 
         // FIXME filter by namspace
-        $tags = $hlp->getTags(array('tag' => $tag), 'pid');
+        $tags = $hlp->findItems(array('tag' => $tag), 'pid');
 
 
 

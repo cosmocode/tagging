@@ -4,7 +4,11 @@ if(!defined('DOKU_INC')) die();
 class helper_plugin_tagging extends DokuWiki_Plugin {
 
     /**
-     * @return helper_plugin_sqlite
+     * Gives access to the database
+     *
+     * Initializes the SQLite helper and register the CLEANTAG function
+     *
+     * @return helper_plugin_sqlite|bool false if initialization fails
      */
     public function getDB() {
         static $db = null;
@@ -54,55 +58,68 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
-     * Get a list of Tags or Pages matching a search criteria
+     * Get a list of Tags or Pages matching search criteria
      *
-     * @param array  $search What to search for array('field' => 'searchterm')
-     * @param string $return What field to return 'tag'|'pid'
+     * @param array  $filter What to search for array('field' => 'searchterm')
+     * @param string $type What field to return 'tag'|'pid'
      * @return array associative array in form of value => count
-     * @todo this is a really ugly function. It should be split into separate ones
      */
-    public function getTags($search, $return) {
-        $where = '1=1';
-        foreach($search as $k => $v) {
-            if ($k === 'tag') {
-                $k = 'CLEANTAG(tag)';
-            }
-
-            if ($this->useLike($v)) {
-                $where .= " AND $k LIKE";
-            } else {
-                $where .= " AND $k =";
-            }
-
-            if ($k === 'CLEANTAG(tag)') {
-                $where .= ' CLEANTAG(?)';
-            } else {
-                $where .= ' ?';
-            }
-        }
-
-        if($return == 'tag') {
-            $groupby = 'CLEANTAG(tag)';
-        } else {
-            $groupby = $return;
-        }
-
+    public function findItems($filter, $type) {
         $db = $this->getDB();
-        $res = $db->query('SELECT ' . $return . ', COUNT(*) ' .
-                          'FROM taggings WHERE ' . $where . ' GROUP BY ' . $groupby .
-                          ' ORDER BY tag',
-                          array_values($search));
+        if(!$db) return array();
 
+        // create WHERE clause
+        $where = '1=1';
+        foreach($filter as $field => $value) {
+            // compare clean tags only
+            if ($field === 'tag') {
+                $field = 'CLEANTAG(tag)';
+                $q     = 'CLEANTAG(?)';
+            } else {
+                $q = '?';
+            }
+            // detect LIKE filters
+            if ($this->useLike($value)) {
+                $where .= " AND $field LIKE $q";
+            } else {
+                $where .= " AND $field = $q";
+            }
+        }
+        // group and order
+        if($type == 'tag') {
+            $groupby = 'CLEANTAG(tag)';
+            $orderby = 'CLEANTAG(tag)';
+        } else {
+            $groupby = $type;
+            $groupby = "cnt DESC, $type";
+        }
+
+        // create SQL
+        $sql = "SELECT $type AS item, COUNT(*) AS cnt
+                  FROM taggings
+                 WHERE $where
+              GROUP BY $groupby
+              ORDER BY $orderby";
+
+        // run query and turn into associative array
+        $res = $db->query($sql, array_values($filter));
         $res = $db->res2arr($res);
+
         $ret = array();
-        foreach ($res as $v) {
-            $ret[$v[$return]] = $v['COUNT(*)'];
+        foreach ($res as $row) {
+            $ret[$row['item']] = $row['cnt'];
         }
         return $ret;
     }
 
-    private function useLike($v) {
-        return strpos($v, '%') === 0 || strrpos($v, '%') === strlen($v) - 1;
+    /**
+     * Check if the given string is a LIKE statement
+     *
+     * @param string $value
+     * @return bool
+     */
+    private function useLike($value) {
+        return strpos($value, '%') === 0 || strrpos($value, '%') === strlen($value) - 1;
     }
 
     /**
@@ -167,7 +184,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         global $ID;
         global $INFO;
         global $lang;
-        $tags = $this->getTags(array('pid' => $ID), 'tag');
+        $tags = $this->findItems(array('pid' => $ID), 'tag');
         $this->html_cloud($tags, 'tag', array($this, 'linkToSearch'));
 
         if (isset($_SERVER['REMOTE_USER']) && $INFO['writable']) {
@@ -176,7 +193,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $form = new Doku_Form(array('id' => 'tagging__edit'));
             $form->addHidden('tagging[id]', $ID);
             $form->addHidden('call', 'plugin_tagging_save');
-            $form->addElement(form_makeTextField('tagging[tags]', implode(', ', array_keys($this->getTags(array('pid' => $ID, 'tagger' => $_SERVER['REMOTE_USER']), 'tag')))));
+            $form->addElement(form_makeTextField('tagging[tags]', implode(', ', array_keys($this->findItems(array('pid' => $ID, 'tagger' => $_SERVER['REMOTE_USER']), 'tag')))));
             $form->addElement(form_makeButton('submit', 'save', $lang['btn_save'], array('id' => 'tagging__edit_save')));
             $form->addElement(form_makeButton('submit', 'cancel', $lang['btn_cancel'], array('id' => 'tagging__edit_cancel')));
             $form->printForm();

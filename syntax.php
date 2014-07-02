@@ -63,7 +63,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
             if (!isset($data['user'])) {
                 $data['user'] = $_SERVER['REMOTE_USER'];
             }
-            $tags = $hlp->getTags(array('tagger' => $data['user']), 'tag');
+            $tags = $hlp->findItems(array('tagger' => $data['user']), 'tag');
             $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
 
             break;
@@ -80,7 +80,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                 $data['ns'] .= ':';
             }
             $data['ns'] .= '%';
-            $tags = $hlp->getTags(array('pid' => $data['ns']), 'tag');
+            $tags = $hlp->findItems(array('pid' => $data['ns']), 'tag');
             $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
 
             break;

@@ -6,55 +6,64 @@ form#tagging__edit input.edit {
     width: 95%;
 }
 
-ul.tagging_cloud div.li {
-    float: left;
-    margin: 0 3px;
+ul.tagging_cloud {
+    text-align: center;
+    margin: 0;
+    width: 95%;
+    line-height: 2.2em;
 }
 
 ul.tagging_cloud li {
     display: inline;
+    list-style-type: none;
+    margin: 0;
+}
+
+ul.tagging_cloud div.li {
+    display: inline-block;
+    margin: 0 0.5em;
 }
 
 ul.tagging_cloud li.t0 {
-    font-size: 0.8em;
+    font-size: 1em;
 }
 
 ul.tagging_cloud li.t1 {
-    font-size: 0.9em;
-}
-
-ul.tagcloud li.t2 {
-    font-size: 0.95em;
-}
-
-ul.tagcloud li.t3 {
-    font-size: 1.0em;
-}
-
-ul.tagcloud li.t4 {
-    font-size: 1.05em;
-}
-
-ul.tagcloud li.t5 {
     font-size: 1.1em;
 }
 
-ul.tagcloud li.t6 {
-    font-size: 1.15em;
-}
-
-ul.tagcloud li.t7 {
+ul.tagging_cloud li.t2 {
     font-size: 1.2em;
 }
 
-ul.tagcloud li.t8 {
-    font-size: 1.24em;
+ul.tagging_cloud li.t3 {
+    font-size: 1.3em;
 }
 
-ul.tagcloud li.t9 {
-    font-size: 1.28em;
+ul.tagging_cloud li.t4 {
+    font-size: 1.4em;
 }
 
-ul.tagcloud li.t10 {
-    font-size: 1.30em;
+ul.tagging_cloud li.t5 {
+    font-size: 1.5em;
+}
+
+ul.tagging_cloud li.t6 {
+    font-size: 1.6em;
+}
+
+ul.tagging_cloud li.t7 {
+    font-size: 1.7em;
+}
+
+ul.tagging_cloud li.t8 {
+    font-size: 1.8em;
+}
+
+ul.tagging_cloud li.t9 {
+    font-size: 1.9em;
+}
+
+ul.tagging_cloud li.t10 {
+    font-size: 2em;
 }

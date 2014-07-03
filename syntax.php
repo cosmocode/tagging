@@ -79,9 +79,8 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                     // Do not match nsbla, only ns:bla
                     $data['ns'] .= ':';
                 }
-                $data['ns'] .= '%';
-                $tags = $hlp->findItems(array('pid' => $data['ns']), 'tag');
-                $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
+                $tags = $hlp->findItems(array('pid' => $data['ns'].'%'), 'tag');
+                $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true, $data['ns']);
 
                 break;
             case 'input':

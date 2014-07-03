@@ -125,13 +125,26 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     /**
      * Constructs the URL to search for a tag
      *
-     * @param $tag
+     * @param string $tag
+     * @param string $ns
      * @return string
      */
-    public function getTagSearchURL($tag) {
-        return '?do=search&id=' . rawurlencode($tag);
+    public function getTagSearchURL($tag, $ns = '') {
+        $ret = '?do=search&id=' . rawurlencode($tag);
+        if($ns) $ret .= rawurlencode(' @'.$ns);
+
+        return $ret;
     }
 
+    /**
+     * Calculates the size levels for the given list of clouds
+     *
+     * Automatically determines sensible tresholds
+     *
+     * @param array $tags list of tags => count
+     * @param int $levels
+     * @return mixed
+     */
     public function cloudData($tags, $levels = 10) {
         $min = min($tags);
         $max = max($tags);
@@ -155,29 +168,47 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return $tags;
     }
 
-    public function html_cloud($tags, $type, $func, $wrap = true, $return = false) {
+    /**
+     * Display a tag cloud
+     *
+     * @param array    $tags   list of tags => count
+     * @param string   $type   'tag'
+     * @param Callable $func   The function to print the link (gets tag and ns)
+     * @param bool     $wrap   wrap cloud in UL tags?
+     * @param bool     $return returnn HTML instead of printing?
+     * @param string   $ns     Add this namespace to search links
+     * @return string
+     */
+    public function html_cloud($tags, $type, $func, $wrap = true, $return = false, $ns = '') {
         $ret = '';
-        if ($wrap) $ret .= '<ul class="tagging_cloud clearfix">';
-        if (count($tags) === 0) {
+        if($wrap) $ret .= '<ul class="tagging_cloud clearfix">';
+        if(count($tags) === 0) {
             // Produce valid XHTML (ul needs a child)
             $this->setupLocale();
             $ret .= '<li><div class="li">' . $this->lang['js']['no' . $type . 's'] . '</div></li>';
         } else {
             $tags = $this->cloudData($tags);
-            foreach ($tags as $val => $size) {
+            foreach($tags as $val => $size) {
                 $ret .= '<li class="t' . $size . '"><div class="li">';
-                $ret .= call_user_func($func, $val);
+                $ret .= call_user_func($func, $val, $ns);
                 $ret .= '</div></li>';
             }
         }
-        if ($wrap) $ret .= '</ul>';
-        if ($return) return $ret;
+        if($wrap) $ret .= '</ul>';
+        if($return) return $ret;
         echo $ret;
+        return '';
     }
 
-    protected function linkToSearch($tag) {
-        return '<a href="' . hsc($this->getTagSearchURL($tag)) . '">' .
-               $tag . '</a>';
+    /**
+     * Get the link to a search for the given tag
+     *
+     * @param string $tag search for this tag
+     * @param string $ns limit search to this namespace
+     * @return string
+     */
+    protected function linkToSearch($tag, $ns='') {
+        return '<a href="' . hsc($this->getTagSearchURL($tag, $ns)) . '">' . $tag . '</a>';
     }
 
     public function tpl_tags() {

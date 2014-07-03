@@ -24,14 +24,16 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
     }
 
     function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('{{tagging::\w+(?:>[^}]+)?}}', $mode, 'plugin_tagging');
+        $this->Lexer->addSpecialPattern('{{tagging::\w+(?:>[^}\?]+)?(?:\?[0-9]+)?}}', $mode, 'plugin_tagging');
     }
 
     function handle($match, $state, $pos, &$handler) {
         $data    = array();
         $matches = array();
-        preg_match('/{{tagging::(\w+)(?:>([^}]+))?}}/', $match, $matches);
+        preg_match('/{{tagging::(\w+)(?:>([^}\?]+))?(\?[0-9]+)?}}/', $match, $matches);
         $data['cmd'] = $matches[1];
+        $data['limit'] = (int) ltrim($matches[3], '?');
+        if(!$data['limit']) $data['limit'] = $this->getConf('cloudlimit');
 
         switch($data['cmd']) {
             case 'user':
@@ -63,7 +65,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                 if(!isset($data['user'])) {
                     $data['user'] = $_SERVER['REMOTE_USER'];
                 }
-                $tags = $hlp->findItems(array('tagger' => $data['user']), 'tag');
+                $tags = $hlp->findItems(array('tagger' => $data['user']), 'tag', $data['limit']);
                 $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
 
                 break;
@@ -79,7 +81,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                     // Do not match nsbla, only ns:bla
                     $data['ns'] .= ':';
                 }
-                $tags = $hlp->findItems(array('pid' => $data['ns'] . '%'), 'tag');
+                $tags = $hlp->findItems(array('pid' => $data['ns'] . '%'), 'tag', $data['limit']);
                 $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true, $data['ns']);
 
                 break;

@@ -61,9 +61,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @param array  $filter What to search for array('field' => 'searchterm')
      * @param string $type   What field to return 'tag'|'pid'
+     * @param int    $limit  Limit to this many results, 0 for all
      * @return array associative array in form of value => count
      */
-    public function findItems($filter, $type) {
+    public function findItems($filter, $type, $limit=0) {
         $db = $this->getDB();
         if(!$db) return array();
 
@@ -93,12 +94,21 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $orderby = "cnt DESC, $type";
         }
 
+        // limit results
+        if($limit) {
+            $limit = " LIMIT $limit";
+        }else{
+            $limit = '';
+        }
+
         // create SQL
         $sql = "SELECT $type AS item, COUNT(*) AS cnt
                   FROM taggings
                  WHERE $where
               GROUP BY $groupby
-              ORDER BY $orderby";
+              ORDER BY $orderby
+                $limit
+              ";
 
         // run query and turn into associative array
         $res = $db->query($sql, array_values($filter));

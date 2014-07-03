@@ -1,7 +1,7 @@
 <?php
 // for admin plugins, the menu prompt to be displayed in the admin menu
 // if set here, the plugin doesn't need to override the getMenuText() method
-$lang['menu'] = 'View and change Tags';
+$lang['menu'] = 'View and Change Tags';
 
 $lang['admin tag']                 = 'Tag name';
 $lang['admin occurrence']          = 'Occurrence';
@@ -15,5 +15,5 @@ $lang['admin tag does not exists'] = 'The tag name you entered does not exist.';
 $lang['admin renamed']             = 'Your tag has been renamed';
 
 $lang['search_section_title'] = 'Tagged pages:';
-$lang['js']['notags']         = 'No tags yet';
-$lang['js']['nopages']        = 'No pages with this tag yet';
+$lang['js']['notags']         = 'No tags, yet';
+$lang['js']['nopages']        = 'No pages with this tag, yet';

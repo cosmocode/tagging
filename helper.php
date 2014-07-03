@@ -220,10 +220,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return '<a href="' . hsc($this->getTagSearchURL($tag, $ns)) . '">' . $tag . '</a>';
     }
 
+
     public function tpl_tags() {
         global $INFO;
         global $lang;
         $tags = $this->findItems(array('pid' => $INFO['id']), 'tag');
+        echo '<div class="plugin_tagging_edit">';
         $this->html_cloud($tags, 'tag', array($this, 'linkToSearch'));
 
         if(isset($_SERVER['REMOTE_USER']) && $INFO['writable']) {
@@ -237,6 +239,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $form->addElement(form_makeButton('submit', 'cancel', $lang['btn_cancel'], array('id' => 'tagging__edit_cancel')));
             $form->printForm();
         }
+        echo '</div>';
     }
 
     /**

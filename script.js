@@ -8,6 +8,14 @@ jQuery(function () {
     $btn.submit(function (e) {
         $btn.hide();
         $form.show();
+        var $input = $form.find('input[type="text"]');
+        var len = $input.val().length;
+        $input.focus();
+        try {
+            $input[0].setSelectionRange(len, len);
+        } catch (e) {
+            // ignore stupid IE
+        }
 
         e.preventDefault();
         e.stopPropagation();
@@ -15,7 +23,7 @@ jQuery(function () {
     });
 
     jQuery('#tagging__edit_save').click(function (e) {
-        jQuery('ul.tagging_cloud').load(
+        jQuery('div.plugin_tagging_edit ul.tagging_cloud').load(
             DOKU_BASE + 'lib/exe/ajax.php',
             $form.serialize()
         );

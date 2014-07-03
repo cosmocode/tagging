@@ -12,17 +12,17 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      */
     public function getDB() {
         static $db = null;
-        if (!is_null($db)) {
+        if(!is_null($db)) {
             return $db;
         }
 
         /** @var helper_plugin_sqlite $db */
         $db = plugin_load('helper', 'sqlite');
-        if (is_null($db)) {
+        if(is_null($db)) {
             msg('The tagging plugin needs the sqlite plugin', -1);
             return false;
         }
-        $db->init('tagging',dirname(__FILE__).'/db/');
+        $db->init('tagging', dirname(__FILE__) . '/db/');
         $db->create_function('CLEANTAG', array($this, 'cleanTag'), 1);
         return $db;
     }
@@ -39,17 +39,16 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return $tag;
     }
 
-
     public function replaceTags($id, $user, $tags) {
         $db = $this->getDB();
         $db->query('BEGIN TRANSACTION');
         $queries = array(array('DELETE FROM taggings WHERE pid = ? AND tagger = ?', $id, $user));
-        foreach ($tags as $tag) {
+        foreach($tags as $tag) {
             $queries[] = array('INSERT INTO taggings (pid, tagger, tag) VALUES(?, ?, ?)', $id, $user, $tag);
         }
 
-        foreach ($queries as $query) {
-            if (!call_user_func_array(array($db, 'query'), $query)) {
+        foreach($queries as $query) {
+            if(!call_user_func_array(array($db, 'query'), $query)) {
                 $db->query('ROLLBACK TRANSACTION');
                 return false;
             }
@@ -61,7 +60,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * Get a list of Tags or Pages matching search criteria
      *
      * @param array  $filter What to search for array('field' => 'searchterm')
-     * @param string $type What field to return 'tag'|'pid'
+     * @param string $type   What field to return 'tag'|'pid'
      * @return array associative array in form of value => count
      */
     public function findItems($filter, $type) {
@@ -72,14 +71,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $where = '1=1';
         foreach($filter as $field => $value) {
             // compare clean tags only
-            if ($field === 'tag') {
+            if($field === 'tag') {
                 $field = 'CLEANTAG(tag)';
                 $q     = 'CLEANTAG(?)';
             } else {
                 $q = '?';
             }
             // detect LIKE filters
-            if ($this->useLike($value)) {
+            if($this->useLike($value)) {
                 $where .= " AND $field LIKE $q";
             } else {
                 $where .= " AND $field = $q";
@@ -106,7 +105,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $res = $db->res2arr($res);
 
         $ret = array();
-        foreach ($res as $row) {
+        foreach($res as $row) {
             $ret[$row['item']] = $row['cnt'];
         }
         return $ret;
@@ -131,7 +130,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      */
     public function getTagSearchURL($tag, $ns = '') {
         $ret = '?do=search&id=' . rawurlencode($tag);
-        if($ns) $ret .= rawurlencode(' @'.$ns);
+        if($ns) $ret .= rawurlencode(' @' . $ns);
 
         return $ret;
     }
@@ -142,7 +141,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * Automatically determines sensible tresholds
      *
      * @param array $tags list of tags => count
-     * @param int $levels
+     * @param int   $levels
      * @return mixed
      */
     public function cloudData($tags, $levels = 10) {
@@ -151,14 +150,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         // calculate tresholds
         $tresholds = array();
-        for($i=0; $i<=$levels; $i++){
-            $tresholds[$i] = pow($max - $min + 1, $i/$levels) + $min - 1;
+        for($i = 0; $i <= $levels; $i++) {
+            $tresholds[$i] = pow($max - $min + 1, $i / $levels) + $min - 1;
         }
 
         // assign weights
-        foreach($tags as $tag => $cnt){
-            foreach($tresholds as $tresh => $val){
-                if($cnt <= $val){
+        foreach($tags as $tag => $cnt) {
+            foreach($tresholds as $tresh => $val) {
+                if($cnt <= $val) {
                     $tags[$tag] = $tresh;
                     break;
                 }
@@ -204,10 +203,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * Get the link to a search for the given tag
      *
      * @param string $tag search for this tag
-     * @param string $ns limit search to this namespace
+     * @param string $ns  limit search to this namespace
      * @return string
      */
-    protected function linkToSearch($tag, $ns='') {
+    protected function linkToSearch($tag, $ns = '') {
         return '<a href="' . hsc($this->getTagSearchURL($tag, $ns)) . '">' . $tag . '</a>';
     }
 
@@ -217,7 +216,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $tags = $this->findItems(array('pid' => $INFO['id']), 'tag');
         $this->html_cloud($tags, 'tag', array($this, 'linkToSearch'));
 
-        if (isset($_SERVER['REMOTE_USER']) && $INFO['writable']) {
+        if(isset($_SERVER['REMOTE_USER']) && $INFO['writable']) {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
             echo html_btn('tagging_edit', $INFO['id'], '', array());
             $form = new Doku_Form(array('id' => 'tagging__edit'));
@@ -233,23 +232,23 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     /**
      * @return array
      */
-    public function getAllTags(){
+    public function getAllTags() {
 
-        $db = $this->getDb();
+        $db  = $this->getDb();
         $res = $db->query('SELECT pid, tag, tagger FROM taggings ORDER BY tag');
 
         $tags_tmp = $db->res2arr($res);
-        $tags = array();
-        foreach ($tags_tmp as $tag) {
+        $tags     = array();
+        foreach($tags_tmp as $tag) {
             $tid = $this->cleanTag($tag['tag']);
 
             //$tags[$tid]['pid'][] = $tag['pid'];
 
-            if (isset($tags[$tid]['count'])) {
+            if(isset($tags[$tid]['count'])) {
                 $tags[$tid]['count']++;
                 $tags[$tid]['tagger'][] = $tag['tagger'];
             } else {
-                $tags[$tid]['count'] = 1;
+                $tags[$tid]['count']  = 1;
                 $tags[$tid]['tagger'] = array($tag['tagger']);
             }
         }
@@ -271,10 +270,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $db = $this->getDb();
 
-        $res = $db->query('SELECT pid FROM taggings WHERE tag= ?', $formerTagName);
+        $res   = $db->query('SELECT pid FROM taggings WHERE tag= ?', $formerTagName);
         $check = $db->res2arr($res);
 
-        if (empty($check)) {
+        if(empty($check)) {
             msg($this->getLang("admin tag does not exists"), -1);
             return;
         }

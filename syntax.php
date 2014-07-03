@@ -7,7 +7,7 @@
  */
 
 // must be run within Dokuwiki
-if (!defined('DOKU_INC')) die();
+if(!defined('DOKU_INC')) die();
 
 class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
 
@@ -24,33 +24,33 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
     }
 
     function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('{{tagging::\w+(?:>[^}]+)?}}',$mode,'plugin_tagging');
+        $this->Lexer->addSpecialPattern('{{tagging::\w+(?:>[^}]+)?}}', $mode, 'plugin_tagging');
     }
 
-    function handle($match, $state, $pos, &$handler){
-        $data = array();
+    function handle($match, $state, $pos, &$handler) {
+        $data    = array();
         $matches = array();
         preg_match('/{{tagging::(\w+)(?:>([^}]+))?}}/', $match, $matches);
         $data['cmd'] = $matches[1];
 
         switch($data['cmd']) {
-        case 'user':
-            if (count($matches) > 2) {
-                $data['user'] = trim($matches[2]);
-            }
-            break;
-        case 'ns':
-            if (count($matches) > 2) {
-                $data['ns'] = trim($matches[2]);
-            }
-            break;
+            case 'user':
+                if(count($matches) > 2) {
+                    $data['user'] = trim($matches[2]);
+                }
+                break;
+            case 'ns':
+                if(count($matches) > 2) {
+                    $data['ns'] = trim($matches[2]);
+                }
+                break;
         }
 
         return $data;
     }
 
     function render($mode, &$renderer, $data) {
-        if ($mode !== 'xhtml') {
+        if($mode !== 'xhtml') {
             return false;
         }
 
@@ -79,7 +79,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                     // Do not match nsbla, only ns:bla
                     $data['ns'] .= ':';
                 }
-                $tags = $hlp->findItems(array('pid' => $data['ns'].'%'), 'tag');
+                $tags = $hlp->findItems(array('pid' => $data['ns'] . '%'), 'tag');
                 $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true, $data['ns']);
 
                 break;

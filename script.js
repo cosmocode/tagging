@@ -13,7 +13,7 @@ jQuery(function () {
         $input.focus();
         try {
             $input[0].setSelectionRange(len, len);
-        } catch (e) {
+        } catch (ex) {
             // ignore stupid IE
         }
 

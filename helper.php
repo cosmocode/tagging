@@ -139,7 +139,11 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return string
      */
     public function getTagSearchURL($tag, $ns = '') {
-        $ret = '?do=search&id=' . rawurlencode('"'.$tag.'"');
+        // wrap tag in quotes if non clean
+        $ctag = $this->cleanTag($tag);
+        if($ctag != utf8_strtolower($tag)) $tag = '"'.$tag.'"';
+
+        $ret = '?do=search&id=' . rawurlencode($tag);
         if($ns) $ret .= rawurlencode(' @' . $ns);
 
         return $ret;

@@ -28,6 +28,20 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
+     * Return the user to use for accessing tags
+     *
+     * Handles the singleuser mode by returning 'auto' as user. Returnes false when no user is logged in.
+     *
+     * @return bool|string
+     */
+    public function getUser() {
+        if(!isset($_SERVER['REMOTE_USER'])) return false;
+        if($this->getConf('singleusermode')) return 'auto';
+        return $_SERVER['REMOTE_USER'];
+    }
+
+
+    /**
      * Canonicalizes the tag to its lower case nospace form
      *
      * @param $tag
@@ -232,13 +246,13 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         echo '<div class="plugin_tagging_edit">';
         $this->html_cloud($tags, 'tag', array($this, 'linkToSearch'));
 
-        if(isset($_SERVER['REMOTE_USER']) && $INFO['writable']) {
+        if($this->getUser() && $INFO['writable']) {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
             echo html_btn('tagging_edit', $INFO['id'], '', array());
             $form = new Doku_Form(array('id' => 'tagging__edit'));
             $form->addHidden('tagging[id]', $INFO['id']);
             $form->addHidden('call', 'plugin_tagging_save');
-            $form->addElement(form_makeTextField('tagging[tags]', implode(', ', array_keys($this->findItems(array('pid' => $INFO['id'], 'tagger' => $_SERVER['REMOTE_USER']), 'tag')))));
+            $form->addElement(form_makeTextField('tagging[tags]', implode(', ', array_keys($this->findItems(array('pid' => $INFO['id'], 'tagger' => $this->getUser()), 'tag')))));
             $form->addElement(form_makeButton('submit', 'save', $lang['btn_save'], array('id' => 'tagging__edit_save')));
             $form->addElement(form_makeButton('submit', 'cancel', $lang['btn_cancel'], array('id' => 'tagging__edit_cancel')));
             $form->printForm();

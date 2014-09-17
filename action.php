@@ -52,7 +52,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $id   = $data['id'];
 
         $hlp->replaceTags(
-            $id, $_SERVER['REMOTE_USER'],
+            $id, $hlp->getUser(),
             preg_split(
                 '/\s*,\s*/', $data['tags'], -1,
                 PREG_SPLIT_NO_EMPTY

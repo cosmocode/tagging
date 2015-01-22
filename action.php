@@ -58,19 +58,21 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $event->data = 'show';
 
         global $INPUT;
-        $tag = $INPUT->str('tag');
+        $tags = $INPUT->arr('tag', (array) $INPUT->str('tag'));
 
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
-        $pages = $hlp->findItems(array('tag' => $tag), 'pid', 1);
 
-        if(!count($pages)) {
-            msg(sprintf($this->getLang('tagjmp_error'), hsc($tag)), -1);
-            return;
+        foreach($tags as $tag){
+            $pages = $hlp->findItems(array('tag' => $tag), 'pid', 1);
+            if(!count($pages)) continue;
+
+            $id = array_pop(array_keys($pages));
+            send_redirect(wl($id, '', true, '&'));
         }
 
-        $id = array_pop(array_keys($pages));
-        send_redirect(wl($id, '', true, '&'));
+        $tags = array_map('hsc', $tags);
+        msg(sprintf($this->getLang('tagjmp_error'), join(', ', $tags)), -1);
     }
 
     /**

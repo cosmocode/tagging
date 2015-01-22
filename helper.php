@@ -198,15 +198,20 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     /**
      * Display a tag cloud
      *
-     * @param array    $tags   list of tags => count
-     * @param string   $type   'tag'
-     * @param Callable $func   The function to print the link (gets tag and ns)
-     * @param bool     $wrap   wrap cloud in UL tags?
-     * @param bool     $return returnn HTML instead of printing?
-     * @param string   $ns     Add this namespace to search links
+     * @param array $tags list of tags => count
+     * @param string $type 'tag'
+     * @param Callable $func The function to print the link (gets tag and ns)
+     * @param bool $wrap wrap cloud in UL tags?
+     * @param bool $return returnn HTML instead of printing?
+     * @param string $ns Add this namespace to search links
      * @return string
      */
     public function html_cloud($tags, $type, $func, $wrap = true, $return = false, $ns = '') {
+        global $INFO;
+
+        $hidden_str = $this->getConf('hiddenprefix');
+        $hidden_len = strlen($hidden_str);
+
         $ret = '';
         if($wrap) $ret .= '<ul class="tagging_cloud clearfix">';
         if(count($tags) === 0) {
@@ -216,6 +221,15 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         } else {
             $tags = $this->cloudData($tags);
             foreach($tags as $val => $size) {
+                // skip hidden tags for users that can't edit
+                if($type == 'tag' and
+                    $hidden_len and
+                    substr($val, 0, $hidden_len) == $hidden_str and
+                    !($this->getUser() && $INFO['writable'])
+                ) {
+                    continue;
+                }
+
                 $ret .= '<li class="t' . $size . '"><div class="li">';
                 $ret .= call_user_func($func, $val, $ns);
                 $ret .= '</div></li>';

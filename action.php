@@ -15,6 +15,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             'AJAX_CALL_UNKNOWN', 'BEFORE', $this,
             'handle_ajax_call_unknown'
         );
+
+        $controller->register_hook(
+            'ACTION_ACT_PREPROCESS', 'BEFORE', $this,
+            'handle_jump'
+        );
     }
 
     /**
@@ -40,24 +45,58 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     }
 
     /**
+     * Jump to a tag
+     *
+     * @param Doku_Event $event
+     * @param $param
+     */
+    function handle_jump(Doku_Event &$event, $param) {
+        if(act_clean($event->data) != 'tagjmp') return;
+
+        $event->preventDefault();
+        $event->stopPropagation();
+        $event->data = 'show';
+
+        global $INPUT;
+        $tag = $INPUT->str('tag');
+
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+        $pages = $hlp->findItems(array('tag' => $tag), 'pid', 1);
+
+        if(!count($pages)) {
+            msg(sprintf($this->getLang('tagjmp_error'), hsc($tag)), -1);
+            return;
+        }
+
+        $id = array_pop(array_keys($pages));
+        send_redirect(wl($id, '', true, '&'));
+    }
+
+    /**
      * Save new/changed tags
      */
     function save() {
         global $INPUT;
+        global $INFO;
+
 
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
 
         $data = $INPUT->arr('tagging');
         $id   = $data['id'];
+        $INFO['writable'] = auth_quickaclcheck($id) >= AUTH_EDIT; // we also need this in findItems
 
-        $hlp->replaceTags(
-            $id, $hlp->getUser(),
-            preg_split(
-                '/\s*,\s*/', $data['tags'], -1,
-                PREG_SPLIT_NO_EMPTY
-            )
-        );
+        if($INFO['writable'] && $hlp->getUser()) {
+            $hlp->replaceTags(
+                $id, $hlp->getUser(),
+                preg_split(
+                    '/\s*,\s*/', $data['tags'], -1,
+                    PREG_SPLIT_NO_EMPTY
+                )
+            );
+        }
 
         $tags = $hlp->findItems(array('pid' => $id), 'tag');
         $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), false);

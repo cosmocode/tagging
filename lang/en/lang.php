@@ -17,3 +17,5 @@ $lang['admin renamed']             = 'Your tag has been renamed';
 $lang['search_section_title'] = 'Tagged pages:';
 $lang['js']['notags']         = 'No tags, yet';
 $lang['js']['nopages']        = 'No pages with this tag, yet';
+
+$lang['tagjmp_error'] = 'Could not find any page tagged with %s';

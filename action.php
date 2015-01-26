@@ -59,12 +59,15 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         global $INPUT;
         $tags = $INPUT->arr('tag', (array) $INPUT->str('tag'));
+        $lang = $INPUT->str('lang');
 
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
 
         foreach($tags as $tag){
-            $pages = $hlp->findItems(array('tag' => $tag), 'pid', 1);
+            $filter = array('tag' => $tag);
+            if($lang) $filter['lang'] = $lang;
+            $pages = $hlp->findItems($filter, 'pid', 1);
             if(!count($pages)) continue;
 
             $id = array_pop(array_keys($pages));

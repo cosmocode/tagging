@@ -53,12 +53,31 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return $tag;
     }
 
+    /**
+     * Create or Update tags of a page
+     *
+     * Uses the translation plugin to store the language of a page (if available)
+     *
+     * @param string $id The page ID
+     * @param string $user
+     * @param array $tags
+     * @return bool|SQLiteResult
+     */
     public function replaceTags($id, $user, $tags) {
+        global $conf;
+        /** @var helper_plugin_translation $trans */
+        $trans = plugin_load('helper', 'translation');
+        if($trans) {
+            $lang = $trans->realLC($trans->getLangPart($id));
+        } else {
+            $lang = $conf['lang'];
+        }
+
         $db = $this->getDB();
         $db->query('BEGIN TRANSACTION');
         $queries = array(array('DELETE FROM taggings WHERE pid = ? AND tagger = ?', $id, $user));
         foreach($tags as $tag) {
-            $queries[] = array('INSERT INTO taggings (pid, tagger, tag) VALUES(?, ?, ?)', $id, $user, $tag);
+            $queries[] = array('INSERT INTO taggings (pid, tagger, tag, lang) VALUES(?, ?, ?, ?)', $id, $user, $tag, $lang);
         }
 
         foreach($queries as $query) {

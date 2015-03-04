@@ -1,6 +1,7 @@
 <?php
 
 if(!defined('DOKU_INC')) die();
+
 class helper_plugin_tagging extends DokuWiki_Plugin {
 
     /**
@@ -39,7 +40,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         if($this->getConf('singleusermode')) return 'auto';
         return $_SERVER['REMOTE_USER'];
     }
-
 
     /**
      * Canonicalizes the tag to its lower case nospace form
@@ -92,12 +92,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     /**
      * Get a list of Tags or Pages matching search criteria
      *
-     * @param array  $filter What to search for array('field' => 'searchterm')
-     * @param string $type   What field to return 'tag'|'pid'
-     * @param int    $limit  Limit to this many results, 0 for all
+     * @param array $filter What to search for array('field' => 'searchterm')
+     * @param string $type What field to return 'tag'|'pid'
+     * @param int $limit Limit to this many results, 0 for all
      * @return array associative array in form of value => count
      */
-    public function findItems($filter, $type, $limit=0) {
+    public function findItems($filter, $type, $limit = 0) {
         $db = $this->getDB();
         if(!$db) return array();
 
@@ -130,7 +130,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         // limit results
         if($limit) {
             $limit = " LIMIT $limit";
-        }else{
+        } else {
             $limit = '';
         }
 
@@ -174,7 +174,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     public function getTagSearchURL($tag, $ns = '') {
         // wrap tag in quotes if non clean
         $ctag = utf8_stripspecials($this->cleanTag($tag));
-        if($ctag != utf8_strtolower($tag)) $tag = '"'.$tag.'"';
+        if($ctag != utf8_strtolower($tag)) $tag = '"' . $tag . '"';
 
         $ret = '?do=search&id=' . rawurlencode($tag);
         if($ns) $ret .= rawurlencode(' @' . $ns);
@@ -188,7 +188,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * Automatically determines sensible tresholds
      *
      * @param array $tags list of tags => count
-     * @param int   $levels
+     * @param int $levels
      * @return mixed
      */
     public function cloudData($tags, $levels = 10) {
@@ -264,7 +264,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * Get the link to a search for the given tag
      *
      * @param string $tag search for this tag
-     * @param string $ns  limit search to this namespace
+     * @param string $ns limit search to this namespace
      * @return string
      */
     protected function linkToSearch($tag, $ns = '') {
@@ -273,26 +273,35 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
     /**
      * Display the Tags for the current page and prepare the tag editing form
+     *
+     * @param bool $print Should the HTML be printed or returned?
+     * @return string
      */
-    public function tpl_tags() {
+    public function tpl_tags($print = true) {
         global $INFO;
         global $lang;
         $tags = $this->findItems(array('pid' => $INFO['id']), 'tag');
-        echo '<div class="plugin_tagging_edit">';
-        $this->html_cloud($tags, 'tag', array($this, 'linkToSearch'));
+
+        $ret = '';
+
+        $ret .= '<div class="plugin_tagging_edit">';
+        $ret .= $this->html_cloud($tags, 'tag', array($this, 'linkToSearch'), true, true);
 
         if($this->getUser() && $INFO['writable']) {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
-            echo html_btn('tagging_edit', $INFO['id'], '', array());
+            $ret .= html_btn('tagging_edit', $INFO['id'], '', array());
             $form = new Doku_Form(array('id' => 'tagging__edit'));
             $form->addHidden('tagging[id]', $INFO['id']);
             $form->addHidden('call', 'plugin_tagging_save');
             $form->addElement(form_makeTextField('tagging[tags]', implode(', ', array_keys($this->findItems(array('pid' => $INFO['id'], 'tagger' => $this->getUser()), 'tag')))));
             $form->addElement(form_makeButton('submit', 'save', $lang['btn_save'], array('id' => 'tagging__edit_save')));
             $form->addElement(form_makeButton('submit', 'cancel', $lang['btn_cancel'], array('id' => 'tagging__edit_cancel')));
-            $form->printForm();
+            $ret .= $form->getForm();
         }
-        echo '</div>';
+        $ret .= '</div>';
+
+        if($print) echo $ret;
+        return $ret;
     }
 
     /**

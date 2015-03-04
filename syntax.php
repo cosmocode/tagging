@@ -86,8 +86,8 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
 
                 break;
             case 'input':
-                $hlp->tpl_tags();
-
+                $renderer->nocache();
+                $renderer->doc .= $hlp->tpl_tags(false);
                 break;
         }
 

@@ -5,6 +5,7 @@ $lang['menu'] = 'View and Change Tags';
 
 $lang['admin tag']                 = 'Tag name';
 $lang['admin occurrence']          = 'Occurrence';
+$lang['admin writtenas']           = 'Written as';
 $lang['admin taggers']             = 'Used by';
 $lang['admin save']                = 'Save';
 $lang['admin find tag']            = 'Find Tag';

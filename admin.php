@@ -71,17 +71,21 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         echo '<tr>';
         echo '<th>' . $this->getLang('admin tag') . '</th>';
         echo '<th>' . $this->getLang('admin occurrence') . '</th>';
+        echo '<th>' . $this->getLang('admin writtenas') . '</th>';
         echo '<th>' . $this->getLang('admin taggers') . '</th>';
         echo '</tr>';
 
         foreach($tags as $tagname => $taginfo) {
             $taggers = array_unique($taginfo['tagger']);
             sort($taggers);
+            $written = array_unique($taginfo['orig']);
             $taggers = join(', ', $taggers);
+            $written = join(', ', $written);
 
             echo '<tr>';
             echo '<td><a class="tagslist" href="' . $this->hlp->getTagSearchURL($tagname) . '">' . hsc($tagname) . '</a></td>';
             echo '<td>' . $taginfo['count'] . '</td>';
+            echo '<td>' . hsc($written) . '</td>';
             echo '<td>' . hsc($taggers) . '</td>';
             echo '</tr>';
         }

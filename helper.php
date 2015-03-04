@@ -271,7 +271,9 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return '<a href="' . hsc($this->getTagSearchURL($tag, $ns)) . '">' . $tag . '</a>';
     }
 
-
+    /**
+     * Display the Tags for the current page and prepare the tag editing form
+     */
     public function tpl_tags() {
         global $INFO;
         global $lang;
@@ -306,7 +308,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         foreach($tags_tmp as $tag) {
             $tid = $this->cleanTag($tag['tag']);
 
-            //$tags[$tid]['pid'][] = $tag['pid'];
+            if(!isset($tags[$tid]['orig'])) $tags[$tid]['orig'] = array();
+            $tags[$tid]['orig'][] = $tag['tag'];
 
             if(isset($tags[$tid]['count'])) {
                 $tags[$tid]['count']++;
@@ -334,7 +337,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $db = $this->getDb();
 
-        $res   = $db->query('SELECT pid FROM taggings WHERE tag= ?', $formerTagName);
+        $res   = $db->query('SELECT pid FROM taggings WHERE CLEANTAG(tag) = ?', $this->cleanTag($formerTagName));
         $check = $db->res2arr($res);
 
         if(empty($check)) {
@@ -342,10 +345,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             return;
         }
 
-        $res = $db->query("UPDATE taggings SET tag = ? WHERE tag = ?", $newTagName, $formerTagName);
+        $res = $db->query("UPDATE taggings SET tag = ? WHERE CLEANTAG(tag) = ?", $newTagName, $this->cleanTag($formerTagName));
         $db->res2arr($res);
 
-        msg($this->getLang("admin saved"), 1);
+        msg($this->getLang("admin renamed"), 1);
         return;
     }
 

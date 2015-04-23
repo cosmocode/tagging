@@ -153,11 +153,24 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         // create filter from term and namespace
         $filter = array('tag' => $tag);
         if(isset($terms['ns'][0])) {
-            $filter['pid'] = $terms['ns'][0];//.':%';
+            $filter['pid'] = $terms['ns'][0];
             if (substr($filter['pid'],-1) !== ':') {
                 $filter['pid'] .= ':';
             }
             $filter['pid'] .= '%';
+        }
+        if (isset($terms['notns'][0])) {
+            $i = 0;
+            foreach ($terms['notns'] as $notns) {
+
+                if (substr($notns,-1) !== ':') {
+                    $notns .= ':';
+                }
+                $notns .= '%';
+                $filter['notpid' . $i] = $notns;
+                ++$i;
+            }
+
         }
 
         /** @var helper_plugin_tagging $hlp */
@@ -169,11 +182,15 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $results = '<h3>'.$this->getLang('search_section_title').'</h3>';
         $results .= '<div class="search_quickresults">';
         $results .= '<ul class="search_quickhits">';
+        global $ID;
+        $oldID = $ID;
         foreach($pages as $page => $cnt) {
+            $ID = $page;
             $results .= '<li><div class="li">';
             $results .= html_wikilink($page);
             $results .= '</div></li>';
         }
+        $ID = $oldID;
         $results .= '</ul>';
         $results .= '</div>';
 

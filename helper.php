@@ -111,11 +111,23 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             } else {
                 $q = '?';
             }
-            // detect LIKE filters
-            if($this->useLike($value)) {
-                $where .= " AND $field LIKE $q";
+
+            if (substr($field,0,6) === 'notpid') {
+                $field = 'pid';
+
+                // detect LIKE filters
+                if($this->useLike($value)) {
+                    $where .= " AND $field NOT LIKE $q";
+                } else {
+                    $where .= " AND $field != $q";
+                }
             } else {
-                $where .= " AND $field = $q";
+                // detect LIKE filters
+                if($this->useLike($value)) {
+                    $where .= " AND $field LIKE $q";
+                } else {
+                    $where .= " AND $field = $q";
+                }
             }
         }
         // group and order

@@ -153,11 +153,24 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         // create filter from term and namespace
         $filter = array('tag' => $tag);
         if(isset($terms['ns'][0])) {
-            $filter['pid'] = $terms['ns'][0];//.':%';
+            $filter['pid'] = $terms['ns'][0];
             if (substr($filter['pid'],-1) !== ':') {
                 $filter['pid'] .= ':';
             }
             $filter['pid'] .= '%';
+        }
+        if (isset($terms['notns'][0])) {
+            $i = 0;
+            foreach ($terms['notns'] as $notns) {
+
+                if (substr($notns,-1) !== ':') {
+                    $notns .= ':';
+                }
+                $notns .= '%';
+                $filter['notpid' . $i] = $notns;
+                ++$i;
+            }
+
         }
 
         /** @var helper_plugin_tagging $hlp */

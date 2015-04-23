@@ -182,11 +182,15 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $results = '<h3>'.$this->getLang('search_section_title').'</h3>';
         $results .= '<div class="search_quickresults">';
         $results .= '<ul class="search_quickhits">';
+        global $ID;
+        $oldID = $ID;
         foreach($pages as $page => $cnt) {
+            $ID = $page;
             $results .= '<li><div class="li">';
             $results .= html_wikilink($page);
             $results .= '</div></li>';
         }
+        $ID = $oldID;
         $results .= '</ul>';
         $results .= '</div>';
 

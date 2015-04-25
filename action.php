@@ -179,19 +179,21 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         if(!count($pages)) return;
 
         // create output HTML
-        $results = '<h3>'.$this->getLang('search_section_title').'</h3>';
+        $results = '';
         $results .= '<div class="search_quickresults">';
+        $results .= '<h3>'.$this->getLang('search_section_title').'</h3>';
         $results .= '<ul class="search_quickhits">';
         global $ID;
         $oldID = $ID;
         foreach($pages as $page => $cnt) {
             $ID = $page;
-            $results .= '<li><div class="li">';
+            $results .= '<li>';
             $results .= html_wikilink($page);
-            $results .= '</div></li>';
+            $results .= '</li>';
         }
         $ID = $oldID;
         $results .= '</ul>';
+        $results .= '<div class="clearer"></div>';
         $results .= '</div>';
 
         // insert it right after second level headline

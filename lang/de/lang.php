@@ -14,6 +14,6 @@ $lang['admin enter tag names']     = 'Bitte geben Sie den aktuellen und den neue
 $lang['admin tag does not exists'] = 'Ihr eingegebener Tagname existiert nicht';
 $lang['admin saved']               = 'Gespeichert';
 
-$lang['search_section_title'] = 'Getaggte Seiten';
+$lang['search_section_title'] = 'Seiten mit Tag';
 $lang['js']['notags']         = 'Keine Tags vergeben';
 $lang['js']['nopages']        = 'Keine Seiten mit diesem Tag';

@@ -180,7 +180,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         // create output HTML
         $results = '<div class="search_quickresult">';
-        $results .= '<h3>'.$this->getLang('search_section_title').'</h3>';
+        $results .= '<h3>'.$this->getLang('search_section_title'). ' "' . $tag . '"' . '</h3>';
         $results .= '<ul class="search_quickhits">';
         global $ID;
         $oldID = $ID;

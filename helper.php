@@ -163,7 +163,9 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $ret = array();
         foreach($res as $row) {
-            $ret[$row['item']] = $row['cnt'];
+            if (!isHiddenPage($row['item']) && auth_quickaclcheck($row['item']) >= AUTH_READ) {
+                $ret[$row['item']] = $row['cnt'];
+            }
         }
         return $ret;
     }

@@ -132,6 +132,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                 }
             }
         }
+        $where .= 'AND GETACCESSLEVEL(item) >= ' . AUTH_READ;
+
         // group and order
         if($type == 'tag') {
             $groupby = 'CLEANTAG(tag)';
@@ -163,7 +165,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $ret = array();
         foreach($res as $row) {
-            if (!isHiddenPage($row['item']) && auth_quickaclcheck($row['item']) >= AUTH_READ) {
+            if (!isHiddenPage($row['item'])) {
                 $ret[$row['item']] = $row['cnt'];
             }
         }

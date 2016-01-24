@@ -5,7 +5,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     /**
      * Register handlers
      */
-    function register(&$controller) {
+    function register(Doku_Event_Handler $controller) {
         $controller->register_hook(
             'TPL_CONTENT_DISPLAY', 'BEFORE', $this,
             'echo_searchresults'

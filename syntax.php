@@ -27,7 +27,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
         $this->Lexer->addSpecialPattern('{{tagging::\w+(?:>[^}\?]+)?(?:\?[0-9]+)?}}', $mode, 'plugin_tagging');
     }
 
-    function handle($match, $state, $pos, &$handler) {
+    function handle($match, $state, $pos, Doku_Handler $handler) {
         $data    = array();
         $matches = array();
         preg_match('/{{tagging::(\w+)(?:>([^}\?]+))?(\?[0-9]+)?}}/', $match, $matches);
@@ -51,7 +51,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
         return $data;
     }
 
-    function render($mode, &$renderer, $data) {
+    function render($mode, Doku_Renderer $renderer, $data) {
         if($mode !== 'xhtml') {
             return false;
         }

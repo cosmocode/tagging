@@ -165,9 +165,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $ret = array();
         foreach($res as $row) {
-            if (!isHiddenPage($row['item'])) {
-                $ret[$row['item']] = $row['cnt'];
-            }
+            $ret[$row['item']] = $row['cnt'];
         }
         return $ret;
     }

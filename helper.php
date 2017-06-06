@@ -132,7 +132,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                 }
             }
         }
-        $where .= 'AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
+        $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
 
         // group and order
         if($type == 'tag') {

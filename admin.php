@@ -1,6 +1,8 @@
 <?php
 // must be run within Dokuwiki
-if(!defined('DOKU_INC')) die();
+if (!defined('DOKU_INC')) {
+    die();
+}
 
 class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
 
@@ -27,7 +29,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
      */
     function handle() {
         global $INPUT;
-        if($INPUT->post->has('old') && $INPUT->post->has('new') && checkSecurityToken()) {
+        if ($INPUT->post->has('old') && $INPUT->post->has('new') && checkSecurityToken()) {
             $this->hlp->renameTag($INPUT->post->str('old'), $INPUT->post->str('new'));
         }
     }
@@ -75,7 +77,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         echo '<th>' . $this->getLang('admin taggers') . '</th>';
         echo '</tr>';
 
-        foreach($tags as $tagname => $taginfo) {
+        foreach ($tags as $tagname => $taginfo) {
             $taggers = array_unique($taginfo['tagger']);
             sort($taggers);
             $written = array_unique($taginfo['orig']);

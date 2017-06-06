@@ -58,7 +58,7 @@ jQuery(function () {
     }
 
     $form.find('input[type="text"]')
-        // don't navigate away from the field on tab when selecting an item
+    // don't navigate away from the field on tab when selecting an item
         .bind("keydown", function (event) {
             if (event.keyCode === jQuery.ui.keyCode.TAB &&
                 jQuery(this).data("ui-autocomplete").menu.active) {
@@ -68,7 +68,7 @@ jQuery(function () {
         .autocomplete({
             source: function (request, response) {
                 jQuery.getJSON(DOKU_BASE + 'lib/exe/ajax.php?call=plugin_tagging_autocomplete', {
-                    term: extractLast(request.term)
+                    term: extractLast(request.term),
                 }, response);
             },
             search: function () {
@@ -93,6 +93,6 @@ jQuery(function () {
                 terms.push("");
                 this.value = terms.join(", ");
                 return false;
-            }
+            },
         });
 });

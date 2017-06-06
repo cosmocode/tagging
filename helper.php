@@ -296,7 +296,13 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     public function tpl_tags($print = true) {
         global $INFO;
         global $lang;
-        $tags = $this->findItems(array('pid' => $INFO['id']), 'tag');
+
+        $filter = array('pid' => $INFO['id']);
+        if ($this->getConf('singleusermode')) {
+            $filter['tagger'] = 'auto';
+        }
+
+        $tags = $this->findItems($filter, 'tag');
 
         $ret = '';
 

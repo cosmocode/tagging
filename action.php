@@ -1,6 +1,9 @@
 <?php
 
-if(!defined('DOKU_INC')) die();
+if (!defined('DOKU_INC')) {
+    die();
+}
+
 class action_plugin_tagging extends DokuWiki_Action_Plugin {
     /**
      * Register handlers
@@ -31,14 +34,16 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     function handle_ajax_call_unknown(Doku_Event &$event, $param) {
         $handled = true;
 
-        if($event->data == 'plugin_tagging_save') {
+        if ($event->data == 'plugin_tagging_save') {
             $this->save();
-        } elseif($event->data == 'plugin_tagging_autocomplete') {
+        } elseif ($event->data == 'plugin_tagging_autocomplete') {
             $this->autocomplete();
         } else {
             $handled = false;
         }
-        if(!$handled) return;
+        if (!$handled) {
+            return;
+        }
 
         $event->preventDefault();
         $event->stopPropagation();
@@ -48,27 +53,33 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      * Jump to a tag
      *
      * @param Doku_Event $event
-     * @param $param
+     * @param            $param
      */
     function handle_jump(Doku_Event &$event, $param) {
-        if(act_clean($event->data) != 'tagjmp') return;
+        if (act_clean($event->data) != 'tagjmp') {
+            return;
+        }
 
         $event->preventDefault();
         $event->stopPropagation();
         $event->data = 'show';
 
         global $INPUT;
-        $tags = $INPUT->arr('tag', (array) $INPUT->str('tag'));
+        $tags = $INPUT->arr('tag', (array)$INPUT->str('tag'));
         $lang = $INPUT->str('lang');
 
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
 
-        foreach($tags as $tag){
+        foreach ($tags as $tag) {
             $filter = array('tag' => $tag);
-            if($lang) $filter['lang'] = $lang;
+            if ($lang) {
+                $filter['lang'] = $lang;
+            }
             $pages = $hlp->findItems($filter, 'pid', 1);
-            if(!count($pages)) continue;
+            if (!count($pages)) {
+                continue;
+            }
 
             $id = array_pop(array_keys($pages));
             send_redirect(wl($id, '', true, '&'));
@@ -90,10 +101,10 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $hlp = plugin_load('helper', 'tagging');
 
         $data = $INPUT->arr('tagging');
-        $id   = $data['id'];
+        $id = $data['id'];
         $INFO['writable'] = auth_quickaclcheck($id) >= AUTH_EDIT; // we also need this in findItems
 
-        if($INFO['writable'] && $hlp->getUser()) {
+        if ($INFO['writable'] && $hlp->getUser()) {
             $hlp->replaceTags(
                 $id, $hlp->getUser(),
                 preg_split(
@@ -117,7 +128,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $hlp = plugin_load('helper', 'tagging');
 
         $search = $INPUT->str('term');
-        $tags   = $hlp->findItems(array('tag' => '%'.$hlp->getDB()->escape_string($search).'%'), 'tag');
+        $tags = $hlp->findItems(array('tag' => '%' . $hlp->getDB()->escape_string($search) . '%'), 'tag');
         arsort($tags);
         $tags = array_keys($tags);
 
@@ -137,24 +148,30 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         global $ACT;
         global $QUERY;
 
-        if($ACT !== 'search') return;
+        if ($ACT !== 'search') {
+            return;
+        }
 
         // parse the search query and use the first found word as term
         $terms = ft_queryParser(idx_get_indexer(), $QUERY);
 
         $tag = '';
-        if(isset($terms['phrases'][0])) {
+        if (isset($terms['phrases'][0])) {
             $tag = $terms['phrases'][0];
-        } else if(isset($terms['and'][0])) {
-            $tag = $terms['and'][0];
+        } else {
+            if (isset($terms['and'][0])) {
+                $tag = $terms['and'][0];
+            }
         }
-        if(!$tag) return;
+        if (!$tag) {
+            return;
+        }
 
         // create filter from term and namespace
         $filter = array('tag' => $tag);
-        if(isset($terms['ns'][0])) {
+        if (isset($terms['ns'][0])) {
             $filter['pid'] = $terms['ns'][0];
-            if (substr($filter['pid'],-1) !== ':') {
+            if (substr($filter['pid'], -1) !== ':') {
                 $filter['pid'] .= ':';
             }
             $filter['pid'] .= '%';
@@ -163,7 +180,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             $i = 0;
             foreach ($terms['notns'] as $notns) {
 
-                if (substr($notns,-1) !== ':') {
+                if (substr($notns, -1) !== ':') {
                     $notns .= ':';
                 }
                 $notns .= '%';
@@ -174,17 +191,19 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         }
 
         /** @var helper_plugin_tagging $hlp */
-        $hlp   = plugin_load('helper', 'tagging');
+        $hlp = plugin_load('helper', 'tagging');
         $pages = $hlp->findItems($filter, 'pid');
-        if(!count($pages)) return;
+        if (!count($pages)) {
+            return;
+        }
 
         // create output HTML
         $results = '<div class="search_quickresult">';
-        $results .= '<h3>'.$this->getLang('search_section_title'). ' "' . hsc($tag) . '"' . '</h3>';
+        $results .= '<h3>' . $this->getLang('search_section_title') . ' "' . hsc($tag) . '"' . '</h3>';
         $results .= '<ul class="search_quickhits">';
         global $ID;
         $oldID = $ID;
-        foreach($pages as $page => $cnt) {
+        foreach ($pages as $page => $cnt) {
             $ID = $page;
             $results .= '<li><div class="li">';
             $results .= html_wikilink($page);
@@ -196,6 +215,6 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $results .= '</div>';
 
         // insert it right after second level headline
-        $event->data = preg_replace('/(<\/h2>)/', "\\1\n".$results, $event->data, 1);
+        $event->data = preg_replace('/(<\/h2>)/', "\\1\n" . $results, $event->data, 1);
     }
 }

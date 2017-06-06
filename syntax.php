@@ -7,7 +7,9 @@
  */
 
 // must be run within Dokuwiki
-if(!defined('DOKU_INC')) die();
+if (!defined('DOKU_INC')) {
+    die();
+}
 
 class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
 
@@ -28,21 +30,23 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
     }
 
     function handle($match, $state, $pos, Doku_Handler $handler) {
-        $data    = array();
+        $data = array();
         $matches = array();
         preg_match('/{{tagging::(\w+)(?:>([^}\?]+))?(\?[0-9]+)?}}/', $match, $matches);
         $data['cmd'] = $matches[1];
-        $data['limit'] = (int) ltrim($matches[3], '?');
-        if(!$data['limit']) $data['limit'] = $this->getConf('cloudlimit');
+        $data['limit'] = (int)ltrim($matches[3], '?');
+        if (!$data['limit']) {
+            $data['limit'] = $this->getConf('cloudlimit');
+        }
 
-        switch($data['cmd']) {
+        switch ($data['cmd']) {
             case 'user':
-                if(count($matches) > 2) {
+                if (count($matches) > 2) {
                     $data['user'] = trim($matches[2]);
                 }
                 break;
             case 'ns':
-                if(count($matches) > 2) {
+                if (count($matches) > 2) {
                     $data['ns'] = trim($matches[2]);
                 }
                 break;
@@ -52,17 +56,17 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
     }
 
     function render($mode, Doku_Renderer $renderer, $data) {
-        if($mode !== 'xhtml') {
+        if ($mode !== 'xhtml') {
             return false;
         }
 
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
 
-        switch($data['cmd']) {
+        switch ($data['cmd']) {
             case 'user':
                 $renderer->info['cache'] = false;
-                if(!isset($data['user'])) {
+                if (!isset($data['user'])) {
                     $data['user'] = $_SERVER['REMOTE_USER'];
                 }
                 $tags = $hlp->findItems(array('tagger' => $data['user']), 'tag', $data['limit']);
@@ -71,13 +75,13 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                 break;
             case 'ns':
                 $renderer->info['cache'] = false;
-                if(!isset($data['ns'])) {
+                if (!isset($data['ns'])) {
                     global $INFO;
                     $data['ns'] = $INFO['namespace'];
                 }
                 global $ID;
                 $data['ns'] = resolve_id(getNS($ID), $data['ns'] . ':');
-                if($data['ns'] !== '') {
+                if ($data['ns'] !== '') {
                     // Do not match nsbla, only ns:bla
                     $data['ns'] .= ':';
                 }

@@ -25,29 +25,12 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
     }
 
     /**
-     * Handle tag actions
+     * Handle tag renames
      */
     function handle() {
         global $INPUT;
-        
-        if (!$INPUT->has('fn')) return false;
-        if (!checkSecurityToken()) return false;
-        
-        // extract the command and any specific parameters
-        // submit button name is of the form - fn[cmd][param(s)]
-        $fn   = $INPUT->param('fn');
-
-        if (is_array($fn)) {
-            $cmd = key($fn);
-            $param = is_array($fn[$cmd]) ? key($fn[$cmd]) : null;
-        } else {
-            $cmd = $fn;
-            $param = null;
-        }
-
-        switch ($cmd) {
-            case 'rename'    : $this->_renameTag(); break;
-            case 'delete'    : $this->_deleteTags(); break;
+        if ($INPUT->post->has('old') && $INPUT->post->has('new') && checkSecurityToken()) {
+            $this->hlp->renameTag($INPUT->post->str('old'), $INPUT->post->str('new'));
         }
     }
 
@@ -65,13 +48,12 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
      * Show form for renaming tags
      */
     protected function html_form() {
-        global $ID;
+        global $ID, $INPUT;
 
         $form = new Doku_Form(array('action' => script(), 'method' => 'post', 'class' => 'plugin_tagging'));
         $form->addHidden('do', 'admin');
         $form->addHidden('page', 'tagging');
         $form->addHidden('id', $ID);
-        $form->addHidden('fn', 'rename');
 
         $form->startFieldset($this->getLang('admin rename tag'));
         $form->addElement(form_makeTextField('old', '', $this->getLang('admin find tag'), '', 'block'));
@@ -85,9 +67,28 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
      * Display ALL the tags!
      */
     protected function html_table() {
-        global $ID;
+        global $ID, $INPUT;
         
-        $tags = $this->hlp->getAllTags();
+        //by default use current page namespace
+        if (!$INPUT->has('filter')) $INPUT->set('filter', getNS($ID));
+        
+        $tags = $this->hlp->getAllTags($INPUT->str('filter'));
+
+        echo '<table class="inline plugin_tagging">';
+        echo '<tr>';
+        echo '<th colspan="5">';
+        /**
+         * Show form for filtering the tags by namespaces
+         */
+        $form = new dokuwiki\Form\Form();
+        $form->setHiddenField('do',   'admin');
+        $form->setHiddenField('page', 'tagging');
+        $form->setHiddenField('id',    $ID);
+        $form->addTextInput('filter', $this->getLang('admin filter').': ');
+        $form->addButton('fn[filter]', $this->getLang('admin filter button'));
+        echo $form->toHTML();
+        echo '</th>';
+        echo '</tr>';
         
         echo '<form action="'.wl().'" method="post" accept-charset="utf-8">';
         formSecurityToken();
@@ -95,9 +96,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         echo '<input type="hidden" name="page" value="tagging" />';
         echo '<input type="hidden" name="id"   value="'.$ID.'" />';
         
-        echo '<table class="inline plugin_tagging">';
         echo '<tr>';
-        echo '<th>&#160;</th>';
         echo '<th>' . $this->getLang('admin tag') . '</th>';
         echo '<th>' . $this->getLang('admin occurrence') . '</th>';
         echo '<th>' . $this->getLang('admin writtenas') . '</th>';
@@ -112,7 +111,6 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
             $written = join(', ', $written);
 
             echo '<tr>';
-            echo '<td class="centeralign"><input type="checkbox" name="tags['.hsc($tagname).']" /></td>';
             echo '<td><a class="tagslist" href="' . $this->hlp->getTagSearchURL($tagname) . '">' . hsc($tagname) . '</a></td>';
             echo '<td>' . $taginfo['count'] . '</td>';
             echo '<td>' . hsc($written) . '</td>';
@@ -124,9 +122,9 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         echo '<span class="medialeft">';
         echo '<button type="submit" name="fn[delete]" id="tagging__del">'.$this->getLang('admin delete_selected').'</button>';
         echo '</tr>';
-
-        echo '</table>';
         echo '</form>';
+        echo '</table>';
+        
     }
     
     /**

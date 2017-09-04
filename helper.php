@@ -356,12 +356,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
+     * @param string $namespace empty for entire wiki
+     * 
      * @return array
      */
-    public function getAllTags() {
+    public function getAllTags($namespace='') {
 
         $db = $this->getDb();
-        $res = $db->query('SELECT pid, tag, tagger FROM taggings ORDER BY tag');
+        $res = $db->query('SELECT pid, tag, tagger FROM taggings WHERE pid LIKE ? ORDER BY tag', "%$namespace%");
 
         $tags_tmp = $db->res2arr($res);
         $tags = array();

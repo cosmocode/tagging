@@ -413,5 +413,21 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         msg($this->getLang("admin renamed"), 1);
         return;
     }
-
+    
+    /**
+     * Deletes a tag
+     *
+     * @param array $tags
+     */
+    public function deleteTags($tags) {
+        if (empty($tags)) return;
+        
+        $db = $this->getDb();
+        
+        $query = 'DELETE FROM taggings WHERE ' . implode(' OR ', array_fill(0, count($tags), 'CLEANTAG(tag) = ?'));
+        $res = $db->query($query, array_map(array($this, 'cleanTag'), $tags));
+        
+        msg(sprintf($this->getLang("admin deleted"), count($tags), $res->rowCount()), 1);
+        return;
+    }
 }

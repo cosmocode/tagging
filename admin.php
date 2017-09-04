@@ -97,6 +97,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         echo '<input type="hidden" name="id"   value="'.$ID.'" />';
         
         echo '<tr>';
+        echo '<th>&#160;</th>';
         echo '<th>' . $this->getLang('admin tag') . '</th>';
         echo '<th>' . $this->getLang('admin occurrence') . '</th>';
         echo '<th>' . $this->getLang('admin writtenas') . '</th>';
@@ -111,6 +112,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
             $written = join(', ', $written);
 
             echo '<tr>';
+            echo '<td class="centeralign"><input type="checkbox" name="tags['.hsc($tagname).']" /></td>';
             echo '<td><a class="tagslist" href="' . $this->hlp->getTagSearchURL($tagname) . '">' . hsc($tagname) . '</a></td>';
             echo '<td>' . $taginfo['count'] . '</td>';
             echo '<td>' . hsc($written) . '</td>';

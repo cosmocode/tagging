@@ -374,27 +374,19 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     public function getAllTags($namespace='') {
         
         $db = $this->getDb();
-        $res = $db->query('SELECT pid, tag, tagger FROM taggings WHERE pid LIKE ? ORDER BY tag', $this->globNamespace($namespace));
-
-        $tags_tmp = $db->res2arr($res);
-        $tags = array();
-        foreach ($tags_tmp as $tag) {
-            $tid = $this->cleanTag($tag['tag']);
-
-            if (!isset($tags[$tid]['orig'])) {
-                $tags[$tid]['orig'] = array();
-            }
-            $tags[$tid]['orig'][] = $tag['tag'];
-
-            if (isset($tags[$tid]['count'])) {
-                $tags[$tid]['count']++;
-                $tags[$tid]['tagger'][] = $tag['tagger'];
-            } else {
-                $tags[$tid]['count'] = 1;
-                $tags[$tid]['tagger'] = array($tag['tagger']);
-            }
-        }
-        return $tags;
+        
+        $query = 'SELECT    pid,
+                            CLEANTAG(tag) as tid,
+                            GROUP_CONCAT(tag, ", ") AS orig,
+                            GROUP_CONCAT(tagger, ", ") AS taggers,
+                            COUNT(*) AS "count"
+                        FROM (SELECT * FROM "taggings" ORDER BY tagger) /*sort taggers inside GROUP_CONCAT*/
+                        WHERE pid LIKE ?
+                        GROUP BY tid
+                        ORDER BY tag';
+        $res = $db->query($query, $this->globNamespace($namespace));
+        
+        return $db->res2arr($res);
     }
 
     /**

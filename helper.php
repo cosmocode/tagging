@@ -339,13 +339,19 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         if ($this->getUser() && $INFO['writable']) {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
             $ret .= html_btn('tagging_edit', $INFO['id'], '', array());
-            $form = new Doku_Form(array('id' => 'tagging__edit'));
-            $form->addHidden('tagging[id]', $INFO['id']);
-            $form->addHidden('call', 'plugin_tagging_save');
-            $form->addElement(form_makeTextField('tagging[tags]', implode(', ', array_keys($this->findItems(array('pid' => $INFO['id'], 'tagger' => $this->getUser()), 'tag')))));
-            $form->addElement(form_makeButton('submit', 'save', $lang['btn_save'], array('id' => 'tagging__edit_save')));
-            $form->addElement(form_makeButton('submit', 'cancel', $lang['btn_cancel'], array('id' => 'tagging__edit_cancel')));
-            $ret .= $form->getForm();
+            
+            $form = new dokuwiki\Form\Form();
+            $form->id('tagging__edit');
+            $form->setHiddenField('tagging[id]', $INFO['id']);
+            $form->setHiddenField('call', 'plugin_tagging_save');
+            $tags = $this->findItems(array(
+                                        'pid' => $INFO['id'],
+                                        'tagger' => $this->getUser()
+                                    ), 'tag');
+            $form->addTextInput('tagging[tags]')->val(implode(', ', array_keys($tags)))->addClass('edit');
+            $form->addButton('do[save]', $lang['btn_save'])->id('tagging__edit_save');
+            $form->addButton('do[cancel]', $lang['btn_cancel'])->id('tagging__edit_cancel');
+            $ret .= $form->toHTML();
         }
         $ret .= '</div>';
 

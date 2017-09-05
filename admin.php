@@ -70,19 +70,24 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
      */
     protected function html_form() {
         global $ID, $INPUT;
-
-        $form = new Doku_Form(array('action' => script(), 'method' => 'post', 'class' => 'plugin_tagging'));
-        $form->addHidden('do', 'admin');
-        $form->addHidden('page', 'tagging');
-        $form->addHidden('id', $ID);
-        $form->addHidden('filter', $INPUT->str('filter'));
-
-        $form->startFieldset($this->getLang('admin rename tag'));
-        $form->addElement(form_makeTextField('old', '', $this->getLang('admin find tag'), '', 'block'));
-        $form->addElement(form_makeTextField('new', '', $this->getLang('admin new name'), '', 'block'));
-        $form->addElement(form_makeButton('submit', 'admin', $this->getLang('admin save')));
-
-        $form->printForm();
+        
+        $form = new dokuwiki\Form\Form();
+        $form->addClass('plugin_tagging');
+        
+        $form->setHiddenField('do',    'admin');
+        $form->setHiddenField('page',  'tagging');
+        $form->setHiddenField('id',     $ID);
+        $form->setHiddenField('filter', $INPUT->str('filter'));
+        
+        $form->addFieldsetOpen($this->getLang('admin rename tag'));
+        $form->addTextInput('old', $this->getLang('admin find tag'))->addClass('block');
+        $form->addTagClose('br');
+        $form->addTextInput('new', $this->getLang('admin new name'))->addClass('block');
+        $form->addTagClose('br');
+        $form->addButton('fn[rename]', $this->getLang('admin save'));
+        $form->addFieldsetClose();
+        
+        echo $form->toHTML();
     }
 
     /**

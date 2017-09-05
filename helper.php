@@ -371,7 +371,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * 
      * @return array
      */
-    public function getAllTags($namespace='') {
+    public function getAllTags($namespace='', $order_by='tag', $desc=false) {
+        $order_fields = array('tag', 'orig', 'taggers', 'count');
+        if (!in_array($order_by, $order_fields))
+            throw new Exception('cannot sort by '.$order_by. ' field does not exists');
         
         $db = $this->getDb();
         
@@ -383,7 +386,9 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                         FROM (SELECT * FROM "taggings" ORDER BY tagger) /*sort taggers inside GROUP_CONCAT*/
                         WHERE pid LIKE ?
                         GROUP BY tid
-                        ORDER BY tag';
+                        ORDER BY '.$order_by;
+        if ($desc) $query .= ' DESC';
+        
         $res = $db->query($query, $this->globNamespace($namespace));
         
         return $db->res2arr($res);

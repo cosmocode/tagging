@@ -52,6 +52,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         switch ($cmd) {
             case 'rename'    : $this->_renameTag(); break;
             case 'delete'    : $this->_deleteTags(); break;
+            case 'sort'      : break;
         }
     }
 
@@ -97,11 +98,11 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         global $ID, $INPUT;
         
         $headers = array(
-            '&#160;',
-            $this->getLang('admin tag'),
-            $this->getLang('admin occurrence'),
-            $this->getLang('admin writtenas'),
-            $this->getLang('admin taggers')
+            array('value' => '&#160;',                           'sort_by' => false),
+            array('value' => $this->getLang('admin tag'),        'sort_by' => 'tid'),
+            array('value' => $this->getLang('admin occurrence'), 'sort_by' => 'count'),
+            array('value' => $this->getLang('admin writtenas'),  'sort_by' => 'orig'),
+            array('value' => $this->getLang('admin taggers'),    'sort_by' => 'taggers')
         );
         $tags = $this->hlp->getAllTags($INPUT->str('filter'));
         
@@ -128,7 +129,12 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
          */        
         $form->addTagOpen('tr');
         foreach ($headers as $header) {
-            $form->addHTML('<th>' . $header . '</th>');
+            $form->addTagOpen('th');
+            $form->addHTML($header['value']);
+            if ($header['sort_by'] !== false) {
+                $form->addButton("fn[sort][$header[sort_by]]", 'sort');
+            }
+            $form->addTagClose('th');
         }
         $form->addTagClose('tr');
 

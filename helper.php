@@ -349,8 +349,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                                         'tagger' => $this->getUser()
                                     ), 'tag');
             $form->addTextInput('tagging[tags]')->val(implode(', ', array_keys($tags)))->addClass('edit');
-            $form->addButton('do[save]', $lang['btn_save'])->id('tagging__edit_save');
-            $form->addButton('do[cancel]', $lang['btn_cancel'])->id('tagging__edit_cancel');
+            $form->addButton('', $lang['btn_save'])->id('tagging__edit_save');
+            $form->addButton('', $lang['btn_cancel'])->id('tagging__edit_cancel');
             $ret .= $form->toHTML();
         }
         $ret .= '</div>';

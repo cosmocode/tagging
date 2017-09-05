@@ -50,9 +50,8 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         }
 
         switch ($cmd) {
-            case 'rename'    : $this->_renameTag(); break;
-            case 'delete'    : $this->_deleteTags(); break;
-            case 'sort'      : break;
+            case 'rename'    : $this->hlp->renameTag($INPUT->str('old'), $INPUT->str('new')); break;
+            case 'delete'    : $this->hlp->deleteTags(array_keys($INPUT->arr('tags')), $INPUT->str('filter')); break;
         }
     }
 
@@ -164,29 +163,5 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         
         $form->addTagClose('table');
         echo $form->toHTML();        
-    }
-    
-    /**
-     * Rename a tag
-     *
-     */
-    protected function _renameTag() {
-        global $INPUT;
-        
-        if ($INPUT->post->has('old') && $INPUT->post->has('new')) {
-            $this->hlp->renameTag($INPUT->post->str('old'), $INPUT->post->str('new'));
-        }
-    }
-    
-    /**
-     * Delete tags
-     *
-     */
-    protected function _deleteTags() {
-        global $INPUT;
-        
-        if ($INPUT->post->has('tags')) {
-            $this->hlp->deleteTags(array_keys($INPUT->post->arr('tags')), $INPUT->str('filter'));
-        }
     }
 }

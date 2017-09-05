@@ -372,7 +372,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return array
      */
     public function getAllTags($namespace='', $order_by='tag', $desc=false) {
-        $order_fields = array('tag', 'orig', 'taggers', 'count');
+        $order_fields = array('pid', 'tid', 'orig', 'taggers', 'count');
         if (!in_array($order_by, $order_fields))
             throw new Exception('cannot sort by '.$order_by. ' field does not exists');
         

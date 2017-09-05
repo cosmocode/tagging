@@ -8,11 +8,9 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
 
     /** @var helper_plugin_tagging */
     private $hlp;
-    /** @var  string message to show */
-    private $message;
 
     public function __construct() {
-        $this->hlp = plugin_load('helper', 'tagging');
+        $this->hlp      = plugin_load('helper', 'tagging');
     }
 
     /**
@@ -33,6 +31,9 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         //by default use current page namespace
         if (!$INPUT->has('filter')) $INPUT->set('filter', getNS($ID));
         
+        //by default sort by tag name
+        if (!$INPUT->has('sort')) $INPUT->set('sort', 'tid');
+        
         //now starts functions handle
         if (!$INPUT->has('fn')) return false;
         if (!checkSecurityToken()) return false;
@@ -50,8 +51,16 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         }
 
         switch ($cmd) {
-            case 'rename'    : $this->hlp->renameTag($INPUT->str('old'), $INPUT->str('new')); break;
-            case 'delete'    : $this->hlp->deleteTags(array_keys($INPUT->arr('tags')), $INPUT->str('filter')); break;
+            case 'rename':
+                $this->hlp->renameTag($INPUT->str('old'), $INPUT->str('new'));
+                break;
+            case 'delete':
+                $this->hlp->deleteTags(array_keys($INPUT->arr('tags')), $INPUT->str('filter'));
+                break;
+            case 'sort':
+                $INPUT->set('sort', $param);
+                break;
+            
         }
     }
 
@@ -78,6 +87,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         $form->setHiddenField('page',  'tagging');
         $form->setHiddenField('id',     $ID);
         $form->setHiddenField('filter', $INPUT->str('filter'));
+        $form->setHiddenField('sort', $INPUT->str('sort'));
         
         $form->addFieldsetOpen($this->getLang('admin rename tag'));
         $form->addTextInput('old', $this->getLang('admin find tag'))->addClass('block');
@@ -103,12 +113,20 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
             array('value' => $this->getLang('admin writtenas'),  'sort_by' => 'orig'),
             array('value' => $this->getLang('admin taggers'),    'sort_by' => 'taggers')
         );
-        $tags = $this->hlp->getAllTags($INPUT->str('filter'));
+        
+        $sort = explode(',', $INPUT->str('sort'));
+        $order_by = $sort[0];
+        $desc = false;
+        if (isset($sort[1]) && $sort[1] === 'desc') {
+            $desc = true;
+        }
+        $tags = $this->hlp->getAllTags($INPUT->str('filter'), $order_by, $desc);
         
         $form = new dokuwiki\Form\Form();
         $form->setHiddenField('do',   'admin');
         $form->setHiddenField('page', 'tagging');
         $form->setHiddenField('id',    $ID);
+        $form->setHiddenField('sort', $INPUT->str('sort'));
         
         $form->addTagOpen('table')->addClass('inline plugin_tagging');
         $form->addTagOpen('tr');
@@ -129,9 +147,22 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         $form->addTagOpen('tr');
         foreach ($headers as $header) {
             $form->addTagOpen('th');
-            $form->addHTML($header['value']);
             if ($header['sort_by'] !== false) {
-                $form->addButton("fn[sort][$header[sort_by]]", 'sort');
+                $param = $header['sort_by'];
+                $icon = 'arrow-both';
+                $title = $this->getLang('admin sort ascending');
+                if ($header['sort_by'] === $order_by) {
+                    if ($desc === false) {
+                        $icon = 'arrow-up';
+                        $title = $this->getLang('admin sort descending');
+                        $param .= ',desc';
+                    } else {
+                         $icon = 'arrow-down';
+                    }
+                }
+                $form->addButtonHTML("fn[sort][$param]", $header['value']. ' '. inlineSVG(dirname(__FILE__) . "/images/$icon.svg"))
+                                    ->addClass('plugin_tagging sort_button')
+                                    ->attr('title', $title);
             }
             $form->addTagClose('th');
         }

@@ -14,6 +14,8 @@ $lang['admin rename tag']          = 'Rename tag';
 $lang['admin enter tag names']     = 'Please enter the current and the new tag name';
 $lang['admin tag does not exists'] = 'The tag name you entered does not exist.';
 $lang['admin renamed']             = 'Your tag has been renamed';
+$lang['admin delete_selected']     = 'Delete Selected';
+$lang['admin deleted']             = 'Your have deleted %d tags on %d pages';
 
 $lang['search_section_title'] = 'Pages tagged';
 $lang['js']['notags']         = 'No tags, yet';

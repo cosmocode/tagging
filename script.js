@@ -1,4 +1,11 @@
 jQuery(function () {
+    
+    /**
+     * Add JavaScript confirmation to the User Delete button
+     */
+    jQuery('#tagging__del').click(function(){
+        return confirm(LANG.del_confirm);
+    });
 
     var $form = jQuery('#tagging__edit').hide();
     if (!$form.length) return;
@@ -43,7 +50,7 @@ jQuery(function () {
         e.stopPropagation();
         return false;
     });
-
+    
 
     /**
      * below follows auto completion as described on  http://jqueryui.com/autocomplete/#multiple-remote

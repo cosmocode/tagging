@@ -61,6 +61,17 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $tag = utf8_strtolower($tag);
         return $tag;
     }
+    
+    /**
+     * Canonicalizes the namespace, remove the first colon and add glob
+     *
+     * @param $namespace
+     *
+     * @return string
+     */
+    public function globNamespace($namespace) {
+        return cleanId($namespace) . '%';
+    }
 
     /**
      * Create or Update tags of a page
@@ -361,11 +372,9 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return array
      */
     public function getAllTags($namespace='') {
-
-        $namespace = cleanId($namespace);
         
         $db = $this->getDb();
-        $res = $db->query('SELECT pid, tag, tagger FROM taggings WHERE pid LIKE ? ORDER BY tag', "$namespace%");
+        $res = $db->query('SELECT pid, tag, tagger FROM taggings WHERE pid LIKE ? ORDER BY tag', $this->globNamespace($namespace));
 
         $tags_tmp = $db->res2arr($res);
         $tags = array();
@@ -422,14 +431,21 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * Deletes a tag
      *
      * @param array $tags
+     * @param string $namespace current namespace context as in getAllTags()
      */
-    public function deleteTags($tags) {
+    public function deleteTags($tags, $namespace='') {
         if (empty($tags)) return;
+        
+        $namespace = cleanId($namespace);
         
         $db = $this->getDb();
         
-        $query = 'DELETE FROM taggings WHERE ' . implode(' OR ', array_fill(0, count($tags), 'CLEANTAG(tag) = ?'));
-        $res = $db->query($query, array_map(array($this, 'cleanTag'), $tags));
+        $query = 'DELETE FROM taggings WHERE pid LIKE ? AND (' . 
+                                implode(' OR ', array_fill(0, count($tags), 'CLEANTAG(tag) = ?')).')';
+        
+        $args = array_map(array($this, 'cleanTag'), $tags);
+        array_unshift($args, $this->globNamespace($namespace));
+        $res = $db->query($query, $args);
         
         msg(sprintf($this->getLang("admin deleted"), count($tags), $res->rowCount()), 1);
         return;

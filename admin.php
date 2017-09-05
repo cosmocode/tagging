@@ -25,12 +25,33 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
     }
 
     /**
-     * Handle tag renames
+     * Handle tag actions
      */
     function handle() {
-        global $INPUT;
-        if ($INPUT->post->has('old') && $INPUT->post->has('new') && checkSecurityToken()) {
-            $this->hlp->renameTag($INPUT->post->str('old'), $INPUT->post->str('new'));
+        global $ID, $INPUT;
+        
+        //by default use current page namespace
+        if (!$INPUT->has('filter')) $INPUT->set('filter', getNS($ID));
+        
+        //now starts functions handle
+        if (!$INPUT->has('fn')) return false;
+        if (!checkSecurityToken()) return false;
+        
+        // extract the command and any specific parameters
+        // submit button name is of the form - fn[cmd][param(s)]
+        $fn   = $INPUT->param('fn');
+
+        if (is_array($fn)) {
+            $cmd = key($fn);
+            $param = is_array($fn[$cmd]) ? key($fn[$cmd]) : null;
+        } else {
+            $cmd = $fn;
+            $param = null;
+        }
+
+        switch ($cmd) {
+            case 'rename'    : $this->_renameTag(); break;
+            case 'delete'    : $this->_deleteTags(); break;
         }
     }
 
@@ -48,7 +69,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
      * Show form for renaming tags
      */
     protected function html_form() {
-        global $ID, $INPUT;
+        global $ID;
 
         $form = new Doku_Form(array('action' => script(), 'method' => 'post', 'class' => 'plugin_tagging'));
         $form->addHidden('do', 'admin');
@@ -69,9 +90,6 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
     protected function html_table() {
         global $ID, $INPUT;
         
-        //by default use current page namespace
-        if (!$INPUT->has('filter')) $INPUT->set('filter', getNS($ID));
-        
         $tags = $this->hlp->getAllTags($INPUT->str('filter'));
 
         echo '<table class="inline plugin_tagging">';
@@ -80,21 +98,22 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         /**
          * Show form for filtering the tags by namespaces
          */
-        $form = new dokuwiki\Form\Form();
-        $form->setHiddenField('do',   'admin');
-        $form->setHiddenField('page', 'tagging');
-        $form->setHiddenField('id',    $ID);
-        $form->addTextInput('filter', $this->getLang('admin filter').': ');
-        $form->addButton('fn[filter]', $this->getLang('admin filter button'));
-        echo $form->toHTML();
+        $filter_form = new dokuwiki\Form\Form();
+        $filter_form->setHiddenField('do',   'admin');
+        $filter_form->setHiddenField('page', 'tagging');
+        $filter_form->setHiddenField('id',    $ID);
+        $filter_form->addTextInput('filter', $this->getLang('admin filter').': ');
+        $filter_form->addButton('fn[filter]', $this->getLang('admin filter button'));
+        echo $filter_form->toHTML();
         echo '</th>';
         echo '</tr>';
         
         echo '<form action="'.wl().'" method="post" accept-charset="utf-8">';
         formSecurityToken();
-        echo '<input type="hidden" name="do"   value="admin" />';
-        echo '<input type="hidden" name="page" value="tagging" />';
-        echo '<input type="hidden" name="id"   value="'.$ID.'" />';
+        echo '<input type="hidden" name="do"     value="admin" />';
+        echo '<input type="hidden" name="page"   value="tagging" />';
+        echo '<input type="hidden" name="id"     value="'.$ID.'" />';
+        echo '<input type="hidden" name="filter" value="'.$INPUT->str('filter').'" />';
         
         echo '<tr>';
         echo '<th>&#160;</th>';
@@ -149,7 +168,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         global $INPUT;
         
         if ($INPUT->post->has('tags')) {
-            $this->hlp->deleteTags(array_keys($INPUT->post->arr('tags')));
+            $this->hlp->deleteTags(array_keys($INPUT->post->arr('tags')), $INPUT->str('filter'));
         }
     }
 }

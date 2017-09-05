@@ -51,6 +51,8 @@ jQuery(function () {
         return false;
     });
     
+    jQuery('.plugin_tagging_edit input').checkboxradio();
+    
 
     /**
      * below follows auto completion as described on  http://jqueryui.com/autocomplete/#multiple-remote

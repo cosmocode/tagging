@@ -345,6 +345,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $ret = '';
 
         $ret .= '<div class="plugin_tagging_edit">';
+        $ret .= '<label>' . $this->getLang('toggle admin mode') . '<input type="checkbox" /></label>';
         $ret .= $this->html_cloud($tags, 'tag', array($this, 'linkToSearch'), true, true);
 
         if ($this->getUser() && $INFO['writable']) {

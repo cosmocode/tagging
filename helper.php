@@ -61,6 +61,17 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $tag = utf8_strtolower($tag);
         return $tag;
     }
+    
+    /**
+     * Canonicalizes the namespace, remove the first colon and add glob
+     *
+     * @param $namespace
+     *
+     * @return string
+     */
+    public function globNamespace($namespace) {
+        return cleanId($namespace) . '%';
+    }
 
     /**
      * Create or Update tags of a page
@@ -339,13 +350,19 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         if ($this->getUser() && $INFO['writable']) {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
             $ret .= html_btn('tagging_edit', $INFO['id'], '', array());
-            $form = new Doku_Form(array('id' => 'tagging__edit'));
-            $form->addHidden('tagging[id]', $INFO['id']);
-            $form->addHidden('call', 'plugin_tagging_save');
-            $form->addElement(form_makeTextField('tagging[tags]', implode(', ', array_keys($this->findItems(array('pid' => $INFO['id'], 'tagger' => $this->getUser()), 'tag')))));
-            $form->addElement(form_makeButton('submit', 'save', $lang['btn_save'], array('id' => 'tagging__edit_save')));
-            $form->addElement(form_makeButton('submit', 'cancel', $lang['btn_cancel'], array('id' => 'tagging__edit_cancel')));
-            $ret .= $form->getForm();
+            
+            $form = new dokuwiki\Form\Form();
+            $form->id('tagging__edit');
+            $form->setHiddenField('tagging[id]', $INFO['id']);
+            $form->setHiddenField('call', 'plugin_tagging_save');
+            $tags = $this->findItems(array(
+                                        'pid' => $INFO['id'],
+                                        'tagger' => $this->getUser()
+                                    ), 'tag');
+            $form->addTextInput('tagging[tags]')->val(implode(', ', array_keys($tags)))->addClass('edit');
+            $form->addButton('', $lang['btn_save'])->id('tagging__edit_save');
+            $form->addButton('', $lang['btn_cancel'])->id('tagging__edit_cancel');
+            $ret .= $form->toHTML();
         }
         $ret .= '</div>';
 
@@ -356,12 +373,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
+     * @param string $namespace empty for entire wiki
+     * 
      * @return array
      */
-    public function getAllTags() {
-
+    public function getAllTags($namespace='') {
+        
         $db = $this->getDb();
-        $res = $db->query('SELECT pid, tag, tagger FROM taggings ORDER BY tag');
+        $res = $db->query('SELECT pid, tag, tagger FROM taggings WHERE pid LIKE ? ORDER BY tag', $this->globNamespace($namespace));
 
         $tags_tmp = $db->res2arr($res);
         $tags = array();
@@ -418,14 +437,21 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * Deletes a tag
      *
      * @param array $tags
+     * @param string $namespace current namespace context as in getAllTags()
      */
-    public function deleteTags($tags) {
+    public function deleteTags($tags, $namespace='') {
         if (empty($tags)) return;
+        
+        $namespace = cleanId($namespace);
         
         $db = $this->getDb();
         
-        $query = 'DELETE FROM taggings WHERE ' . implode(' OR ', array_fill(0, count($tags), 'CLEANTAG(tag) = ?'));
-        $res = $db->query($query, array_map(array($this, 'cleanTag'), $tags));
+        $query = 'DELETE FROM taggings WHERE pid LIKE ? AND (' . 
+                                implode(' OR ', array_fill(0, count($tags), 'CLEANTAG(tag) = ?')).')';
+        
+        $args = array_map(array($this, 'cleanTag'), $tags);
+        array_unshift($args, $this->globNamespace($namespace));
+        $res = $db->query($query, $args);
         
         msg(sprintf($this->getLang("admin deleted"), count($tags), $res->rowCount()), 1);
         return;

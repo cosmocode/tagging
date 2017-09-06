@@ -28,8 +28,12 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
      * Handle tag actions
      */
     function handle() {
-        global $INPUT;
+        global $ID, $INPUT;
         
+        //by default use current page namespace
+        if (!$INPUT->has('filter')) $INPUT->set('filter', getNS($ID));
+        
+        //now starts functions handle
         if (!$INPUT->has('fn')) return false;
         if (!checkSecurityToken()) return false;
         
@@ -65,44 +69,68 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
      * Show form for renaming tags
      */
     protected function html_form() {
-        global $ID;
-
-        $form = new Doku_Form(array('action' => script(), 'method' => 'post', 'class' => 'plugin_tagging'));
-        $form->addHidden('do', 'admin');
-        $form->addHidden('page', 'tagging');
-        $form->addHidden('id', $ID);
-        $form->addHidden('fn', 'rename');
-
-        $form->startFieldset($this->getLang('admin rename tag'));
-        $form->addElement(form_makeTextField('old', '', $this->getLang('admin find tag'), '', 'block'));
-        $form->addElement(form_makeTextField('new', '', $this->getLang('admin new name'), '', 'block'));
-        $form->addElement(form_makeButton('submit', 'admin', $this->getLang('admin save')));
-
-        $form->printForm();
+        global $ID, $INPUT;
+        
+        $form = new dokuwiki\Form\Form();
+        $form->addClass('plugin_tagging');
+        
+        $form->setHiddenField('do',    'admin');
+        $form->setHiddenField('page',  'tagging');
+        $form->setHiddenField('id',     $ID);
+        $form->setHiddenField('filter', $INPUT->str('filter'));
+        
+        $form->addFieldsetOpen($this->getLang('admin rename tag'));
+        $form->addTextInput('old', $this->getLang('admin find tag'))->addClass('block');
+        $form->addTagClose('br');
+        $form->addTextInput('new', $this->getLang('admin new name'))->addClass('block');
+        $form->addTagClose('br');
+        $form->addButton('fn[rename]', $this->getLang('admin save'));
+        $form->addFieldsetClose();
+        
+        echo $form->toHTML();
     }
 
     /**
      * Display ALL the tags!
      */
     protected function html_table() {
-        global $ID;
+        global $ID, $INPUT;
         
-        $tags = $this->hlp->getAllTags();
+        $headers = array(
+            '&#160;',
+            $this->getLang('admin tag'),
+            $this->getLang('admin occurrence'),
+            $this->getLang('admin writtenas'),
+            $this->getLang('admin taggers')
+        );
+        $tags = $this->hlp->getAllTags($INPUT->str('filter'));
         
-        echo '<form action="'.wl().'" method="post" accept-charset="utf-8">';
-        formSecurityToken();
-        echo '<input type="hidden" name="do"   value="admin" />';
-        echo '<input type="hidden" name="page" value="tagging" />';
-        echo '<input type="hidden" name="id"   value="'.$ID.'" />';
+        $form = new dokuwiki\Form\Form();
+        $form->setHiddenField('do',   'admin');
+        $form->setHiddenField('page', 'tagging');
+        $form->setHiddenField('id',    $ID);
         
-        echo '<table class="inline plugin_tagging">';
-        echo '<tr>';
-        echo '<th>&#160;</th>';
-        echo '<th>' . $this->getLang('admin tag') . '</th>';
-        echo '<th>' . $this->getLang('admin occurrence') . '</th>';
-        echo '<th>' . $this->getLang('admin writtenas') . '</th>';
-        echo '<th>' . $this->getLang('admin taggers') . '</th>';
-        echo '</tr>';
+        $form->addTagOpen('table')->addClass('inline plugin_tagging');
+        $form->addTagOpen('tr');
+        $form->addTagOpen('th')->attr('colspan', count($headers));
+        
+        /**
+         * Show form for filtering the tags by namespaces
+         */
+        $form->addTextInput('filter', $this->getLang('admin filter').': ');
+        $form->addButton('fn[filter]', $this->getLang('admin filter button'));
+        
+        $form->addTagClose('th');
+        $form->addTagClose('tr');
+        
+        /**
+         * Table headers
+         */        
+        $form->addTagOpen('tr');
+        foreach ($headers as $header) {
+            $form->addHTML('<th>' . $header . '</th>');
+        }
+        $form->addTagClose('tr');
 
         foreach ($tags as $tagname => $taginfo) {
             $taggers = array_unique($taginfo['tagger']);
@@ -111,22 +139,27 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
             $taggers = join(', ', $taggers);
             $written = join(', ', $written);
 
-            echo '<tr>';
-            echo '<td class="centeralign"><input type="checkbox" name="tags['.hsc($tagname).']" /></td>';
-            echo '<td><a class="tagslist" href="' . $this->hlp->getTagSearchURL($tagname) . '">' . hsc($tagname) . '</a></td>';
-            echo '<td>' . $taginfo['count'] . '</td>';
-            echo '<td>' . hsc($written) . '</td>';
-            echo '<td>' . hsc($taggers) . '</td>';
-            echo '</tr>';
+            $form->addTagOpen('tr');
+            $form->addTagOpen('td')->addClass('centeralign');
+            $form->addCheckbox('tags['.hsc($tagname).']');
+            $form->addTagClose('td');
+            $form->addHTML('<td><a class="tagslist" href="' . 
+                    $this->hlp->getTagSearchURL($tagname) . '">' . hsc($tagname) . '</a></td>');
+            $form->addHTML('<td>' . $taginfo['count'] . '</td>');
+            $form->addHTML('<td>' . hsc($written) . '</td>');
+            $form->addHTML('<td>' . hsc($taggers) . '</td>');
+            
+            $form->addTagClose('tr');
         }
-        echo '<tr>';
-        echo '<td colspan="5" class="centeralign">';
-        echo '<span class="medialeft">';
-        echo '<button type="submit" name="fn[delete]" id="tagging__del">'.$this->getLang('admin delete_selected').'</button>';
-        echo '</tr>';
 
-        echo '</table>';
-        echo '</form>';
+        $form->addTagOpen('tr');
+        $form->addHTML('<td colspan="5" class="centeralign"><span class="medialeft">');
+        $form->addButton('fn[delete]', $this->getLang('admin delete_selected'))->id('tagging__del');
+        $form->addHTML('</span></td>');
+        $form->addTagClose('tr');
+        
+        $form->addTagClose('table');
+        echo $form->toHTML();        
     }
     
     /**
@@ -149,7 +182,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         global $INPUT;
         
         if ($INPUT->post->has('tags')) {
-            $this->hlp->deleteTags(array_keys($INPUT->post->arr('tags')));
+            $this->hlp->deleteTags(array_keys($INPUT->post->arr('tags')), $INPUT->str('filter'));
         }
     }
 }

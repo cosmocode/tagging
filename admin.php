@@ -31,6 +31,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         //by default use current page namespace
         if (!$INPUT->has('filter')) $INPUT->set('filter', getNS($ID));
         
+
         //by default sort by tag name
         if (!$INPUT->has('sort')) $INPUT->set('sort', 'tid');
         

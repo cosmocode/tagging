@@ -31,6 +31,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         //by default use current page namespace
         if (!$INPUT->has('filter')) $INPUT->set('filter', getNS($ID));
         
+
         //by default sort by tag name
         if (!$INPUT->has('sort')) $INPUT->set('sort', 'tid');
         
@@ -169,9 +170,12 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         $form->addTagClose('tr');
 
         foreach ($tags as $taginfo) {
+            sort($taginfo['taggers']);
+            sort($taginfo['orig']);
+            
             $tagname = $taginfo['tid'];
-            $taggers = $taginfo['taggers'];
-            $written = $taginfo['orig'];
+            $taggers = implode(', ', $taginfo['taggers']);
+            $written = implode(', ', $taginfo['orig']);
 
             $form->addTagOpen('tr');
             $form->addTagOpen('td')->addClass('centeralign');

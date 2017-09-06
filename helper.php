@@ -389,10 +389,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         
         $query = 'SELECT    pid,
                             CLEANTAG(tag) as tid,
-                            GROUP_CONCAT(tag, ", ") AS orig,
-                            GROUP_CONCAT(tagger, ", ") AS taggers,
+                            GROUP_CONCAT(tag) AS orig,
+                            GROUP_CONCAT(tagger) AS taggers,
                             COUNT(*) AS "count"
-                        FROM (SELECT * FROM "taggings" ORDER BY tagger) /*sort taggers inside GROUP_CONCAT*/
+                        FROM "taggings"
                         WHERE pid LIKE ?
                         GROUP BY tid
                         ORDER BY '.$order_by;
@@ -400,7 +400,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         
         $res = $db->query($query, $this->globNamespace($namespace));
         
-        return $db->res2arr($res);
+        return array_map(
+                function($record) {
+                    $record['orig'] = explode(',', $record['orig']);
+                    $record['taggers'] = explode(',', $record['taggers']);
+                    return $record;
+                }, $db->res2arr($res));
     }
 
     /**

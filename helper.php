@@ -377,30 +377,32 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * 
      * @return array
      */
-    public function getAllTags($namespace='') {
+    public function getAllTags($namespace='', $order_by='tag', $desc=false) {
+        $order_fields = array('pid', 'tid', 'orig', 'taggers', 'count');
+        if (!in_array($order_by, $order_fields))
+            throw new Exception('cannot sort by '.$order_by. ' field does not exists');
         
         $db = $this->getDb();
-        $res = $db->query('SELECT pid, tag, tagger FROM taggings WHERE pid LIKE ? ORDER BY tag', $this->globNamespace($namespace));
-
-        $tags_tmp = $db->res2arr($res);
-        $tags = array();
-        foreach ($tags_tmp as $tag) {
-            $tid = $this->cleanTag($tag['tag']);
-
-            if (!isset($tags[$tid]['orig'])) {
-                $tags[$tid]['orig'] = array();
-            }
-            $tags[$tid]['orig'][] = $tag['tag'];
-
-            if (isset($tags[$tid]['count'])) {
-                $tags[$tid]['count']++;
-                $tags[$tid]['tagger'][] = $tag['tagger'];
-            } else {
-                $tags[$tid]['count'] = 1;
-                $tags[$tid]['tagger'] = array($tag['tagger']);
-            }
-        }
-        return $tags;
+        
+        $query = 'SELECT    pid,
+                            CLEANTAG(tag) as tid,
+                            GROUP_CONCAT(tag) AS orig,
+                            GROUP_CONCAT(tagger) AS taggers,
+                            COUNT(*) AS "count"
+                        FROM "taggings"
+                        WHERE pid LIKE ?
+                        GROUP BY tid
+                        ORDER BY '.$order_by;
+        if ($desc) $query .= ' DESC';
+        
+        $res = $db->query($query, $this->globNamespace($namespace));
+        
+        return array_map(
+                function($record) {
+                    $record['orig'] = explode(',', $record['orig']);
+                    $record['taggers'] = explode(',', $record['taggers']);
+                    return $record;
+                }, $db->res2arr($res));
     }
 
     /**

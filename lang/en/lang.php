@@ -18,6 +18,8 @@ $lang['admin renamed']             = 'Your tag has been renamed';
 $lang['admin delete_selected']     = 'Delete Selected';
 $lang['admin filter button']       = 'Filter';
 $lang['admin deleted']             = 'You have deleted %d tags on %d pages';
+$lang['admin sort ascending']      = 'Sort ascending';
+$lang['admin sort descending']     = 'Sort descending';
 
 $lang['search_section_title'] = 'Pages tagged';
 $lang['js']['notags']         = 'No tags, yet';

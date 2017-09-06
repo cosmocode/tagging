@@ -8,11 +8,9 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
 
     /** @var helper_plugin_tagging */
     private $hlp;
-    /** @var  string message to show */
-    private $message;
 
     public function __construct() {
-        $this->hlp = plugin_load('helper', 'tagging');
+        $this->hlp      = plugin_load('helper', 'tagging');
     }
 
     /**
@@ -33,6 +31,10 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         //by default use current page namespace
         if (!$INPUT->has('filter')) $INPUT->set('filter', getNS($ID));
         
+
+        //by default sort by tag name
+        if (!$INPUT->has('sort')) $INPUT->set('sort', 'tid');
+        
         //now starts functions handle
         if (!$INPUT->has('fn')) return false;
         if (!checkSecurityToken()) return false;
@@ -50,8 +52,16 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         }
 
         switch ($cmd) {
-            case 'rename'    : $this->_renameTag(); break;
-            case 'delete'    : $this->_deleteTags(); break;
+            case 'rename':
+                $this->hlp->renameTag($INPUT->str('old'), $INPUT->str('new'));
+                break;
+            case 'delete':
+                $this->hlp->deleteTags(array_keys($INPUT->arr('tags')), $INPUT->str('filter'));
+                break;
+            case 'sort':
+                $INPUT->set('sort', $param);
+                break;
+            
         }
     }
 
@@ -78,6 +88,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         $form->setHiddenField('page',  'tagging');
         $form->setHiddenField('id',     $ID);
         $form->setHiddenField('filter', $INPUT->str('filter'));
+        $form->setHiddenField('sort', $INPUT->str('sort'));
         
         $form->addFieldsetOpen($this->getLang('admin rename tag'));
         $form->addTextInput('old', $this->getLang('admin find tag'))->addClass('block');
@@ -97,18 +108,26 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         global $ID, $INPUT;
         
         $headers = array(
-            '&#160;',
-            $this->getLang('admin tag'),
-            $this->getLang('admin occurrence'),
-            $this->getLang('admin writtenas'),
-            $this->getLang('admin taggers')
+            array('value' => '&#160;',                           'sort_by' => false),
+            array('value' => $this->getLang('admin tag'),        'sort_by' => 'tid'),
+            array('value' => $this->getLang('admin occurrence'), 'sort_by' => 'count'),
+            array('value' => $this->getLang('admin writtenas'),  'sort_by' => 'orig'),
+            array('value' => $this->getLang('admin taggers'),    'sort_by' => 'taggers')
         );
-        $tags = $this->hlp->getAllTags($INPUT->str('filter'));
+        
+        $sort = explode(',', $INPUT->str('sort'));
+        $order_by = $sort[0];
+        $desc = false;
+        if (isset($sort[1]) && $sort[1] === 'desc') {
+            $desc = true;
+        }
+        $tags = $this->hlp->getAllTags($INPUT->str('filter'), $order_by, $desc);
         
         $form = new dokuwiki\Form\Form();
         $form->setHiddenField('do',   'admin');
         $form->setHiddenField('page', 'tagging');
         $form->setHiddenField('id',    $ID);
+        $form->setHiddenField('sort', $INPUT->str('sort'));
         
         $form->addTagOpen('table')->addClass('inline plugin_tagging');
         $form->addTagOpen('tr');
@@ -128,16 +147,35 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
          */        
         $form->addTagOpen('tr');
         foreach ($headers as $header) {
-            $form->addHTML('<th>' . $header . '</th>');
+            $form->addTagOpen('th');
+            if ($header['sort_by'] !== false) {
+                $param = $header['sort_by'];
+                $icon = 'arrow-both';
+                $title = $this->getLang('admin sort ascending');
+                if ($header['sort_by'] === $order_by) {
+                    if ($desc === false) {
+                        $icon = 'arrow-up';
+                        $title = $this->getLang('admin sort descending');
+                        $param .= ',desc';
+                    } else {
+                         $icon = 'arrow-down';
+                    }
+                }
+                $form->addButtonHTML("fn[sort][$param]", $header['value']. ' '. inlineSVG(dirname(__FILE__) . "/images/$icon.svg"))
+                                    ->addClass('plugin_tagging sort_button')
+                                    ->attr('title', $title);
+            }
+            $form->addTagClose('th');
         }
         $form->addTagClose('tr');
 
-        foreach ($tags as $tagname => $taginfo) {
-            $taggers = array_unique($taginfo['tagger']);
-            sort($taggers);
-            $written = array_unique($taginfo['orig']);
-            $taggers = join(', ', $taggers);
-            $written = join(', ', $written);
+        foreach ($tags as $taginfo) {
+            sort($taginfo['taggers']);
+            sort($taginfo['orig']);
+            
+            $tagname = $taginfo['tid'];
+            $taggers = implode(', ', $taginfo['taggers']);
+            $written = implode(', ', $taginfo['orig']);
 
             $form->addTagOpen('tr');
             $form->addTagOpen('td')->addClass('centeralign');
@@ -160,29 +198,5 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         
         $form->addTagClose('table');
         echo $form->toHTML();        
-    }
-    
-    /**
-     * Rename a tag
-     *
-     */
-    protected function _renameTag() {
-        global $INPUT;
-        
-        if ($INPUT->post->has('old') && $INPUT->post->has('new')) {
-            $this->hlp->renameTag($INPUT->post->str('old'), $INPUT->post->str('new'));
-        }
-    }
-    
-    /**
-     * Delete tags
-     *
-     */
-    protected function _deleteTags() {
-        global $INPUT;
-        
-        if ($INPUT->post->has('tags')) {
-            $this->hlp->deleteTags(array_keys($INPUT->post->arr('tags')), $INPUT->str('filter'));
-        }
     }
 }

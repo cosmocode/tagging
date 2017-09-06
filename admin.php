@@ -170,9 +170,12 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         $form->addTagClose('tr');
 
         foreach ($tags as $taginfo) {
+            sort($taginfo['taggers']);
+            sort($taginfo['orig']);
+            
             $tagname = $taginfo['tid'];
-            $taggers = $taginfo['taggers'];
-            $written = $taginfo['orig'];
+            $taggers = implode(', ', $taginfo['taggers']);
+            $written = implode(', ', $taginfo['orig']);
 
             $form->addTagOpen('tr');
             $form->addTagOpen('td')->addClass('centeralign');

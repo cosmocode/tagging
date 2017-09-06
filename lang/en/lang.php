@@ -20,7 +20,7 @@ $lang['admin filter button']       = 'Filter';
 $lang['admin deleted']             = 'You have deleted %d tags on %d pages';
 $lang['admin sort ascending']      = 'Sort ascending';
 $lang['admin sort descending']     = 'Sort descending';
-$lang['toggle admin mode']         = 'Toggle admin mode';
+$lang['toggle admin mode']         = 'Admin';
 
 $lang['search_section_title'] = 'Pages tagged';
 $lang['js']['notags']         = 'No tags, yet';

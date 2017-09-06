@@ -345,12 +345,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $ret = '';
 
         $ret .= '<div class="plugin_tagging_edit">';
-        $ret .= '<label>' . $this->getLang('toggle admin mode') . '<input type="checkbox" /></label>';
         $ret .= $this->html_cloud($tags, 'tag', array($this, 'linkToSearch'), true, true);
 
         if ($this->getUser() && $INFO['writable']) {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
+            $ret .= '<div id="tagging__edit_buttons_group">';
             $ret .= html_btn('tagging_edit', $INFO['id'], '', array());
+            $ret .= '<label>' . $this->getLang('toggle admin mode') . '<input type="checkbox" id="tagging__edit_toggle_admin" /></label>';
+            $ret .= '</div>';
             
             $form = new dokuwiki\Form\Form();
             $form->id('tagging__edit');

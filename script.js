@@ -11,9 +11,10 @@ jQuery(function () {
     if (!$form.length) return;
 
     var $btn = jQuery('form.btn_tagging_edit');
+    var $btns = jQuery('#tagging__edit_buttons_group');
 
     $btn.submit(function (e) {
-        $btn.hide();
+        $btns.hide();
         $form.show();
         var $input = $form.find('input[type="text"]');
         var len = $input.val().length;
@@ -34,7 +35,7 @@ jQuery(function () {
             DOKU_BASE + 'lib/exe/ajax.php',
             $form.serialize()
         );
-        $btn.show();
+        $btns.show();
         $form.hide();
 
         e.preventDefault();
@@ -43,7 +44,7 @@ jQuery(function () {
     });
 
     jQuery('#tagging__edit_cancel').click(function (e) {
-        $btn.show();
+        $btns.show();
         $form.hide();
 
         e.preventDefault();
@@ -51,7 +52,8 @@ jQuery(function () {
         return false;
     });
     
-    jQuery('.plugin_tagging_edit input').checkboxradio();
+    jQuery('#tagging__edit_toggle_admin').checkboxradio();
+    jQuery('.btn_tagging_edit button, #tagging__edit_save, #tagging__edit_cancel').button();
     
 
     /**

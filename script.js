@@ -52,9 +52,15 @@ jQuery(function () {
         return false;
     });
     
-    jQuery('#tagging__edit_toggle_admin').checkboxradio();
+    var $toggle_btn = jQuery('#tagging__edit_toggle_admin').checkboxradio();
     jQuery('.btn_tagging_edit button, #tagging__edit_save, #tagging__edit_cancel').button();
     
+    jQuery('.plugin_tagging_edit .tagging_cloud').click(function(e) {
+        var admin = $toggle_btn[0].checked;
+        if (admin) {
+            e.preventDefault();
+        }
+    });
 
     /**
      * below follows auto completion as described on  http://jqueryui.com/autocomplete/#multiple-remote

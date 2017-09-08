@@ -27,6 +27,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         }
         $db->init('tagging', dirname(__FILE__) . '/db/');
         $db->create_function('CLEANTAG', array($this, 'cleanTag'), 1);
+        $db->create_function('GROUP_SORT',
+            function($group, $newDelimiter) {
+                $ex = explode(',', $group);
+                sort($ex);
+                return implode($newDelimiter, $ex);
+            }, 2);
         return $db;
     }
 
@@ -386,8 +392,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         
         $query = 'SELECT    pid,
                             CLEANTAG(tag) as tid,
-                            GROUP_CONCAT(tag) AS orig,
-                            GROUP_CONCAT(tagger) AS taggers,
+                            GROUP_SORT(GROUP_CONCAT(tag), ", ") AS orig,
+                            GROUP_SORT(GROUP_CONCAT(tagger), ", ") AS taggers,
                             COUNT(*) AS "count"
                         FROM "taggings"
                         WHERE pid LIKE ?
@@ -397,12 +403,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         
         $res = $db->query($query, $this->globNamespace($namespace));
         
-        return array_map(
-                function($record) {
-                    $record['orig'] = explode(',', $record['orig']);
-                    $record['taggers'] = explode(',', $record['taggers']);
-                    return $record;
-                }, $db->res2arr($res));
+        return $db->res2arr($res);
     }
 
     /**

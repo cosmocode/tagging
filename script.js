@@ -187,7 +187,7 @@
             this.isSaving = true;
             
              //sending data to server
-            var params = {oldValue: this.options.value, newValue: newValue};
+            var params = $.extend({}, this.options.params, {oldValue: this.options.value, newValue: newValue});
             return $.ajax({
                         url     : this.options.url,
                         data    : params,
@@ -195,14 +195,16 @@
                     })
                 .done($.proxy(function(response) {
                     this.isSaving = false;
-                    console.log(response);
+                    
                     if (response.status === 'error') {
-                        this.error(response.msg);
                         this.showForm();
                         return;
                     }
                     this.error(false);   
-                    this.value = newValue;
+                    this.options.value = newValue;
+                    if (typeof this.options.success === 'function') {
+                        this.options.success.call(this.options.scope, response, newValue);
+                    }
                     
                     this.$div.triggerHandler('save', {newValue: newValue, response: response});
                 }, this))
@@ -234,6 +236,10 @@
             this.value = this.$element.text();
             //add 'editable' class to every editable element
             this.$element.addClass('editable');
+            
+            if (!this.options.disabled) {
+                this.$element.addClass('editable-click');
+            }
              
             this.$element.tooltip({
                 items: '*',
@@ -301,10 +307,7 @@
         **/          
         enable: function() {
             this.options.disabled = false;
-            this.$element.removeClass('editable-disabled');
-            if(this.$element.attr('tabindex') === '-1') {    
-                this.$element.removeAttr('tabindex');                                
-            }
+            this.$element.addClass('editable-click');
         },
         
         /**
@@ -314,9 +317,7 @@
         disable: function() {
             this.options.disabled = true; 
             this.hide();           
-            this.$element.addClass('editable-disabled');
-            //do not stop focus on this element
-            this.$element.attr('tabindex', -1);                
+            this.$element.removeClass('editable-click');       
         },
         
         /**
@@ -357,8 +358,11 @@
             
             //render form
             this.form = new EditableForm(this.$form_container, {
-                value: this.value,
-                url: this.options.url
+                value   : this.value,
+                url     : this.options.url,
+                success : this.options.success,
+                scope   : this.options.scope,
+                params  : this.options.params
             });
             
             this.$form_container.on({
@@ -366,9 +370,6 @@
                 nochange: $.proxy(function(){ this.hide(); }, this), //click on submit button (value NOT changed)                
                 cancel: $.proxy(function(){ this.hide(); }, this), //click on cancel button
             });
-                        
-            
-            
         },
         
         /**
@@ -420,8 +421,11 @@
     };
     
     $.fn.editable.defaults = {
-        disabled: false,
-        label   : 'Enter value'
+        disabled : false,
+        label    : 'Enter value',
+        success  : null, //success callback
+        scope    : null, //success calback scope
+        params   : {}    //additional params passed to ajax post request
     };
 }(window.jQuery));   
 
@@ -463,17 +467,29 @@ jQuery(function () {
                                     jQuery('div.plugin_tagging_edit ul.tagging_cloud a').editable('toggleDisabled');
                                 }),
         add_editable = function() {
+            //no editable button - we are not the admin
+            if ($admin_toggle_btn.length === 0) return;
+            
             jQuery('div.plugin_tagging_edit ul.tagging_cloud a')
                 .editable({
                     disabled  : !$admin_toggle_btn[0].checked,
                     label     : LANG.plugins.tagging.admin_change_tag,
-                    url       : DOKU_BASE + 'lib/exe/ajax.php?call=plugin_tagging_admin_change'
+                    url       : DOKU_BASE + 'lib/exe/ajax.php?call=plugin_tagging_admin_change',
+                    params    : { 'call'   : 'plugin_tagging_admin_change',
+                                  'id'     : JSINFO.id,
+                                  'sectok' : JSINFO.sectok
+                                },
+                    success   :
+                        function(response, newValue) {
+                            jQuery('div.plugin_tagging_edit ul.tagging_cloud').html(response.html_cloud);
+                            $form.find('input[type="text"]').val(response.tags_edit_value);
+                            add_editable();
+                        }
                 });
         };
     
     add_editable();
-    
-    
+
     jQuery('#tagging__edit_save').click(function (e) {
         jQuery('div.plugin_tagging_edit ul.tagging_cloud').load(
             DOKU_BASE + 'lib/exe/ajax.php',

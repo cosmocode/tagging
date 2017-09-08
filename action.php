@@ -38,6 +38,8 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             $this->save();
         } elseif ($event->data == 'plugin_tagging_autocomplete') {
             $this->autocomplete();
+        } elseif ($event->data === 'plugin_tagging_admin_change') {
+            $this->admin_change();
         } else {
             $handled = false;
         }
@@ -136,6 +138,22 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         $json = new JSON();
         echo $json->encode(array_combine($tags, $tags));
+    }
+    
+    /**
+     * Allow admins to change all tags (not only their own)
+     * We change the tag for every user
+     */
+    function admin_change() {
+        global $INPUT;
+        
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+        sleep(1);
+        header('Content-Type: application/json');
+        
+        $json = new JSON();
+        echo $json->encode(array('status' => 'error', 'msg' => 'Not implemented'));
     }
 
     /**

@@ -22,8 +22,9 @@ $lang['admin sort ascending']      = 'Sort ascending';
 $lang['admin sort descending']     = 'Sort descending';
 $lang['toggle admin mode']         = 'Admin';
 
-$lang['search_section_title'] = 'Pages tagged';
-$lang['js']['notags']         = 'No tags, yet';
-$lang['js']['nopages']        = 'No pages with this tag, yet';
+$lang['search_section_title']      = 'Pages tagged';
+$lang['js']['notags']              = 'No tags, yet';
+$lang['js']['nopages']             = 'No pages with this tag, yet';
+$lang['js']['admin_change_tag']    = 'Change the tag';
 
 $lang['tagjmp_error'] = 'Could not find any page tagged with %s';

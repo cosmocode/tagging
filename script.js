@@ -1,19 +1,24 @@
 (function ($) {
     "use strict";
-    var TextInput = function () {
+    var TextInput = function (div, options) {
+        this.$div = $(div);
+        this.options = options;
         
+        this.init();
     };
 
     TextInput.prototype = {
-        render: function() {
-            this.$input = $('<input type="text">');
+        init: function() {
+            this.$input = $('<input type="text">').val(this.options.defaultValue).appendTo(this.$div);
             this.renderClear();
         },
         
         activate: function() {
             if(this.$input.is(':visible')) {
                 this.$input.focus();
-                //~ $.fn.editableutils.setCursorPosition(this.$input.get(0), this.$input.val().length);
+                
+                var pos = this.$input.val().length;
+                this.$input.get(0).setSelectionRange(pos, pos);
                 this.toggleClear();
             }
         },
@@ -39,17 +44,14 @@
                       .parent().css('position', 'relative');
                       
            this.$clear.click($.proxy(this.clear, this));
+           
         },
         
         //show / hide clear button
         toggleClear: function(e) {
-            if(!this.$clear) {
-                return;
-            }
-            
             var len = this.$input.val().length,
                 visible = this.$clear.is(':visible');
-                 
+            
             if(len && !visible) {
                 this.$clear.show();
             } 
@@ -62,11 +64,12 @@
         clear: function() {
            this.$clear.hide();
            this.$input.val('').focus();
-        }          
+        },
     };
     
-    var EditableForm = function (div) {
+    var EditableForm = function (div, options) {
         this.$div = $(div); //div, containing form. Not form tag. Not editable-element.
+        this.options = options;
         this.init();
     };
 
@@ -84,31 +87,6 @@
         buttons: '<button type="submit" class="editable-submit">ok</button>'+
                  '<button type="button" class="editable-cancel">cancel</button>', 
    
-        initInput: function() {  //called once
-            //take input from options (as it is created in editable-element)
-            this.input = new TextInput();
-                        
-            //render: get input.$input
-            this.input.render();
-            
-            this.setValue(this.value);
-        },
-        initTemplate: function() {
-            this.$form = $(this.template); 
-        },
-        initButtons: function() {
-            var $btn = this.$form.find('.editable-buttons');
-            $btn.append(this.buttons);
-
-            this.$form.find('.editable-submit').button({
-                icons: { primary: "ui-icon-check" },
-                text: false
-            });
-            this.$form.find('.editable-cancel').button({
-                icons: { primary: "ui-icon-closethick" },
-                text: false
-            });
-        },
         /**
         Renders editableform
         @method render
@@ -119,19 +97,27 @@
             this.$div.empty().append(this.$loading);        
             
             //init form template and buttons
-            this.initTemplate();
+            this.$form = $(this.template); 
     
-            this.initButtons();            
-            
+            var $btn = this.$form.find('.editable-buttons');
+            $btn.append(this.buttons);
+
+            this.$form.find('.editable-submit').button({
+                icons: { primary: "ui-icon-check" },
+                text: false
+            });
+            this.$form.find('.editable-cancel').button({
+                icons: { primary: "ui-icon-closethick" },
+                text: false
+            });           
+
+            //render: get input.$input
+            //append input to form
+            this.input = new TextInput(this.$form.find('div.editable-input'), {defaultValue: this.options.value});
+                      
             //flag showing is form now saving value to server. 
             //It is needed to wait when closing form.
             this.isSaving = false;
-
-            //init input
-            this.initInput();
-                        
-            //append input to form
-            this.$form.find('div.editable-input').append(this.input.$input);            
             
             //append form to container
             this.$div.append(this.$form);
@@ -178,9 +164,9 @@
 
         error: function(msg) {
             if(msg === false) {
-                this.$form.find('.editable-error-block').empty().hide(); 
+                this.$form.find('.editable-error-block').removeClass('ui-state-error').empty().hide(); 
             } else {
-                this.$form.find('.editable-error-block').html(msg).show();
+                this.$form.find('.editable-error-block').addClass('ui-state-error').html(msg).show();
             }
         },
 
@@ -191,43 +177,45 @@
             //get new value from input
             var newValue = this.input.$input.val();
             
-            if (newValue === this.value) {
+            if (newValue === this.options.value) {
                 this.$div.triggerHandler('nochange');            
                 return;
             }
             
-            this.isSaving = true;
-             //sending data to server
-            $.when(this.save(newValue))
-            .done($.proxy(function(response) {
-                this.isSaving = false;
-                
-                if (response.status === 'error') {
-                    this.error(response.msg);
-                    this.showForm();
-                    return;
-                }
-                this.error(false);   
-                this.value = newValue;
-                
-                this.$div.triggerHandler('save', {newValue: newValue, response: response});
-            }, this));
-        },
-
-        save: function(submitValue) {
             this.showLoading();
-            return {'status': 'ok'};
+
+            this.isSaving = true;
+            
+             //sending data to server
+            var params = {oldValue: this.options.value, newValue: newValue};
             return $.ajax({
                         url     : this.options.url,
                         data    : params,
-                        type    : 'POST'
-                    });
-        }, 
+                        type    : 'POST',
+                    })
+                .done($.proxy(function(response) {
+                    this.isSaving = false;
+                    console.log(response);
+                    if (response.status === 'error') {
+                        this.error(response.msg);
+                        this.showForm();
+                        return;
+                    }
+                    this.error(false);   
+                    this.value = newValue;
+                    
+                    this.$div.triggerHandler('save', {newValue: newValue, response: response});
+                }, this))
+                .fail($.proxy(function(xhr) {
+                    this.isSaving = false;
 
-        setValue: function(value) {
-            this.value = value;
-            this.input.$input.val(value);     
-        }               
+                    var msg = typeof xhr === 'string' ? xhr : xhr.responseText || xhr.statusText || 'Unknown error';
+
+                    this.error(msg);
+                    this.showForm();
+                    
+                }, this));
+        },           
     };
 
     
@@ -241,20 +229,7 @@
         isVisible: function() {
             return this.$element.hasClass('editable-open');
         },
-        
-        renderForm: function() {
-            this.form = new EditableForm(this.$form_container);
-            
-            this.$form_container.on({
-                save: $.proxy(function(){ this.hide(); }, this), //click on submit button (value changed)
-                nochange: $.proxy(function(){ this.hide(); }, this), //click on submit button (value NOT changed)                
-                cancel: $.proxy(function(){ this.hide(); }, this), //click on cancel button
-            });
-            
-            this.form.setValue(this.value);
-        },
-        
-        
+                
         init: function () {
             this.value = this.$element.text();
             //add 'editable' class to every editable element
@@ -282,12 +257,11 @@
             
             if(!$(document).data('editable-handlers-attached')) {
                 //close all on escape
-                $(document).on('keyup.editable', function (e) {
-                    if (e.which === 27) {
-                        $('.editable-open').data('editable').hide();
-                        //todo: return focus on element 
+                $(document).on('keyup.editable', $.proxy(function (e) {
+                    if (e.keyCode === jQuery.ui.keyCode.ESCAPE) {
+                        this.closeOthers(null);
                     }
-                });
+                }, this));
 
                 //close containers when click outside 
                 //(mousedown could be better than click, it closes everything also on drag drop)
@@ -307,7 +281,7 @@
         
         /*
         Closes other containers except one related to passed element. 
-        Other containers can be cancelled or submitted (depends on onblur option)
+        Other containers are canceled
         */
         closeOthers: function(element) {
             $('.editable-open').each(function(i, el){
@@ -366,19 +340,34 @@
                 return;
             }
             this.$element.addClass('editable-open');
-            this.$element.tooltip('open');
             
             //redraw element
             var $content = $('<div>');
-            $content.append($('<label>').text('Hello world!'));
+            
+            //append elements to dom so they are visible
+            this.$element.tooltip('option', 'content', $content);
+            
+            //open tooltip
+            this.$element.tooltip('open');
+            
+            $content.append($('<label>').text(this.options.label));
                         
             this.$form_container = $('<div>');
             $content.append(this.$form_container);
             
             //render form
-            this.renderForm();
+            this.form = new EditableForm(this.$form_container, {
+                value: this.value,
+                url: this.options.url
+            });
             
-            this.$element.tooltip('option', 'content', $content);
+            this.$form_container.on({
+                save: $.proxy(function(){ this.hide(); }, this), //click on submit button (value changed)
+                nochange: $.proxy(function(){ this.hide(); }, this), //click on submit button (value NOT changed)                
+                cancel: $.proxy(function(){ this.hide(); }, this), //click on cancel button
+            });
+                        
+            
             
         },
         
@@ -431,7 +420,8 @@
     };
     
     $.fn.editable.defaults = {
-        disabled: false
+        disabled: false,
+        label   : 'Enter value'
     };
 }(window.jQuery));   
 
@@ -467,21 +457,28 @@ jQuery(function () {
         return false;
     });
     
-    var $admin_toggle_btn = jQuery('#tagging__edit_toggle_admin').checkboxradio();
+    var $admin_toggle_btn = jQuery('#tagging__edit_toggle_admin')
+                                .checkboxradio()
+                                .click(function(){
+                                    jQuery('div.plugin_tagging_edit ul.tagging_cloud a').editable('toggleDisabled');
+                                }),
+        add_editable = function() {
+            jQuery('div.plugin_tagging_edit ul.tagging_cloud a')
+                .editable({
+                    disabled  : !$admin_toggle_btn[0].checked,
+                    label     : LANG.plugins.tagging.admin_change_tag,
+                    url       : DOKU_BASE + 'lib/exe/ajax.php?call=plugin_tagging_admin_change'
+                });
+        };
     
-    $admin_toggle_btn.click(function(){
-        jQuery('.plugin_tagging_edit .tagging_cloud a').editable('toggleDisabled');
-    });
-    jQuery('.plugin_tagging_edit .tagging_cloud a').editable({disabled: true});
+    add_editable();
     
     
     jQuery('#tagging__edit_save').click(function (e) {
         jQuery('div.plugin_tagging_edit ul.tagging_cloud').load(
             DOKU_BASE + 'lib/exe/ajax.php',
             $form.serialize(),
-            function () {
-                jQuery(this).find('a').editable({disabled: !$admin_toggle_btn[0].checked});
-            }
+            add_editable
         );
         $btns.show();
         $form.hide();

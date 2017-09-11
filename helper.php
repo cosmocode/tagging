@@ -27,6 +27,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         }
         $db->init('tagging', dirname(__FILE__) . '/db/');
         $db->create_function('CLEANTAG', array($this, 'cleanTag'), 1);
+        $db->create_function('GROUP_SORT',
+            function($group, $newDelimiter) {
+                $ex = explode(',', $group);
+                sort($ex);
+                return implode($newDelimiter, $ex);
+            }, 2);
         return $db;
     }
 
@@ -61,7 +67,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $tag = utf8_strtolower($tag);
         return $tag;
     }
-    
+
     /**
      * Canonicalizes the namespace, remove the first colon and add glob
      *
@@ -355,7 +361,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                 $ret .= '<label>' . $this->getLang('toggle admin mode') . '<input type="checkbox" id="tagging__edit_toggle_admin" /></label>';
             }
             $ret .= '</div>';
-            
             $form = new dokuwiki\Form\Form();
             $form->id('tagging__edit');
             $form->setHiddenField('tagging[id]', $INFO['id']);
@@ -379,35 +384,32 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
     /**
      * @param string $namespace empty for entire wiki
-     * 
+     *
      * @return array
      */
     public function getAllTags($namespace='', $order_by='tag', $desc=false) {
         $order_fields = array('pid', 'tid', 'orig', 'taggers', 'count');
-        if (!in_array($order_by, $order_fields))
-            throw new Exception('cannot sort by '.$order_by. ' field does not exists');
-        
+        if (!in_array($order_by, $order_fields)) {
+            msg('cannot sort by '.$order_by. ' field does not exists', -1);
+            $order_by='tag';
+        }
+
         $db = $this->getDb();
-        
-        $query = 'SELECT    pid,
-                            CLEANTAG(tag) as tid,
-                            GROUP_CONCAT(tag) AS orig,
-                            GROUP_CONCAT(tagger) AS taggers,
+
+        $query = 'SELECT    "pid",
+                            CLEANTAG("tag") as "tid",
+                            GROUP_SORT(GROUP_CONCAT("tag"), \', \') AS "orig",
+                            GROUP_SORT(GROUP_CONCAT("tagger"), \', \') AS "taggers",
                             COUNT(*) AS "count"
                         FROM "taggings"
-                        WHERE pid LIKE ?
-                        GROUP BY tid
+                        WHERE "pid" LIKE ?
+                        GROUP BY "tid"
                         ORDER BY '.$order_by;
         if ($desc) $query .= ' DESC';
-        
+
         $res = $db->query($query, $this->globNamespace($namespace));
-        
-        return array_map(
-                function($record) {
-                    $record['orig'] = explode(',', $record['orig']);
-                    $record['taggers'] = explode(',', $record['taggers']);
-                    return $record;
-                }, $db->res2arr($res));
+
+        return $db->res2arr($res);
     }
 
     /**
@@ -439,7 +441,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         msg($this->getLang("admin renamed"), 1);
         return;
     }
-    
+
     /**
      * Rename or delete a tag for all users
      *
@@ -478,18 +480,18 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      */
     public function deleteTags($tags, $namespace='') {
         if (empty($tags)) return;
-        
+
         $namespace = cleanId($namespace);
-        
+
         $db = $this->getDb();
-        
-        $query = 'DELETE FROM taggings WHERE pid LIKE ? AND (' . 
+
+        $query = 'DELETE FROM taggings WHERE pid LIKE ? AND (' .
                                 implode(' OR ', array_fill(0, count($tags), 'CLEANTAG(tag) = ?')).')';
-        
+
         $args = array_map(array($this, 'cleanTag'), $tags);
         array_unshift($args, $this->globNamespace($namespace));
         $res = $db->query($query, $args);
-        
+
         msg(sprintf($this->getLang("admin deleted"), count($tags), $res->rowCount()), 1);
         return;
     }

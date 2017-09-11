@@ -5,7 +5,7 @@ jQuery(function () {
     /**
      * Add JavaScript confirmation to the User Delete button
      */
-    jQuery('#tagging__del').click(function(){
+    jQuery('#tagging__del').click(function () {
         return confirm(LANG.del_confirm);
     });
 
@@ -18,7 +18,7 @@ jQuery(function () {
     $btn.submit(function (e) {
         $btns.hide();
         $form.show();
-        var $input = $form.find('input[type="text"]');
+        var $input = $form.find('textarea');
         var len = $input.val().length;
         $input.focus();
         try {
@@ -33,29 +33,30 @@ jQuery(function () {
     });
 
     var $admin_toggle_btn = jQuery('#tagging__edit_toggle_admin')
-                                .checkboxradio()
-                                .click(function(){
-                                    jQuery('div.plugin_tagging_edit ul.tagging_cloud a').editable('toggleDisabled');
-                                }),
-        add_editable = function() {
+            .checkboxradio()
+            .click(function () {
+                jQuery('div.plugin_tagging_edit ul.tagging_cloud a').editable('toggleDisabled');
+            }),
+        add_editable = function () {
             //no editable button - we are not the admin
             if ($admin_toggle_btn.length === 0) return;
 
             jQuery('div.plugin_tagging_edit ul.tagging_cloud a')
                 .editable({
-                    disabled  : !$admin_toggle_btn[0].checked,
-                    label     : LANG.plugins.tagging.admin_change_tag,
-                    url       : DOKU_BASE + 'lib/exe/ajax.php?call=plugin_tagging_admin_change',
-                    params    : { 'call'   : 'plugin_tagging_admin_change',
-                                  'id'     : JSINFO.id,
-                                  'sectok' : JSINFO.sectok
-                                },
-                    success   :
-                        function(response) {
-                            jQuery('div.plugin_tagging_edit ul.tagging_cloud').html(response.html_cloud);
-                            $form.find('input[type="text"]').val(response.tags_edit_value);
-                            add_editable();
-                        }
+                    disabled: !$admin_toggle_btn[0].checked,
+                    label:    LANG.plugins.tagging.admin_change_tag,
+                    url:      DOKU_BASE + 'lib/exe/ajax.php?call=plugin_tagging_admin_change',
+                    params:   {
+                        'call':   'plugin_tagging_admin_change',
+                        'id':     JSINFO.id,
+                        'sectok': JSINFO.sectok
+                    },
+                    success:
+                              function (response) {
+                                  jQuery('div.plugin_tagging_edit ul.tagging_cloud').html(response.html_cloud);
+                                  $form.find('textarea').val(response.tags_edit_value);
+                                  add_editable();
+                              }
                 });
         };
 
@@ -98,18 +99,18 @@ jQuery(function () {
         return split(term).pop();
     }
 
-    $form.find('input[type="text"]')
+    $form.find('textarea')
     // don't navigate away from the field on tab when selecting an item
-        .bind("keydown", function (event) {
+        .bind('keydown', function (event) {
             if (event.keyCode === jQuery.ui.keyCode.TAB &&
-                jQuery(this).data("ui-autocomplete").menu.active) {
+                jQuery(this).data('ui-autocomplete').menu.active) {
                 event.preventDefault();
             }
         })
         .autocomplete({
             source: function (request, response) {
                 jQuery.getJSON(DOKU_BASE + 'lib/exe/ajax.php?call=plugin_tagging_autocomplete', {
-                    term: extractLast(request.term),
+                    term: extractLast(request.term)
                 }, response);
             },
             search: function () {
@@ -120,7 +121,7 @@ jQuery(function () {
                 }
                 return true;
             },
-            focus: function () {
+            focus:  function () {
                 // prevent value inserted on focus
                 return false;
             },
@@ -131,9 +132,9 @@ jQuery(function () {
                 // add the selected item
                 terms.push(ui.item.value);
                 // add placeholder to get the comma-and-space at the end
-                terms.push("");
-                this.value = terms.join(", ");
+                terms.push('');
+                this.value = terms.join(', ');
                 return false;
-            },
+            }
         });
 });

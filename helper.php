@@ -67,7 +67,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $tag = utf8_strtolower($tag);
         return $tag;
     }
-    
+
     /**
      * Canonicalizes the namespace, remove the first colon and add glob
      *
@@ -356,7 +356,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         if ($this->getUser() && $INFO['writable']) {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
             $ret .= html_btn('tagging_edit', $INFO['id'], '', array());
-            
+
             $form = new dokuwiki\Form\Form();
             $form->id('tagging__edit');
             $form->setHiddenField('tagging[id]', $INFO['id']);
@@ -380,16 +380,16 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
     /**
      * @param string $namespace empty for entire wiki
-     * 
+     *
      * @return array
      */
     public function getAllTags($namespace='', $order_by='tag', $desc=false) {
         $order_fields = array('pid', 'tid', 'orig', 'taggers', 'count');
         if (!in_array($order_by, $order_fields))
             throw new Exception('cannot sort by '.$order_by. ' field does not exists');
-        
+
         $db = $this->getDb();
-        
+
         $query = 'SELECT    pid,
                             CLEANTAG(tag) as tid,
                             GROUP_SORT(GROUP_CONCAT(tag), ", ") AS orig,
@@ -398,11 +398,11 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                         FROM "taggings"
                         WHERE pid LIKE ?
                         GROUP BY tid
-                        ORDER BY '.$order_by;
+                        ORDER BY ?';
         if ($desc) $query .= ' DESC';
-        
-        $res = $db->query($query, $this->globNamespace($namespace));
-        
+
+        $res = $db->query($query, $this->globNamespace($namespace), $order_by);
+
         return $db->res2arr($res);
     }
 
@@ -435,7 +435,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         msg($this->getLang("admin renamed"), 1);
         return;
     }
-    
+
     /**
      * Deletes a tag
      *
@@ -444,18 +444,18 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      */
     public function deleteTags($tags, $namespace='') {
         if (empty($tags)) return;
-        
+
         $namespace = cleanId($namespace);
-        
+
         $db = $this->getDb();
-        
-        $query = 'DELETE FROM taggings WHERE pid LIKE ? AND (' . 
+
+        $query = 'DELETE FROM taggings WHERE pid LIKE ? AND (' .
                                 implode(' OR ', array_fill(0, count($tags), 'CLEANTAG(tag) = ?')).')';
-        
+
         $args = array_map(array($this, 'cleanTag'), $tags);
         array_unshift($args, $this->globNamespace($namespace));
         $res = $db->query($query, $args);
-        
+
         msg(sprintf($this->getLang("admin deleted"), count($tags), $res->rowCount()), 1);
         return;
     }

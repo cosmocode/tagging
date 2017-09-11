@@ -199,9 +199,10 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         }
         
         $tags = $hlp->findItems(array('pid' => $pid), 'tag');
+        $userTags = $hlp->findItems(array('pid' => $pid, 'tagger' => $hlp->getUser()), 'tag');
         echo $json->encode(array(
                                 'status'          => 'ok',
-                                'tags_edit_value' => implode(', ', array_keys($tags)),
+                                'tags_edit_value' => implode(', ', array_keys($userTags)),
                                 'html_cloud'      => $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), false, true)
                         ));
     }

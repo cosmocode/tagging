@@ -160,6 +160,11 @@
             this.$form.show();
 
             this.input.activate();
+
+            /**
+             Fired when form is shown
+             **/
+            this.$div.triggerHandler('show');
         },
 
         error: function(msg) {
@@ -241,16 +246,7 @@
                 this.$element.addClass('editable-click');
             }
 
-            this.$element.tooltip({
-                items: '*',
-                content: ' ',
-                track:  false,
-                open: $.proxy(function() {
-                    this.$element.off('mouseleave focusout');
-                }, this)
-            });
-            //disable standart triggering tooltip events
-            this.$element.off('mouseover focusin');
+            this.$popup = null;
 
             this.$element.on('click.editable', $.proxy(function(e){
                 //prevent following link if editable enabled
@@ -274,10 +270,11 @@
                 $(document).on('click.editable', function(e) {
                     var $target = $(e.target);
 
-                    if($target.is('.ui-tooltip') || $target.parents('.ui-tooltip').length) {
+                    if($target.is('.editable-popup') || $target.parents('.editable-popup').length) {
                         return;
                     }
-                    //close all open containers (except one - target)
+
+                    //close all open containers
                     Editable.prototype.closeOthers(e.target);
                 });
 
@@ -340,21 +337,36 @@
             if(this.options.disabled) {
                 return;
             }
+
             this.$element.addClass('editable-open');
 
             //redraw element
-            var $content = $('<div>');
+            this.$popup = $('<div>')
+                .addClass('ui-tooltip ui-corner-all ui-widget-shadow ui-widget ui-widget-content editable-popup')
+                .css('max-width', 'none') //remove ui-tooltip max-width property
+                .prependTo('body')
+                .hide()
+                .fadeIn();
 
-            //append elements to dom so they are visible
-            this.$element.tooltip('option', 'content', $content);
-
-            //open tooltip
-            this.$element.tooltip('open');
-
-            $content.append($('<label>').text(this.options.label));
+            this.$popup.append($('<label>').text(this.options.label));
 
             this.$form_container = $('<div>');
-            $content.append(this.$form_container);
+            this.$popup.append(this.$form_container);
+
+            //firstly bind the events
+            this.$form_container.on({
+                save: $.proxy(function(){ this.hide(); }, this), //click on submit button (value changed)
+                nochange: $.proxy(function(){ this.hide(); }, this), //click on submit button (value NOT changed)
+                cancel: $.proxy(function(){ this.hide(); }, this), //click on cancel button
+                show: $.proxy(function() {
+                    this.$popup.position({
+                        of: this.$element,
+                        my: 'center bottom-5',
+                        at: 'center top',
+                        collision: 'flipfit'
+                    });
+                }, this)
+            });
 
             //render form
             this.form = new EditableForm(this.$form_container, {
@@ -363,12 +375,6 @@
                 success : this.options.success,
                 scope   : this.options.scope,
                 params  : this.options.params
-            });
-
-            this.$form_container.on({
-                save: $.proxy(function(){ this.hide(); }, this), //click on submit button (value changed)
-                nochange: $.proxy(function(){ this.hide(); }, this), //click on submit button (value NOT changed)
-                cancel: $.proxy(function(){ this.hide(); }, this) //click on cancel button
             });
         },
 
@@ -386,8 +392,13 @@
                 return;
             }
 
-            this.$element.removeClass('editable-open');
-            this.$element.tooltip('close');
+            this.$popup.fadeOut({
+                complete: $.proxy(function() {
+                    this.$popup.remove();
+                    this.$popup = null;
+                    this.$element.removeClass('editable-open');
+                }, this)
+            });
         },
         /**
          Toggles container visibility (show / hide)

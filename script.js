@@ -1,4 +1,3 @@
-
 /* DOKUWIKI:include script/editable.js */
 
 jQuery(function () {

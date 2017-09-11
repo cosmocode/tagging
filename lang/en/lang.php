@@ -20,9 +20,13 @@ $lang['admin filter button']       = 'Filter';
 $lang['admin deleted']             = 'You have deleted %d tags on %d pages';
 $lang['admin sort ascending']      = 'Sort ascending';
 $lang['admin sort descending']     = 'Sort descending';
+$lang['toggle admin mode']         = 'Change tags';
 
-$lang['search_section_title'] = 'Pages tagged';
-$lang['js']['notags']         = 'No tags, yet';
-$lang['js']['nopages']        = 'No pages with this tag, yet';
+$lang['no_admin']                  = 'Error. Only admins can modify tags.';
+
+$lang['search_section_title']      = 'Pages tagged';
+$lang['js']['notags']              = 'No tags, yet';
+$lang['js']['nopages']             = 'No pages with this tag, yet';
+$lang['js']['admin_change_tag']    = 'Change the tag';
 
 $lang['tagjmp_error'] = 'Could not find any page tagged with %s';

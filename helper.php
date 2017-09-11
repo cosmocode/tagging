@@ -349,7 +349,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         if ($this->getUser() && $INFO['writable']) {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
+            $ret .= '<div id="tagging__edit_buttons_group">';
             $ret .= html_btn('tagging_edit', $INFO['id'], '', array());
+            if (auth_isadmin()) {
+                $ret .= '<label>' . $this->getLang('toggle admin mode') . '<input type="checkbox" id="tagging__edit_toggle_admin" /></label>';
+            }
+            $ret .= '</div>';
             
             $form = new dokuwiki\Form\Form();
             $form->id('tagging__edit');
@@ -433,6 +438,36 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         msg($this->getLang("admin renamed"), 1);
         return;
+    }
+    
+    /**
+     * Rename or delete a tag for all users
+     *
+     * @param string $pid
+     * @param string $formerTagName
+     * @param string $newTagName
+     * 
+     * @return array
+     */
+    public function modifyPageTag($pid, $formerTagName, $newTagName) {
+
+        $db = $this->getDb();
+
+        $res = $db->query('SELECT pid FROM taggings WHERE CLEANTAG(tag) = ? AND pid = ?', $this->cleanTag($formerTagName), $pid);
+        $check = $db->res2arr($res);
+
+        if (empty($check)) {
+            return array(true, $this->getLang('admin tag does not exists'));
+        }
+        
+        if (empty($newTagName)) {
+            $res = $db->query('DELETE FROM taggings WHERE pid = ? AND CLEANTAG(tag) = ?', $pid, $this->cleanTag($formerTagName));
+        } else {
+            $res = $db->query('UPDATE taggings SET tag = ? WHERE pid = ? AND CLEANTAG(tag) = ?', $newTagName, $pid, $this->cleanTag($formerTagName));
+        }
+        $db->res2arr($res);
+
+        return array(false, $this->getLang('admin renamed'));
     }
     
     /**

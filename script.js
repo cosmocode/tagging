@@ -18,7 +18,7 @@ jQuery(function () {
     $btn.submit(function (e) {
         $btns.hide();
         $form.show();
-        var $input = $form.find('input[type="text"]');
+        var $input = $form.find('textarea');
         var len = $input.val().length;
         $input.focus();
         try {
@@ -53,7 +53,7 @@ jQuery(function () {
                     success   :
                         function(response) {
                             jQuery('div.plugin_tagging_edit ul.tagging_cloud').html(response.html_cloud);
-                            $form.find('input[type="text"]').val(response.tags_edit_value);
+                            $form.find('textarea').val(response.tags_edit_value);
                             add_editable();
                         }
                 });
@@ -98,7 +98,7 @@ jQuery(function () {
         return split(term).pop();
     }
 
-    $form.find('input[type="text"]')
+    $form.find('textarea')
     // don't navigate away from the field on tab when selecting an item
         .bind("keydown", function (event) {
             if (event.keyCode === jQuery.ui.keyCode.TAB &&

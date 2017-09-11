@@ -126,7 +126,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             $hlp->replaceTags(
                 $id, $hlp->getUser(),
                 preg_split(
-                    '/\s*,\s*/', $data['tags'], -1,
+                    '/(\s*,\s*)|(\s*,?\s*\n\s*)/', $data['tags'], -1,
                     PREG_SPLIT_NO_EMPTY
                 )
             );

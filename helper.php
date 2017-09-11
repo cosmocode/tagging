@@ -385,23 +385,25 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      */
     public function getAllTags($namespace='', $order_by='tag', $desc=false) {
         $order_fields = array('pid', 'tid', 'orig', 'taggers', 'count');
-        if (!in_array($order_by, $order_fields))
-            throw new Exception('cannot sort by '.$order_by. ' field does not exists');
+        if (!in_array($order_by, $order_fields)) {
+            msg('cannot sort by '.$order_by. ' field does not exists', -1);
+            $order_by='tag';
+        }
 
         $db = $this->getDb();
 
-        $query = 'SELECT    pid,
-                            CLEANTAG(tag) as tid,
-                            GROUP_SORT(GROUP_CONCAT(tag), ", ") AS orig,
-                            GROUP_SORT(GROUP_CONCAT(tagger), ", ") AS taggers,
+        $query = 'SELECT    "pid",
+                            CLEANTAG("tag") as "tid",
+                            GROUP_SORT(GROUP_CONCAT("tag"), \', \') AS "orig",
+                            GROUP_SORT(GROUP_CONCAT("tagger"), \', \') AS "taggers",
                             COUNT(*) AS "count"
                         FROM "taggings"
-                        WHERE pid LIKE ?
-                        GROUP BY tid
-                        ORDER BY ?';
+                        WHERE "pid" LIKE ?
+                        GROUP BY "tid"
+                        ORDER BY '.$order_by;
         if ($desc) $query .= ' DESC';
 
-        $res = $db->query($query, $this->globNamespace($namespace), $order_by);
+        $res = $db->query($query, $this->globNamespace($namespace));
 
         return $db->res2arr($res);
     }

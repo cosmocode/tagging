@@ -1,0 +1,5 @@
+====== Tags suchen und bearbeiten ======
+
+Auf dieser Seite stehen alle im Wiki genutzten Tags.
+Das Formular erlaubt einzelne Tags umzubenennen.
+Tags können verschmolzen werden, indem ein Tag zu einem anderen existierenden Tag umbenannt wird.

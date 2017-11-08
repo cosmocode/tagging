@@ -501,17 +501,21 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $namespace = cleanId($namespace);
 
-        $db = $this->getDb();
+        $db = $this->getDB();
 
-        $query = 'DELETE FROM taggings WHERE pid LIKE ? AND (' .
+        $queryBody = 'FROM taggings WHERE pid LIKE ? AND (' .
             implode(' OR ', array_fill(0, count($tags), 'CLEANTAG(tag) = ?')) . ')';
-
         $args = array_map(array($this, 'cleanTag'), $tags);
         array_unshift($args, $this->globNamespace($namespace));
-        $res = $db->query($query, $args);
 
-        msg(sprintf($this->getLang("admin deleted"), count($tags), $res->rowCount()), 1);
 
-        return;
+        $affectedPagesQuery= 'SELECT DISTINCT pid ' . $queryBody;
+        $resAffectedPages = $db->query($affectedPagesQuery, $args);
+        $numAffectedPages = count($resAffectedPages->fetchAll());
+
+        $deleteQuery = 'DELETE ' . $queryBody;
+        $db->query($deleteQuery, $args);
+
+        msg(sprintf($this->getLang("admin deleted"), count($tags), $numAffectedPages), 1);
     }
 }

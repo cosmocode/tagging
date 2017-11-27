@@ -9,7 +9,7 @@ jQuery(function () {
         return confirm(LANG.del_confirm);
     });
 
-    var $form = jQuery('#tagging__edit').hide();
+    var $form = jQuery('#tagging__edit');
     if (!$form.length) return;
 
     var $btn = jQuery('form.btn_tagging_edit');

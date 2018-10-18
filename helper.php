@@ -426,6 +426,22 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
+     * Get all pages with tags and their tags
+     *
+     * @return array ['pid' => 'tag1,tag2,tag3']
+     */
+    public function getAllTagsByPage() {
+        $query = '
+        SELECT pid, GROUP_CONCAT(tag) AS tags
+        FROM taggings
+        GROUP BY pid
+        ';
+        $db = $this->getDb();
+        $res = $db->query($query);
+        return array_column($db->res2arr($res), 'tags', 'pid');
+    }
+
+    /**
      * Renames a tag
      *
      * @param string $formerTagName

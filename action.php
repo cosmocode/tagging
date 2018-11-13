@@ -287,7 +287,17 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $results .= '<div class="clearer"></div>';
         $results .= '</div>';
 
-        // insert it right after second level headline
-        $event->data = preg_replace('/(<\/h2>)/', "\\1\n" . $results, $event->data, 1);
+        if (preg_match('/<div class="nothing">.*?<\/div>/', $event->data)) {
+            // there are no other hits, replace the nothing found
+            $event->data = preg_replace('/<div class="nothing">.*?<\/div>/', $results, $event->data, 1);
+        } elseif (preg_match('/(<\/h2>)/', $event->data)) {
+            // insert it right after second level headline
+            $event->data = preg_replace('/(<\/h2>)/', "\\1\n" . $results, $event->data, 1);
+        } else {
+            // unclear what happened, let's just append
+            $event->data .= $results;
+        }
+
+
     }
 }

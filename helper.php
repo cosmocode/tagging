@@ -1,9 +1,9 @@
 <?php
-
-if (!defined('DOKU_INC')) {
-    die();
-}
-
+/**
+ * Tagging Plugin (hlper component)
+ *
+ * @license GPL 2
+ */
 class helper_plugin_tagging extends DokuWiki_Plugin {
 
     /**
@@ -15,18 +15,18 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      */
     public function getDB() {
         static $db = null;
-        if (!is_null($db)) {
+        if ($db !== null) {
             return $db;
         }
 
         /** @var helper_plugin_sqlite $db */
         $db = plugin_load('helper', 'sqlite');
-        if (is_null($db)) {
+        if ($db === null) {
             msg('The tagging plugin needs the sqlite plugin', -1);
 
             return false;
         }
-        $db->init('tagging', dirname(__FILE__) . '/db/');
+        $db->init('tagging', __DIR__ . '/db/');
         $db->create_function('CLEANTAG', array($this, 'cleanTag'), 1);
         $db->create_function('GROUP_SORT',
             function ($group, $newDelimiter) {
@@ -65,9 +65,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return string
      */
     public function cleanTag($tag) {
-        $tag = str_replace(' ', '', $tag);
-        $tag = str_replace('-', '', $tag);
-        $tag = str_replace('_', '', $tag);
+        $tag = str_replace(array(' ', '-', '_'), '', $tag);
         $tag = utf8_strtolower($tag);
 
         return $tag;
@@ -170,7 +168,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
 
         // group and order
-        if ($type == 'tag') {
+        if ($type === 'tag') {
             $groupby = 'CLEANTAG(tag)';
             $orderby = 'CLEANTAG(tag)';
         } else {
@@ -304,7 +302,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $tags = $this->cloudData($tags);
             foreach ($tags as $val => $size) {
                 // skip hidden tags for users that can't edit
-                if ($type == 'tag' and
+                if ($type === 'tag' and
                     $hidden_len and
                     substr($val, 0, $hidden_len) == $hidden_str and
                     !($this->getUser() && $INFO['writable'])
@@ -423,6 +421,27 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $res = $db->query($query, $this->globNamespace($namespace));
 
         return $db->res2arr($res);
+    }
+
+    /**
+     * Get all pages with tags and their tags
+     *
+     * @return array ['pid' => ['tag1','tag2','tag3']]
+     */
+    public function getAllTagsByPage() {
+        $query = '
+        SELECT pid, GROUP_CONCAT(tag) AS tags
+        FROM taggings
+        GROUP BY pid
+        ';
+        $db = $this->getDb();
+        $res = $db->query($query);
+        return array_map(
+            function ($i) {
+                return explode(',', $i);
+            },
+            array_column($db->res2arr($res), 'tags', 'pid')
+        );
     }
 
     /**

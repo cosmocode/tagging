@@ -426,7 +426,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     /**
      * Get all pages with tags and their tags
      *
-     * @return array ['pid' => 'tag1,tag2,tag3']
+     * @return array ['pid' => ['tag1','tag2','tag3']]
      */
     public function getAllTagsByPage() {
         $query = '
@@ -436,7 +436,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         ';
         $db = $this->getDb();
         $res = $db->query($query);
-        return array_column($db->res2arr($res), 'tags', 'pid');
+        return array_map(
+            function ($i) {
+                return explode(',', $i);
+            },
+            array_column($db->res2arr($res), 'tags', 'pid')
+        );
     }
 
     /**

@@ -20,7 +20,7 @@ $lang['admin filter button']       = 'Filter';
 $lang['admin deleted']             = 'You have deleted %d tags on %d pages';
 $lang['admin sort ascending']      = 'Sort ascending';
 $lang['admin sort descending']     = 'Sort descending';
-$lang['toggle admin mode']         = 'Change tags';
+$lang['toggle admin mode']         = 'Tag Admin';
 
 $lang['no_admin']                  = 'Error. Only admins can modify tags.';
 

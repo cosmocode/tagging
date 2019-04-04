@@ -26,6 +26,7 @@ $lang['admin sort descending'] = 'Absteigend sortieren';
 $lang['toggle admin mode']     = 'Administrieren';
 $lang['no_admin']              = 'Fehler. Nur Admins können Schlagworte bearbeiten.';
 $lang['search_section_title']  = 'Seiten mit Schlagwort';
+$lang['search_section_title_other']  = 'Seiten mit Suchbegriff';
 $lang['js']['notags']          = 'Keine Schlagworte vergeben';
 $lang['js']['nopages']         = 'Keine Seiten mit diesem Schlagwort';
 $lang['js']['admin_change_tag'] = 'Schlagworte bearbeiten';

@@ -25,6 +25,7 @@ $lang['toggle admin mode']         = 'Tag Admin';
 $lang['no_admin']                  = 'Error. Only admins can modify tags.';
 
 $lang['search_section_title']      = 'Pages tagged';
+$lang['search_section_title_other']      = 'Pages containing';
 $lang['js']['notags']              = 'No tags, yet';
 $lang['js']['nopages']             = 'No pages with this tag, yet';
 $lang['js']['admin_change_tag']    = 'Change the tag';

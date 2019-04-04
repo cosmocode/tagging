@@ -286,6 +286,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $results .= '</ul>';
         $results .= '<div class="clearer"></div>';
         $results .= '</div>';
+        $results .= '<h3>' . $this->getLang('search_section_title_other') . ' "' . hsc($tag) . '"' . '</h3>';
 
         if (preg_match('/<div class="nothing">.*?<\/div>/', $event->data)) {
             // there are no other hits, replace the nothing found

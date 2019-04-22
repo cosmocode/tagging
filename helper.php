@@ -400,10 +400,11 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     protected function linkToPage($pid, $ns = '') {
         print "trying to split the array from value $pid";
         print "namespace is $ns";
-        $pidWONamespace = explode(":",$pid);
-        $pidWONamespaceEnd = end($pidWONamespace);
-        print "splitted value is $pidWONamespaceEnd";
-        return '<a href="' . hsc($this->getPidURL($pid, $ns)) . '">' . $pidWONamespaceEnd . '</a>';
+        $pidWONamespace = end(explode(":",$pid));
+        $namespace = array_pop(array_reverse(explode(":",$pid)));
+        print "namespace from pid is $namespace";
+        print "splitted value is $pidWONamespace";
+        return '<a href="' . hsc($this->getPidURL($pid, $namespace)) . '">' . $pidWONamespace . '</a>';
     }
 
     /**

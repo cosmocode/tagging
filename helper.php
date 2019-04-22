@@ -202,8 +202,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         foreach ($res as $row) {
             $ret[$row['item']] = $row['cnt'];
         }
-
-        print "the result is: $ret \n";
+        print_r($ret);
         return $ret;
     }
 

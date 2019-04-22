@@ -193,7 +193,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                 $limit
               ";
 
-        print "running sql query: $sql \n";
         // run query and turn into associative array
         $res = $db->query($sql, array_values($filter));
         $res = $db->res2arr($res);
@@ -202,7 +201,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         foreach ($res as $row) {
             $ret[$row['item']] = $row['cnt'];
         }
-        print_r($ret);
+        
         return $ret;
     }
 

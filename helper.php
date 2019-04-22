@@ -398,7 +398,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     protected function linkToPage($pid, $ns = '') {
-        return '<a href="' . hsc($this->getPidURL($pid, $ns)) . '">' . $pid . '</a>';
+        $pidWONamespace = end(split(":",$pid));  
+        return '<a href="' . hsc($this->getPidURL($pid, $ns)) . '">' . $pidWONamespace . '</a>';
     }
 
     /**

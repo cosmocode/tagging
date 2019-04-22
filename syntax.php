@@ -81,8 +81,8 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
             case 'tag':
                 $renderer->info['cache'] = false;
                 
-                $tags = $hlp->findItems(array('tag' => $data['tag']), 'pid', $data['limit']);
-                $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
+                $pids = $hlp->findItems(array('tag' => $data['tag']), 'pid', $data['limit']);
+                $renderer->doc .= $hlp->html_cloud($pids, 'tag', array($hlp, 'linkToSearch'), true, true);
 
                 break;
             case 'ns':

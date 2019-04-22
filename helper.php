@@ -404,7 +404,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $namespace = array_pop(array_reverse(explode(":",$pid)));
         print "namespace from pid is $namespace";
         print "splitted value is $pidWONamespace";
-        return '<a href="' . hsc($this->getPidURL($pidWONamespace, $namespace)) . '">' . $pidWONamespace . '</a>';
+        return '<a href="' . $this->getPidURL($pidWONamespace, $namespace) . '">' . $pidWONamespace . '</a>';
     }
 
     /**

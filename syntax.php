@@ -75,14 +75,16 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                     $data['user'] = $_SERVER['REMOTE_USER'];
                 }
                 $tags = $hlp->findItems(array('tagger' => $data['user']), 'tag', $data['limit']);
-                $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
+                $info_text = $this->lang['js']['notags'];
+                $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true, $info_text);
 
                 break;
             case 'tag':
                 $renderer->info['cache'] = false;
                 
                 $pids = $hlp->findItems(array('tag' => $data['tag']), 'pid', $data['limit']);
-                $renderer->doc .= $hlp->html_cloud($pids, 'tag', array($hlp, 'linkToPage'), true, true);
+                $info_text = $this->lang['js']['nopages'];
+                $renderer->doc .= $hlp->html_cloud($pids, 'tag', array($hlp, 'linkToPage'), true, true, $info_text);
 
                 break;
             case 'ns':

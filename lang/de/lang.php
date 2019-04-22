@@ -28,6 +28,7 @@ $lang['no_admin']              = 'Fehler. Nur Admins können Schlagworte bearbei
 $lang['search_section_title']  = 'Seiten mit Schlagwort';
 $lang['search_section_title_other']  = 'Seiten mit Suchbegriff';
 $lang['js']['notags']          = 'Keine Schlagworte vergeben';
+$lang['js']['notag']          = 'Kein Schlagwort angegeben';
 $lang['js']['nopages']         = 'Keine Seiten mit diesem Schlagwort';
 $lang['js']['admin_change_tag'] = 'Schlagworte bearbeiten';
 $lang['tagjmp_error']          = 'Es konnte keine Seite mit Schlagwort %s gefunden werden';

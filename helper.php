@@ -239,21 +239,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return $ret;
     }
 
-    public function getPidURL($pid, $ns = '') {
-        // wrap tag in quotes if non clean
-        $cpid = utf8_stripspecials($this->cleanTag($pid));
-        if ($cpid != utf8_strtolower($pid)) {
-            $pid = '"' . $pid . '"';
-        }
-
-        $ret = $ns . rawurlencode(":" . $pid);
-        /*if ($ns) {
-            $ret .= rawurlencode(' @' . $ns);
-        }*/
-
-        return str_replace("%3A",":",$ret);
-    }
-
     /**
      * Calculates the size levels for the given list of clouds
      *
@@ -300,7 +285,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return string
      */
-    public function html_cloud($tags, $type, $func, $wrap = true, $return = false, $ns = '') {
+    public function html_cloud($tags, $type, $func, $wrap = true, $return = false, $ns = '', $info_text) {
         global $INFO;
 
         $hidden_str = $this->getConf('hiddenprefix');
@@ -313,7 +298,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         if (count($tags) === 0) {
             // Produce valid XHTML (ul needs a child)
             $this->setupLocale();
-            $ret .= '<li><div class="li">' . $this->lang['js']['no' . $type . 's'] . '</div></li>';
+            $ret .= '<li><div class="li">' . $info_text . '</div></li>';
         } else {
             $tags = $this->cloudData($tags);
             foreach ($tags as $val => $size) {
@@ -364,7 +349,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      */
     protected function linkToPage($pid, $ns = '') {
         return html_wikilink($pid);
-
     }
 
     /**

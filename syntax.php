@@ -82,7 +82,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                 $renderer->info['cache'] = false;
                 
                 $pids = $hlp->findItems(array('tag' => $data['tag']), 'pid', $data['limit']);
-                $renderer->doc .= $hlp->html_cloud_pid($pids, 'tag', array($hlp, 'linkToPage'), true, true);
+                $renderer->doc .= $hlp->html_cloud($pids, 'tag', array($hlp, 'linkToPage'), true, true);
 
                 break;
             case 'ns':

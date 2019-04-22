@@ -343,48 +343,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return '';
     }
 
-    public function html_cloud_pid($tags, $type, $func, $wrap = true, $return = false, $ns = '') {
-        global $INFO;
-
-        $hidden_str = $this->getConf('hiddenprefix');
-        $hidden_len = strlen($hidden_str);
-
-        $ret = '';
-        if ($wrap) {
-            $ret .= '<ul class="tagging_cloud clearfix">';
-        }
-        if (count($tags) === 0) {
-            // Produce valid XHTML (ul needs a child)
-            $this->setupLocale();
-            $ret .= '<li><div class="li">' . $this->lang['js']['no' . $type . 's'] . '</div></li>';
-        } else {
-            $tags = $this->cloudData($tags);
-            foreach ($tags as $val => $size) {
-                // skip hidden tags for users that can't edit
-                if ($type === 'tag' and
-                    $hidden_len and
-                    substr($val, 0, $hidden_len) == $hidden_str and
-                    !($this->getUser() && $INFO['writable'])
-                ) {
-                    continue;
-                }
-
-                $ret .= '<li class="t' . $size . '"><div class="li">';
-                $ret .= call_user_func($func, $val, $ns);
-                $ret .= '</div></li>';
-            }
-        }
-        if ($wrap) {
-            $ret .= '</ul>';
-        }
-        if ($return) {
-            return $ret;
-        }
-        echo $ret;
-
-        return '';
-    }
-
     /**
      * Get the link to a search for the given tag
      *
@@ -397,15 +355,17 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return '<a href="' . hsc($this->getTagSearchURL($tag, $ns)) . '">' . $tag . '</a>';
     }
 
+    /**
+     * Get the link to a page for the given pid
+     *
+     * @param string $pid search for this tag
+     * @param string $ns  limit search to this namespace
+     *
+     * @return string
+     */
     protected function linkToPage($pid, $ns = '') {
-        print "trying to split the array from value $pid";
-        print "namespace is $ns";
-        $pidWONamespace = end(explode(":",$pid));
-        $namespace = array_pop(array_reverse(explode(":",$pid)));
-        print "namespace from pid is $namespace";
-        print "splitted value is $pidWONamespace";
         return html_wikilink($pid);
-        //return '<a href="' . hsc($this->getPidURL($pidWONamespace, $namespace)) . '">' . $pidWONamespace . '</a>';
+
     }
 
     /**

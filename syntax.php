@@ -87,7 +87,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                     $ret = '<ul class="tagging_cloud clearfix">';
                     $ret .= '<li><div class="li">' . $this->lang['js']['nopages'] . '</div></li>';
                     $ret .= '</ul>';
-                    $renderer->doc .= $hlp->$ret;
+                    $renderer->doc .= $ret;
                 } else {
                     $renderer->doc .= $hlp->html_cloud($pids, 'tag', array($hlp, 'linkToPage'), true, true);
                 }

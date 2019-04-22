@@ -75,10 +75,8 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                 break;
             case 'tag':
                 $renderer->info['cache'] = false;
-                if (!isset($data['tag'])) {
-                    $data['tag'] = $_SERVER['REMOTE_USER'];
-                }
-                $tags = $hlp->findItems(array('tagger' => $data['tag']), 'tag', $data['limit']);
+                
+                $tags = $hlp->findItems(array('tag' => $data['tag']), 'pid', $data['limit']);
                 $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
 
                 break;

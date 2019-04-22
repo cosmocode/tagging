@@ -45,6 +45,11 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                     $data['user'] = trim($matches[2]);
                 }
                 break;
+            case 'tag':
+                if (count($matches) > 2) {
+                    $data['tag'] = trim($matches[2]);
+                }
+                break;
             case 'ns':
                 if (count($matches) > 2) {
                     $data['ns'] = trim($matches[2]);

@@ -167,6 +167,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         }
         $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
 
+        
         // group and order
         if ($type === 'tag') {
             $groupby = 'CLEANTAG(tag)';
@@ -192,6 +193,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                 $limit
               ";
 
+        print "running sql query: $sql";
         // run query and turn into associative array
         $res = $db->query($sql, array_values($filter));
         $res = $db->res2arr($res);

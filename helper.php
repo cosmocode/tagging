@@ -398,8 +398,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     protected function linkToPage($pid, $ns = '') {
-        print "trying to split the array";
-        $pidWONamespace = end(split(":",$pid));
+        print "trying to split the array from value $pid";
+        $splitted = split(":",$pid);
+        print_r($splitted);
+        $pidWONamespace = end($splitted);
         print "splitted value is $pidWONamespace";
         return '<a href="' . hsc($this->getPidURL($pid, $ns)) . '">' . $pidWONamespace . '</a>';
     }

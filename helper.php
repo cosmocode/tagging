@@ -247,7 +247,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $pid = '"' . $pid . '"';
         }
 
-        $ret = rawurlencode($pid);
+        $ret = "test"; //rawurlencode($pid);
         /*if ($ns) {
             $ret .= "rawurlencode(' @' . $ns)";
         }*/

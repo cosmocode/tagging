@@ -252,7 +252,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $ret .= rawurlencode(' @' . $ns);
         }*/
 
-        return $ret;
+        return str_replace("%3A",":",$ret);
     }
 
     /**

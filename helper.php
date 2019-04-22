@@ -240,6 +240,21 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return $ret;
     }
 
+    public function getPidURL($pid, $ns = '') {
+        // wrap tag in quotes if non clean
+        $cpid = utf8_stripspecials($this->cleanTag($pid));
+        if ($cpid != utf8_strtolower($pid)) {
+            $pid = '"' . $pid . '"';
+        }
+
+        $ret = rawurlencode($pid);
+        if ($ns) {
+            $ret .= rawurlencode(' @' . $ns);
+        }
+
+        return $ret;
+    }
+
     /**
      * Calculates the size levels for the given list of clouds
      *
@@ -328,6 +343,48 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         return '';
     }
 
+    public function html_cloud_pid($tags, $type, $func, $wrap = true, $return = false, $ns = '') {
+        global $INFO;
+
+        $hidden_str = $this->getConf('hiddenprefix');
+        $hidden_len = strlen($hidden_str);
+
+        $ret = '';
+        if ($wrap) {
+            $ret .= '<ul class="tagging_cloud clearfix">';
+        }
+        if (count($tags) === 0) {
+            // Produce valid XHTML (ul needs a child)
+            $this->setupLocale();
+            $ret .= '<li><div class="li">' . $this->lang['js']['no' . $type . 's'] . '</div></li>';
+        } else {
+            $tags = $this->cloudData($tags);
+            foreach ($tags as $val => $size) {
+                // skip hidden tags for users that can't edit
+                if ($type === 'tag' and
+                    $hidden_len and
+                    substr($val, 0, $hidden_len) == $hidden_str and
+                    !($this->getUser() && $INFO['writable'])
+                ) {
+                    continue;
+                }
+
+                $ret .= '<li class="t' . $size . '"><div class="li">';
+                $ret .= call_user_func($func, $val, $ns);
+                $ret .= '</div></li>';
+            }
+        }
+        if ($wrap) {
+            $ret .= '</ul>';
+        }
+        if ($return) {
+            return $ret;
+        }
+        echo $ret;
+
+        return '';
+    }
+
     /**
      * Get the link to a search for the given tag
      *
@@ -338,6 +395,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      */
     protected function linkToSearch($tag, $ns = '') {
         return '<a href="' . hsc($this->getTagSearchURL($tag, $ns)) . '">' . $tag . '</a>';
+    }
+
+    protected function linkToPage($pid, $ns = '') {
+        return '<a href="' . hsc($this->getPidURL($pid, $ns)) . '">' . $pid . '</a>';
     }
 
     /**

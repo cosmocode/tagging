@@ -272,7 +272,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         // create output HTML
         $results = '<div class="search_quickresult">';
-        $results .= '<h3>' . $this->getLang('search_section_title') . ' "' . hsc($tag) . '"' . '</h3>';
+        $results .= '<h2>' . $this->getLang('search_section_title') . ' "' . hsc($tag) . '"' . '</h2>';
         $results .= '<ul class="search_quickhits">';
         global $ID;
         $oldID = $ID;
@@ -291,8 +291,8 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             // there are no other hits, replace the nothing found
             $event->data = preg_replace('/<div class="nothing">.*?<\/div>/', $results, $event->data, 1);
         } elseif (preg_match('/(<\/h2>)/', $event->data)) {
-            // insert it right after second level headline
-            $event->data = preg_replace('/(<\/h2>)/', "\\1\n" . $results, $event->data, 1);
+            // insert it right before second level headline
+            $event->data = preg_replace('/(<h2>)/', $results . "\\1\n", $event->data, 1);
         } else {
             // unclear what happened, let's just append
             $event->data .= $results;

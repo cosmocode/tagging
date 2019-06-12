@@ -537,4 +537,15 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         msg(sprintf($this->getLang("admin deleted"), count($tags), $numAffectedPages), 1);
     }
+
+    /**
+     * Updates tags with a new page name
+     *
+     * @param string $oldName
+     * @param string $newName
+     */
+    public function renamePage($oldName, $newName) {
+        $db = $this->getDb();
+        $db->query('UPDATE taggings SET pid = ? WHERE pid = ?', $newName, $oldName);
+    }
 }

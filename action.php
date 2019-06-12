@@ -28,6 +28,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             'DOKUWIKI_STARTED', 'AFTER', $this,
             'js_add_security_token'
         );
+
+        $controller->register_hook(
+            'PLUGIN_MOVE_PAGE_RENAME', 'AFTER', $this,
+            'update_moved_page'
+        );
     }
 
     /**
@@ -278,6 +283,8 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $oldID = $ID;
         foreach ($pages as $page => $cnt) {
             $ID = $page;
+            // skip nonexistent pages
+            if (!page_exists($ID)) continue;
             $results .= '<li><div class="li">';
             $results .= html_wikilink($page);
             $results .= '</div></li>';
@@ -299,5 +306,21 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         }
 
 
+    }
+
+    /**
+     * Updates tagging database after a page has been moved/renamed by the move plugin
+     *
+     * @param Doku_Event $event
+     * @param $param
+     */
+    public function update_moved_page(Doku_Event $event, $param)
+    {
+        $src = $event->data['src_id'];
+        $dst = $event->data['dst_id'];
+
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+        $hlp->renamePage($src, $dst);
     }
 }

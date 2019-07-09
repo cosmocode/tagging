@@ -151,7 +151,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $hlp = plugin_load('helper', 'tagging');
 
         $search = $INPUT->str('term');
-        $tags = $hlp->findItems(array('tag' => '%' . $hlp->getDB()->escape_string($search) . '%'), 'tag');
+        $tags = $hlp->findItems(array('tag' => '*' . $hlp->getDB()->escape_string($search) . '*'), 'tag');
         arsort($tags);
         $tags = array_keys($tags);
 
@@ -252,7 +252,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             if (substr($filter['pid'], -1) !== ':') {
                 $filter['pid'] .= ':';
             }
-            $filter['pid'] .= '%';
+            $filter['pid'] .= '*';
         }
         if (isset($terms['notns'][0])) {
             $i = 0;
@@ -261,7 +261,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
                 if (substr($notns, -1) !== ':') {
                     $notns .= ':';
                 }
-                $notns .= '%';
+                $notns .= '*';
                 $filter['notpid' . $i] = $notns;
                 ++$i;
             }

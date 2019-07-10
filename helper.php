@@ -79,7 +79,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return string
      */
     public function globNamespace($namespace) {
-        return cleanId($namespace) . '%';
+        return cleanId($namespace) . '*';
     }
 
     /**
@@ -152,14 +152,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
                 // detect LIKE filters
                 if ($this->useLike($value)) {
-                    $where .= " AND $field NOT LIKE $q";
+                    $where .= " AND $field NOT GLOB $q";
                 } else {
                     $where .= " AND $field != $q";
                 }
             } else {
                 // detect LIKE filters
                 if ($this->useLike($value)) {
-                    $where .= " AND $field LIKE $q";
+                    $where .= " AND $field GLOB $q";
                 } else {
                     $where .= " AND $field = $q";
                 }
@@ -212,7 +212,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return bool
      */
     private function useLike($value) {
-        return strpos($value, '%') === 0 || strrpos($value, '%') === strlen($value) - 1;
+        return strpos($value, '*') === 0 || strrpos($value, '*') === strlen($value) - 1;
     }
 
     /**
@@ -411,7 +411,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                             GROUP_SORT(GROUP_CONCAT("tagger"), \', \') AS "taggers",
                             COUNT(*) AS "count"
                         FROM "taggings"
-                        WHERE "pid" LIKE ?
+                        WHERE "pid" GLOB ?
                         GROUP BY "tid"
                         ORDER BY ' . $order_by;
         if ($desc) {
@@ -522,7 +522,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $db = $this->getDB();
 
-        $queryBody = 'FROM taggings WHERE pid LIKE ? AND (' .
+        $queryBody = 'FROM taggings WHERE pid GLOB ? AND (' .
             implode(' OR ', array_fill(0, count($tags), 'CLEANTAG(tag) = ?')) . ')';
         $args = array_map(array($this, 'cleanTag'), $tags);
         array_unshift($args, $this->globNamespace($namespace));

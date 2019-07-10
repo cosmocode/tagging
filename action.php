@@ -222,7 +222,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      * @param $event
      * @param $param
      */
-    function echo_searchresults(Doku_Event &$event, $param) {
+    public function echo_searchresults(Doku_Event $event, $param) {
         global $ACT;
         global $QUERY;
 
@@ -233,40 +233,13 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         // parse the search query and use the first found word as term
         $terms = ft_queryParser(idx_get_indexer(), $QUERY);
 
-        $tag = '';
-        if (isset($terms['phrases'][0])) {
-            $tag = $terms['phrases'][0];
-        } else {
-            if (isset($terms['and'][0])) {
-                $tag = $terms['and'][0];
-            }
-        }
+        $tag = $this->getTags($terms);
         if (!$tag) {
             return;
         }
 
         // create filter from term and namespace
-        $filter = array('tag' => $tag);
-        if (isset($terms['ns'][0])) {
-            $filter['pid'] = $terms['ns'][0];
-            if (substr($filter['pid'], -1) !== ':') {
-                $filter['pid'] .= ':';
-            }
-            $filter['pid'] .= '*';
-        }
-        if (isset($terms['notns'][0])) {
-            $i = 0;
-            foreach ($terms['notns'] as $notns) {
-
-                if (substr($notns, -1) !== ':') {
-                    $notns .= ':';
-                }
-                $notns .= '*';
-                $filter['notpid' . $i] = $notns;
-                ++$i;
-            }
-
-        }
+        $filter = $this->getSearchFilter($terms, $tag);
 
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
@@ -304,8 +277,6 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             // unclear what happened, let's just append
             $event->data .= $results;
         }
-
-
     }
 
     /**
@@ -322,5 +293,54 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
         $hlp->renamePage($src, $dst);
+    }
+
+    /**
+     * Returns filter array constructed from search query terms
+     *
+     * @param array $terms
+     * @param string $tag
+     * @return array
+     */
+    public function getSearchFilter($terms, $tag)
+    {
+        $filter = ['ortag' => $tag];
+        if (isset($terms['ns'][0])) {
+            $filter['pid'] = $terms['ns'][0];
+            if (substr($filter['pid'], -1) !== ':') {
+                $filter['pid'] .= ':';
+            }
+            $filter['pid'] .= '*';
+        }
+        if (isset($terms['notns'][0])) {
+            $i = 0;
+            foreach ($terms['notns'] as $notns) {
+
+                if (substr($notns, -1) !== ':') {
+                    $notns .= ':';
+                }
+                $notns .= '*';
+                $filter['notpid' . $i] = $notns;
+                ++$i;
+            }
+        }
+        return $filter;
+    }
+
+    /**
+     * Extracts tags from search query
+     *
+     * @param array $terms
+     * @return string
+     */
+    protected function getTags($terms)
+    {
+        $tags = '';
+        if (isset($terms['phrases'][0])) {
+            $tags = implode(',', $terms['phrases']);
+        } elseif (isset($terms['and'][0])) {
+            $tags = implode(',', $terms['and']);
+        }
+        return $tags;
     }
 }

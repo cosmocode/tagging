@@ -136,64 +136,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             return array();
         }
 
-        // create WHERE clause
-        $where = '1=1';
-        foreach ($filter as $field => $value) {
-            // compare clean tags only
-            if ($field === 'tag') {
-                $field = 'CLEANTAG(tag)';
-                $q = 'CLEANTAG(?)';
-            } else {
-                $q = '?';
-            }
-
-            if (substr($field, 0, 6) === 'notpid') {
-                $field = 'pid';
-
-                // detect LIKE filters
-                if ($this->useLike($value)) {
-                    $where .= " AND $field NOT GLOB $q";
-                } else {
-                    $where .= " AND $field != $q";
-                }
-            } else {
-                // detect LIKE filters
-                if ($this->useLike($value)) {
-                    $where .= " AND $field GLOB $q";
-                } else {
-                    $where .= " AND $field = $q";
-                }
-            }
-        }
-        $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
-
-        // group and order
-        if ($type === 'tag') {
-            $groupby = 'CLEANTAG(tag)';
-            $orderby = 'CLEANTAG(tag)';
-        } else {
-            $groupby = $type;
-            $orderby = "cnt DESC, $type";
-        }
-
-        // limit results
-        if ($limit) {
-            $limit = " LIMIT $limit";
-        } else {
-            $limit = '';
-        }
-
-        // create SQL
-        $sql = "SELECT $type AS item, COUNT(*) AS cnt
-                  FROM taggings
-                 WHERE $where
-              GROUP BY $groupby
-              ORDER BY $orderby
-                $limit
-              ";
+        $sql = $this->getWikiSearchSql($filter, $type, $limit);
 
         // run query and turn into associative array
-        $res = $db->query($sql, array_values($filter));
+        $data = [];
+        foreach ($filter as $item) {
+            $data = array_merge($data, explode(',', $item));
+        }
+        $res = $db->query($sql, $data);
         $res = $db->res2arr($res);
 
         $ret = array();
@@ -547,5 +497,79 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     public function renamePage($oldName, $newName) {
         $db = $this->getDb();
         $db->query('UPDATE taggings SET pid = ? WHERE pid = ?', $newName, $oldName);
+    }
+
+    /**
+     * Create query SQL from search filter
+     *
+     * @param array $filter
+     * @param string $type
+     * @param int $limit
+     * @return string
+     */
+    public function getWikiSearchSql(array $filter, $type, $limit)
+    {
+        // create WHERE clause
+        $where = '1=1';
+
+        foreach ($filter as $field => $value) {
+            // needed for an AND search
+            $subvalsCount = count(explode(',', $value));
+            $having = ($field === 'andtag') ? 'HAVING cnt = ' . $subvalsCount : '';
+
+            // compare clean tags only
+            if ($field === 'ortag' || $field === 'andtag') {
+                $field = 'CLEANTAG(tag)';
+                // multiple tags in one filter
+                $q = implode(', ', array_fill(0, $subvalsCount, 'CLEANTAG(?)'));
+            } else {
+                $q = '?';
+            }
+
+            if (substr($field, 0, 6) === 'notpid') {
+                $field = 'pid';
+
+                // detect LIKE filters
+                if ($this->useLike($value)) {
+                    $where .= " AND $field NOT GLOB $q";
+                } else {
+                    $where .= " AND $field NOT IN ( $q )";
+                }
+            } else {
+                // detect LIKE filters
+                if ($this->useLike($value)) {
+                    $where .= " AND $field GLOB $q";
+                } else {
+                    $where .= " AND $field IN ( $q )";
+                }
+            }
+        }
+        $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
+
+        // group and order
+        if ($type === 'tag') {
+            $groupby = 'CLEANTAG(tag)';
+            $orderby = 'CLEANTAG(tag)';
+        } else {
+            $groupby = $type;
+            $orderby = "cnt DESC, $type";
+        }
+
+        // limit results
+        if ($limit) {
+            $limit = " LIMIT $limit";
+        } else {
+            $limit = '';
+        }
+
+        // create SQL
+        return "SELECT $type AS item, COUNT(*) AS cnt
+                  FROM taggings
+                 WHERE $where
+              GROUP BY $groupby
+              $having
+              ORDER BY $orderby
+                $limit
+              ";
     }
 }

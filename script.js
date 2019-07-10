@@ -137,4 +137,35 @@ jQuery(function () {
                 return false;
             }
         });
+
+    /**
+     * Add tag search parameter to all links in the advanced search tools
+     *
+     * This duplicates the solution from the watchcycle plugin, and should also be replaced
+     * with a DokuWiki event, which does not exist yet, but should handle extending search tools.
+     */
+    const $advancedOptions = jQuery('.search-results-form .advancedOptions');
+    if (!$advancedOptions.length) {
+        return;
+    }
+
+    function getQueryParam(param) {
+        location.search.substr(1)
+            .split("&")
+            .some(function(item) { // returns first occurence and stops
+                return item.split("=")[0] === param && (param = item.split("=")[1])
+            });
+        return param
+    }
+
+    if (getQueryParam('taggings') === 'and') {
+        $advancedOptions.find('a').each(function (index, element) {
+            const $link = jQuery(element);
+            // do not override parameters in our own links
+            if ($link.attr('href').indexOf('taggings') === -1) {
+                console.log($link.attr('href'));
+                $link.attr('href', $link.attr('href') + '&taggings=and');
+            }
+        });
+    }
 });

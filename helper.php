@@ -230,7 +230,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $tag = '"' . $tag . '"';
         }
 
-        $ret = '?do=search&id=' . rawurlencode($tag);
+        $ret = '?do=search&sf=1&id=' . rawurlencode($tag);
         if ($ns) {
             $ret .= rawurlencode(' @' . $ns);
         }

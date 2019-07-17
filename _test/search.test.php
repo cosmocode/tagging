@@ -19,31 +19,31 @@ class helper_plugin_tagging_test extends DokuWikiTest
     {
         return [
             [
-                ['ortag' => 'image'],
+                ['ortag' => ['image']],
                 'SELECT pid AS item, COUNT(*) AS cnt
                 FROM taggings
                 WHERE 1=1
-                AND CLEANTAG(tag) IN ( CLEANTAG(?) )
+                AND CLEANTAG(tag) = CLEANTAG(?)
                 AND GETACCESSLEVEL(pid) >= '. AUTH_READ .'
                 GROUP BY pid
                 ORDER BY cnt DESC, pid'
             ],
             [
-                ['ortag' => 'acks, image'],
+                ['ortag' => ['acks', 'image']],
                 'SELECT pid AS item, COUNT(*) AS cnt
                 FROM taggings
                 WHERE 1=1
-                AND CLEANTAG(tag) IN ( CLEANTAG(?), CLEANTAG(?) )
+                AND CLEANTAG(tag) = CLEANTAG(?) OR CLEANTAG(tag) = CLEANTAG(?)
                 AND GETACCESSLEVEL(pid) >= '. AUTH_READ .'
                 GROUP BY pid
                 ORDER BY cnt DESC, pid'
             ],
             [
-                ['andtag' => 'acks, image'],
+                ['andtag' => ['acks', 'image']],
                 'SELECT pid AS item, COUNT(*) AS cnt
                 FROM taggings
                 WHERE 1=1
-                AND CLEANTAG(tag) IN ( CLEANTAG(?), CLEANTAG(?) )
+                AND CLEANTAG(tag) = CLEANTAG(?) OR CLEANTAG(tag) = CLEANTAG(?)
                 AND GETACCESSLEVEL(pid) >= '. AUTH_READ .'
                 GROUP BY pid
                 HAVING cnt = 2
@@ -51,28 +51,28 @@ class helper_plugin_tagging_test extends DokuWikiTest
             ],
             [
                 [
-                    'ortag' => 'image',
-                    'pid' => 'wiki:*'
+                    'ortag' => ['image'],
+                    'ns' => ['wiki:*']
                 ],
                 'SELECT pid AS item, COUNT(*) AS cnt
                 FROM taggings
                 WHERE 1=1
-                AND CLEANTAG(tag) IN ( CLEANTAG(?) )
                 AND pid GLOB ?
+                AND CLEANTAG(tag) = CLEANTAG(?)
                 AND GETACCESSLEVEL(pid) >= '. AUTH_READ .'
                 GROUP BY pid
                 ORDER BY cnt DESC, pid'
             ],
             [
                 [
-                    'ortag' => 'image',
-                    'notpid0' => 'wiki:*'
+                    'ortag' => ['image'],
+                    'notns' => ['wiki:*']
                 ],
                 'SELECT pid AS item, COUNT(*) AS cnt
                 FROM taggings
                 WHERE 1=1
-                AND CLEANTAG(tag) IN ( CLEANTAG(?) )
                 AND pid NOT GLOB ?
+                AND CLEANTAG(tag) = CLEANTAG(?)
                 AND GETACCESSLEVEL(pid) >= '. AUTH_READ .'
                 GROUP BY pid
                 ORDER BY cnt DESC, pid'
@@ -80,17 +80,67 @@ class helper_plugin_tagging_test extends DokuWikiTest
             ],
             [
                 [
-                    'ortag' => 'image',
-                    'notpid0' => 'wiki:*',
-                    'notpid1' => 'awiki:*'
+                    'ortag' => ['image'],
+                    'notns' => ['wiki:*', 'awiki:*']
                 ],
                 'SELECT pid AS item, COUNT(*) AS cnt
                 FROM taggings
                 WHERE 1=1
-                AND CLEANTAG(tag) IN ( CLEANTAG(?) )
                 AND pid NOT GLOB ? AND pid NOT GLOB ?
+                AND CLEANTAG(tag) = CLEANTAG(?)
                 AND GETACCESSLEVEL(pid) >= '. AUTH_READ .'
                 GROUP BY pid
+                ORDER BY cnt DESC, pid'
+            ],
+            [
+                ['ortag' => ['acks*']],
+                'SELECT pid AS item, COUNT(*) AS cnt
+                FROM taggings
+                WHERE 1=1
+                AND CLEANTAG(tag) GLOB CLEANTAG(?)
+                AND GETACCESSLEVEL(pid) >= '. AUTH_READ .'
+                GROUP BY pid
+                ORDER BY cnt DESC, pid'
+            ],
+            [
+                ['ortag' => ['acks', 'image*']],
+                'SELECT pid AS item, COUNT(*) AS cnt
+                FROM taggings
+                WHERE 1=1
+                AND CLEANTAG(tag) = CLEANTAG(?) OR CLEANTAG(tag) GLOB CLEANTAG(?)
+                AND GETACCESSLEVEL(pid) >= '. AUTH_READ .'
+                GROUP BY pid
+                ORDER BY cnt DESC, pid'
+            ],
+            [
+                ['ortag' => ['acks*', 'image']],
+                'SELECT pid AS item, COUNT(*) AS cnt
+                FROM taggings
+                WHERE 1=1
+                AND CLEANTAG(tag) GLOB CLEANTAG(?) OR CLEANTAG(tag) = CLEANTAG(?)
+                AND GETACCESSLEVEL(pid) >= '. AUTH_READ .'
+                GROUP BY pid
+                ORDER BY cnt DESC, pid'
+            ],
+            [
+                ['ortag' => ['acks*', 'image*']],
+                'SELECT pid AS item, COUNT(*) AS cnt
+                FROM taggings
+                WHERE 1=1
+                AND CLEANTAG(tag) GLOB CLEANTAG(?) OR CLEANTAG(tag) GLOB CLEANTAG(?)
+                AND GETACCESSLEVEL(pid) >= '. AUTH_READ .'
+                GROUP BY pid
+                ORDER BY cnt DESC, pid'
+            ],
+            [
+                ['andtag' => ['acks*', 'image*']],
+                'SELECT pid AS item, COUNT(*) AS cnt
+                FROM taggings
+                WHERE 1=1
+                AND CLEANTAG(tag) GLOB CLEANTAG(?) OR CLEANTAG(tag) GLOB CLEANTAG(?)
+                AND GETACCESSLEVEL(pid) >= '. AUTH_READ .'
+                GROUP BY pid
+                HAVING cnt = 2
                 ORDER BY cnt DESC, pid'
             ],
         ];
@@ -105,9 +155,23 @@ class helper_plugin_tagging_test extends DokuWikiTest
      */
     public function testSearchSql($filter, $expected)
     {
-        /** @var helper_plugin_tagging $helper */
-        $helper = plugin_load('helper', 'tagging');
-        $actual = $helper->getWikiSearchSql($filter, 'pid', 0);
+        /** @var helper_plugin_tagging_querybuilder $queryBuilder */
+        $queryBuilder = plugin_load('helper', 'tagging_querybuilder');
+        $queryBuilder->setField('pid');
+
+        if (isset($filter['andtag'])) {
+            $queryBuilder->setTags($filter['andtag']);
+            $queryBuilder->setLogicalAnd(true);
+        } else {
+            $queryBuilder->setTags($filter['ortag']);
+        }
+
+        if (isset($filter['ns'])) $queryBuilder->includeNS($filter['ns']);
+        if (isset($filter['notns'])) $queryBuilder->excludeNS($filter['notns']);
+
+
+
+        $actual = $queryBuilder->getPages();
         $this->assertEquals($this->toSingleLine($expected), $this->toSingleLine($actual));
     }
 

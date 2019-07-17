@@ -6,6 +6,9 @@
  */
 class helper_plugin_tagging extends DokuWiki_Plugin {
 
+    // filter whitelist
+    const KNOWN_FILTERS = ['pid', 'tag', 'ns', 'notns', 'tagger'];
+
     /**
      * Gives access to the database
      *
@@ -136,12 +139,18 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             return array();
         }
 
-        $sql = $this->getWikiSearchSql($filter, $type, $limit);
+        $sql = $this->buildQuery($filter, $type, $limit);
 
         // run query and turn into associative array
         $data = [];
-        foreach ($filter as $item) {
-            $data = array_merge($data, explode(',', $item));
+        foreach ($filter as $key => $item) {
+            // not all filter values are arrays
+            if (!is_array($item)) $item = [$item];
+
+            if ($key === 'ns' || $key === 'notns') {
+                $item = $this->formatNS($item);
+            }
+            $data = array_merge($data, $item);
         }
         $res = $db->query($sql, $data);
         $res = $db->res2arr($res);
@@ -152,17 +161,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         }
 
         return $ret;
-    }
-
-    /**
-     * Check if the given string is a LIKE statement
-     *
-     * @param string $value
-     *
-     * @return bool
-     */
-    private function useLike($value) {
-        return strpos($value, '*') === 0 || strrpos($value, '*') === strlen($value) - 1;
     }
 
     /**
@@ -500,76 +498,82 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
-     * Create query SQL from search filter
+     * Extracts tags from search query
+     *
+     * @param array $parsedQuery
+     * @return array
+     */
+    public function getTags($parsedQuery)
+    {
+        $tags = [];
+        if (isset($parsedQuery['phrases'][0])) {
+            $tags = $parsedQuery['phrases'];
+        } elseif (isset($parsedQuery['and'][0])) {
+            $tags = $parsedQuery['and'];
+        } elseif (isset($parsedQuery['tag'])) {
+            // handle autocomplete call
+            $tags[] = $parsedQuery['tag'];
+        }
+        return $tags;
+    }
+
+    /**
+     * Returns an SQL query string constructed by the query builder
+     * from given constraints and options
      *
      * @param array $filter
      * @param string $type
      * @param int $limit
+     *
      * @return string
      */
-    public function getWikiSearchSql(array $filter, $type, $limit)
+    protected function buildQuery(&$filter, $type, $limit)
     {
-        // create WHERE clause
-        $where = '1=1';
+        global $INPUT;
 
-        foreach ($filter as $field => $value) {
-            // needed for an AND search
-            $subvalsCount = count(explode(',', $value));
-            $having = ($field === 'andtag') ? 'HAVING cnt = ' . $subvalsCount : '';
+        // search form passes a dummy filter, parsing the actual query instead
+        if (!$filter) {
+            global $QUERY;
+            $filter = ft_queryParser(new Doku_Indexer(), $QUERY);
+        }
 
-            // compare clean tags only
-            if ($field === 'ortag' || $field === 'andtag') {
-                $field = 'CLEANTAG(tag)';
-                // multiple tags in one filter
-                $q = implode(', ', array_fill(0, $subvalsCount, 'CLEANTAG(?)'));
-            } else {
-                $q = '?';
+        /** @var helper_plugin_tagging_querybuilder $queryBuilder */
+        $queryBuilder = new helper_plugin_tagging_querybuilder();
+        $queryBuilder->setLimit($limit);
+
+        // if tags are extracted directly form query, they have to be added to the filter,
+        // which is the only source of parameters
+        $tags = $this->getTags($filter);
+        if (!isset($filter['tag'])) $filter['tag'] = $tags;
+        $queryBuilder->setTags($tags);
+
+        // remove no longer needed items from an overblown query-based filter
+        $filter = array_intersect_key($filter, array_flip(self::KNOWN_FILTERS));
+
+        $queryBuilder->setLogicalAnd($INPUT->has('taggings') && $INPUT->str('taggings') === 'and');
+        if (isset($filter['ns'])) $queryBuilder->includeNS($filter['ns']);
+        if (isset($filter['notns'])) $queryBuilder->excludeNS($filter['notns']);
+        if (isset($filter['tagger'])) $queryBuilder->setTagger($filter['tagger']);
+        if (isset($filter['pid'])) $queryBuilder->setPid($filter['pid']);
+
+        $queryBuilder->setField($type);
+
+        return $queryBuilder->getQuery();
+    }
+
+    /**
+     * Converts namespaces into a wildcard form suitable for SQL queries
+     *
+     * @param array $item
+     * @return array
+     */
+    protected function formatNS(array $item)
+    {
+        return array_map(function($ns) {
+            if (substr($ns, -1) !== ':') {
+                $ns .= ':';
             }
-
-            if (substr($field, 0, 6) === 'notpid') {
-                $field = 'pid';
-
-                // detect LIKE filters
-                if ($this->useLike($value)) {
-                    $where .= " AND $field NOT GLOB $q";
-                } else {
-                    $where .= " AND $field NOT IN ( $q )";
-                }
-            } else {
-                // detect LIKE filters
-                if ($this->useLike($value)) {
-                    $where .= " AND $field GLOB $q";
-                } else {
-                    $where .= " AND $field IN ( $q )";
-                }
-            }
-        }
-        $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
-
-        // group and order
-        if ($type === 'tag') {
-            $groupby = 'CLEANTAG(tag)';
-            $orderby = 'CLEANTAG(tag)';
-        } else {
-            $groupby = $type;
-            $orderby = "cnt DESC, $type";
-        }
-
-        // limit results
-        if ($limit) {
-            $limit = " LIMIT $limit";
-        } else {
-            $limit = '';
-        }
-
-        // create SQL
-        return "SELECT $type AS item, COUNT(*) AS cnt
-                  FROM taggings
-                 WHERE $where
-              GROUP BY $groupby
-              $having
-              ORDER BY $orderby
-                $limit
-              ";
+            return $ns . '*';
+        }, $item);
     }
 }

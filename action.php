@@ -292,20 +292,20 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             return;
         }
 
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+
         // parse the search query and use the first found word as term
         $terms = ft_queryParser(idx_get_indexer(), $QUERY);
 
-        $tag = $this->getTags($terms);
+        $tag = $hlp->getTags($terms);
         if (!$tag) {
             return;
         }
 
-        // create filter from term and namespace
-        $filter = $this->getSearchFilter($terms, $tag);
-
-        /** @var helper_plugin_tagging $hlp */
-        $hlp = plugin_load('helper', 'tagging');
-        $pages = $hlp->findItems($filter, 'pid');
+        // use dummy filter instead of parsing the query into an intermediate format;
+        // the query builder will do the parsing itself
+        $pages = $hlp->findItems([],'pid');
         if (!count($pages)) {
             return;
         }
@@ -313,10 +313,10 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         // create output HTML
         // format tag search terms
         $operator = ($INPUT->has('taggings') && $INPUT->str('taggings') === 'and') ? $this->getLang('search_all_label') : $this->getLang('search_any_label');
-        $terms = implode(' ' . $operator . ' ', explode(',', $tag));
+        $tagInfo = implode(' ' . $operator . ' ', $tag);
 
         $results = '<div class="search_quickresult">';
-        $results .= '<h2>' . $this->getLang('search_section_title') . ' ' . hsc($terms) . '' . '</h2>';
+        $results .= '<h2>' . $this->getLang('search_section_title') . ' ' . hsc($tagInfo) . '' . '</h2>';
         $results .= '<ul class="search_quickhits">';
         global $ID;
         $oldID = $ID;
@@ -365,7 +365,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      * Returns filter array constructed from search query terms
      *
      * @param array $terms
-     * @param string $tag
+     * @param array $tag
      * @return array
      */
     public function getSearchFilter($terms, $tag)
@@ -381,35 +381,15 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             $filter['pid'] .= '*';
         }
         if (isset($terms['notns'][0])) {
-            $i = 0;
-            foreach ($terms['notns'] as $notns) {
-
+            foreach ($terms['notns'] as &$notns) {
                 if (substr($notns, -1) !== ':') {
                     $notns .= ':';
                 }
                 $notns .= '*';
-                $filter['notpid' . $i] = $notns;
-                ++$i;
             }
+            $filter['notns'] = $terms['notns'];
         }
         return $filter;
-    }
-
-    /**
-     * Extracts tags from search query
-     *
-     * @param array $terms
-     * @return string
-     */
-    protected function getTags($terms)
-    {
-        $tags = '';
-        if (isset($terms['phrases'][0])) {
-            $tags = implode(',', $terms['phrases']);
-        } elseif (isset($terms['and'][0])) {
-            $tags = implode(',', $terms['and']);
-        }
-        return $tags;
     }
 
     /**

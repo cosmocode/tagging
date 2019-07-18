@@ -85,7 +85,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                     // Do not match nsbla, only ns:bla
                     $data['ns'] .= ':';
                 }
-                $tags = $hlp->findItems(array('pid' => $data['ns'] . '%'), 'tag', $data['limit']);
+                $tags = $hlp->findItems(['pid' => $hlp->globNamespace($data['ns'])], 'tag', $data['limit']);
                 $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true, $data['ns']);
 
                 break;

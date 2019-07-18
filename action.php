@@ -310,7 +310,9 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         // create output HTML
         // format tag search terms
-        $operator = ($INPUT->has('taggings') && $INPUT->str('taggings') === 'and') ? $this->getLang('search_all_label') : $this->getLang('search_any_label');
+        $operator = ($INPUT->str('taggings') === 'and') ?
+            $this->getLang('search_all_label') :
+            $this->getLang('search_any_label');
         $tagInfo = implode(' ' . $operator . ' ', $tag);
 
         $results = '<div class="search_quickresult">';
@@ -357,37 +359,6 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
         $hlp->renamePage($src, $dst);
-    }
-
-    /**
-     * Returns filter array constructed from search query terms
-     *
-     * @param array $terms
-     * @param array $tag
-     * @return array
-     */
-    public function getSearchFilter($terms, $tag)
-    {
-        global $INPUT;
-        $searchType = ($INPUT->has('taggings') && $INPUT->str('taggings') === 'and') ? 'andtag' : 'ortag';
-        $filter = [$searchType => $tag];
-        if (isset($terms['ns'][0])) {
-            $filter['pid'] = $terms['ns'][0];
-            if (substr($filter['pid'], -1) !== ':') {
-                $filter['pid'] .= ':';
-            }
-            $filter['pid'] .= '*';
-        }
-        if (isset($terms['notns'][0])) {
-            foreach ($terms['notns'] as &$notns) {
-                if (substr($notns, -1) !== ':') {
-                    $notns .= ':';
-                }
-                $notns .= '*';
-            }
-            $filter['notns'] = $terms['notns'];
-        }
-        return $filter;
     }
 
     /**

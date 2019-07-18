@@ -135,7 +135,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         global $INPUT;
 
         /** @var helper_plugin_tagging_querybuilder $queryBuilder */
-        $queryBuilder = new helper_plugin_tagging_querybuilder();
+        $queryBuilder = new \helper_plugin_tagging_querybuilder();
 
         $queryBuilder->setField($type);
         $queryBuilder->setLimit($limit);
@@ -515,7 +515,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $parsedQuery = ft_queryParser(new Doku_Indexer(), $QUERY);
 
         /** @var helper_plugin_tagging_querybuilder $queryBuilder */
-        $queryBuilder = new helper_plugin_tagging_querybuilder();
+        $queryBuilder = new \helper_plugin_tagging_querybuilder();
 
         $queryBuilder->setField('pid');
         $queryBuilder->setTags($this->getTags($parsedQuery));

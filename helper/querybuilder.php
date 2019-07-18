@@ -18,8 +18,8 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     protected $pid;
     /** @var string */
     protected $tagger = '';
-    /** @var string */
-    protected $limit = '';
+    /** @var int */
+    protected $limit;
     /** @var string */
     protected $where;
     /** @var string */
@@ -128,16 +128,16 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
      */
     public function setLogicalAnd($and)
     {
-        $this->logicalAnd = $and;
+        $this->logicalAnd = (bool)$and;
     }
 
     /**
      * Result limit
-     * @param string $limit
+     * @param int $limit
      */
     public function setLimit($limit)
     {
-        $this->limit = $limit ? " LIMIT $limit" : '';
+        $this->limit = $limit;
     }
 
     /**
@@ -179,8 +179,12 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
               GROUP BY $this->groupby
               $this->having
               ORDER BY $this->orderby
-                $this->limit
               ";
+
+        if ($this->limit) {
+            $sql .= ' LIMIT ?';
+            $this->values[] = $this->limit;
+        }
 
         return $sql;
     }
@@ -194,7 +198,9 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
         $where = '1=1';
 
         if ($this->pid) {
-            $where .= ' AND pid = ?';
+            $where .= ' AND pid';
+            $where .= $this->useLike($this->pid) ? ' GLOB' : ' =';
+            $where .= '  ?';
             $this->values[] = $this->pid;
         }
 

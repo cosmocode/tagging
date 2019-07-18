@@ -149,6 +149,13 @@ jQuery(function () {
         return;
     }
 
+    /**
+     * Extracts the value of a given parameter from the URL querystring
+     *
+     * taken via watchcycle from https://stackoverflow.com/a/31412050/3293343
+     * @param param
+     * @returns {*}
+     */
     function getQueryParam(param) {
         location.search.substr(1)
             .split("&")
@@ -163,7 +170,6 @@ jQuery(function () {
             const $link = jQuery(element);
             // do not override parameters in our own links
             if ($link.attr('href').indexOf('taggings') === -1) {
-                console.log($link.attr('href'));
                 $link.attr('href', $link.attr('href') + '&taggings=and');
             }
         });

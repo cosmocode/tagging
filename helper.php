@@ -531,7 +531,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     /**
      * Executes the query and returns the results as array
      *
-     * @param helper_plugin_tagging_querybuilder $query
+     * @param array $query
      * @return array
      */
     protected function queryDb($query)
@@ -541,7 +541,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             return [];
         }
 
-        $res = $db->query($query->getSql(), $query->getParameterValues());
+        $res = $db->query($query[0], $query[1]);
         $res = $db->res2arr($res);
 
         $ret = [];

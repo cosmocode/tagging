@@ -34,7 +34,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     /**
      * Shorthand method: calls the appropriate getter deduced from $this->field
      *
-     * @return helper_plugin_tagging_querybuilder
+     * @return array
      */
     public function getQuery()
     {
@@ -49,7 +49,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
      *
      * Returns the query builder object
      *
-     * @return helper_plugin_tagging_querybuilder
+     * @return array
      */
     public function getPages()
     {
@@ -58,7 +58,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
         $this->orderby = "cnt DESC, pid";
         if ($this->tags && $this->logicalAnd) $this->having = ' HAVING cnt = ' . count($this->tags);
 
-        return $this;
+        return [$this->getSql(), $this->values];
     }
 
     /**
@@ -66,7 +66,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
      *
      * Returns the query builder object
      *
-     * @return helper_plugin_tagging_querybuilder
+     * @return array
      */
     public function getTags()
     {
@@ -74,25 +74,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
         $this->groupby = 'CLEANTAG(tag)';
         $this->orderby = 'CLEANTAG(tag)';
 
-        return $this;
-    }
-
-    /**
-     * Returns the SQL string
-     * @return string
-     */
-    public function getSql()
-    {
-        return $this->composeSql();
-    }
-
-    /**
-     * Returns the parameter values
-     * @return array
-     */
-    public function getParameterValues()
-    {
-        return $this->values;
+        return [$this->getSql(), $this->values];
     }
 
     /**
@@ -171,7 +153,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
      * Returns full query SQL
      * @return string
      */
-    protected function composeSql()
+    protected function getSql()
     {
         $sql = "SELECT $this->field AS item, COUNT(*) AS cnt
                   FROM taggings

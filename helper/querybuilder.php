@@ -4,8 +4,6 @@
  */
 class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
 
-    const QUERY_ORDER = ['pid', 'tagger', 'tags', 'ns', 'notns'];
-
     /** @var string */
     protected $field;
     /** @var bool */
@@ -30,11 +28,13 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     protected $groupby;
     /** @var string */
     protected $having = '';
+    /** @var array */
+    protected $values = [];
 
     /**
-     * Shorthand method: deduces the appropriate getter from $this->field
+     * Shorthand method: calls the appropriate getter deduced from $this->field
      *
-     * @return string
+     * @return helper_plugin_tagging_querybuilder
      */
     public function getQuery()
     {
@@ -45,9 +45,11 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     }
 
     /**
-     * Returns SQL query for fetching tagged pages
+     * Processes all parts of the query for fetching tagged pages
      *
-     * @return string
+     * Returns the query builder object
+     *
+     * @return helper_plugin_tagging_querybuilder
      */
     public function getPages()
     {
@@ -56,13 +58,15 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
         $this->orderby = "cnt DESC, pid";
         if ($this->tags && $this->logicalAnd) $this->having = ' HAVING cnt = ' . count($this->tags);
 
-        return $this->getSql();
+        return $this;
     }
 
     /**
-     * Returns SQL query for fetching tags
+     * Processes all parts of the query for fetching tags
      *
-     * @return string
+     * Returns the query builder object
+     *
+     * @return helper_plugin_tagging_querybuilder
      */
     public function getTags()
     {
@@ -70,10 +74,29 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
         $this->groupby = 'CLEANTAG(tag)';
         $this->orderby = 'CLEANTAG(tag)';
 
-        return $this->getSql();
+        return $this;
     }
 
     /**
+     * Returns the SQL string
+     * @return string
+     */
+    public function getSql()
+    {
+        return $this->composeSql();
+    }
+
+    /**
+     * Returns the parameter values
+     * @return array
+     */
+    public function getParameterValues()
+    {
+        return $this->values;
+    }
+
+    /**
+     * Tags to search for
      * @param array $tags
      */
     public function setTags($tags)
@@ -83,25 +106,24 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
 
     /**
      * Namespaces to limit search to
-     *
      * @param array $ns
      */
     public function includeNS($ns)
     {
-        $this->ns = $ns;
+        $this->ns = $this->globNS($ns);
     }
 
     /**
      * Namespaces to exclude from search
-     *
      * @param array $ns
      */
     public function excludeNS($ns)
     {
-        $this->notns = $ns;
+        $this->notns = $this->globNS($ns);
     }
 
     /**
+     * Sets the logical operator used in tag search to AND
      * @param bool $and
      */
     public function setLogicalAnd($and)
@@ -110,6 +132,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     }
 
     /**
+     * Result limit
      * @param string $limit
      */
     public function setLimit($limit)
@@ -118,6 +141,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     }
 
     /**
+     * Database field to select
      * @param string $field
      */
     public function setField($field)
@@ -126,6 +150,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     }
 
     /**
+     * Limit search to this page id
      * @param string $pid
      */
     public function setPid($pid)
@@ -134,6 +159,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     }
 
     /**
+     * Limit results to this tagger
      * @param string $tagger
      */
     public function setTagger($tagger)
@@ -142,10 +168,10 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     }
 
     /**
-     * Returns query SQL
+     * Returns full query SQL
      * @return string
      */
-    protected function getSql()
+    protected function composeSql()
     {
         $sql = "SELECT $this->field AS item, COUNT(*) AS cnt
                   FROM taggings
@@ -160,7 +186,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     }
 
     /**
-     * Builds query string. The order is important
+     * Builds the WHERE part of query string
      * @return string
      */
     protected function getWhere()
@@ -169,10 +195,12 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
 
         if ($this->pid) {
             $where .= ' AND pid = ?';
+            $this->values[] = $this->pid;
         }
 
         if ($this->tagger) {
             $where .= ' AND tagger = ?';
+            $this->values[] = $this->tagger;
         }
 
         if ($this->ns) {
@@ -185,6 +213,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
                 $where .= ' GLOB';
                 $where .= ' ?';
                 if (++$i < $nsCnt) $where .= ' OR';
+                $this->values[] = $ns;
             }
         }
 
@@ -198,6 +227,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
                 $where .= ' NOT GLOB';
                 $where .= ' ?';
                 if (++$i < $nsCnt) $where .= ' AND';
+                $this->values[] = $notns;
             }
         }
 
@@ -211,6 +241,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
                 $where .= $this->useLike($tag) ? ' GLOB' : ' =';
                 $where .= ' CLEANTAG(?)';
                 if (++$i < $tagCnt) $where .= ' OR';
+                $this->values[] = $tag;
             }
         }
 
@@ -229,4 +260,18 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     protected function useLike($value) {
         return strpos($value, '*') === 0 || strrpos($value, '*') === strlen($value) - 1;
     }
+
+    /**
+     * Converts namespaces into a wildcard form suitable for SQL queries
+     *
+     * @param array $item
+     * @return array
+     */
+    protected function globNS(array $item)
+    {
+        return array_map(function($ns) {
+            return cleanId($ns) . '*';
+        }, $item);
+    }
+
 }

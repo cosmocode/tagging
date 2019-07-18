@@ -6,9 +6,6 @@
  */
 class helper_plugin_tagging extends DokuWiki_Plugin {
 
-    // filter whitelist
-    const KNOWN_FILTERS = ['pid', 'tag', 'ns', 'notns', 'tagger'];
-
     /**
      * Gives access to the database
      *
@@ -134,33 +131,22 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return array associative array in form of value => count
      */
     public function findItems($filter, $type, $limit = 0) {
-        $db = $this->getDB();
-        if (!$db) {
-            return array();
-        }
 
-        $sql = $this->buildQuery($filter, $type, $limit);
+        global $INPUT;
 
-        // run query and turn into associative array
-        $data = [];
-        foreach ($filter as $key => $item) {
-            // not all filter values are arrays
-            if (!is_array($item)) $item = [$item];
+        /** @var helper_plugin_tagging_querybuilder $queryBuilder */
+        $queryBuilder = new helper_plugin_tagging_querybuilder();
 
-            if ($key === 'ns' || $key === 'notns') {
-                $item = $this->formatNS($item);
-            }
-            $data = array_merge($data, $item);
-        }
-        $res = $db->query($sql, $data);
-        $res = $db->res2arr($res);
+        $queryBuilder->setField($type);
+        $queryBuilder->setLimit($limit);
+        $queryBuilder->setTags($this->getTags($filter));
+        if (isset($filter['ns'])) $queryBuilder->includeNS($filter['ns']);
+        if (isset($filter['notns'])) $queryBuilder->excludeNS($filter['notns']);
+        if (isset($filter['tagger'])) $queryBuilder->setTagger($filter['tagger']);
+        if (isset($filter['pid'])) $queryBuilder->setPid($filter['pid']);
 
-        $ret = array();
-        foreach ($res as $row) {
-            $ret[$row['item']] = $row['cnt'];
-        }
+        return $this->queryDb($queryBuilder->getQuery());
 
-        return $ret;
     }
 
     /**
@@ -518,62 +504,50 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
-     * Returns an SQL query string constructed by the query builder
-     * from given constraints and options
+     * Search for tagged pages
      *
-     * @param array $filter
-     * @param string $type
-     * @param int $limit
-     *
-     * @return string
+     * @return array
      */
-    protected function buildQuery(&$filter, $type, $limit)
+    public function searchPages()
     {
         global $INPUT;
-
-        // search form passes a dummy filter, parsing the actual query instead
-        if (!$filter) {
-            global $QUERY;
-            $filter = ft_queryParser(new Doku_Indexer(), $QUERY);
-        }
+        global $QUERY;
+        $parsedQuery = ft_queryParser(new Doku_Indexer(), $QUERY);
 
         /** @var helper_plugin_tagging_querybuilder $queryBuilder */
         $queryBuilder = new helper_plugin_tagging_querybuilder();
-        $queryBuilder->setLimit($limit);
 
-        // if tags are extracted directly form query, they have to be added to the filter,
-        // which is the only source of parameters
-        $tags = $this->getTags($filter);
-        if (!isset($filter['tag'])) $filter['tag'] = $tags;
-        $queryBuilder->setTags($tags);
+        $queryBuilder->setField('pid');
+        $queryBuilder->setTags($this->getTags($parsedQuery));
+        $queryBuilder->setLogicalAnd($INPUT->str('taggings') === 'and');
+        if (isset($parsedQuery['ns'])) $queryBuilder->includeNS($parsedQuery['ns']);
+        if (isset($parsedQuery['notns'])) $queryBuilder->excludeNS($parsedQuery['notns']);
+        if (isset($parsedQuery['tagger'])) $queryBuilder->setTagger($parsedQuery['tagger']);
+        if (isset($parsedQuery['pid'])) $queryBuilder->setPid($parsedQuery['pid']);
 
-        // remove no longer needed items from an overblown query-based filter
-        $filter = array_intersect_key($filter, array_flip(self::KNOWN_FILTERS));
-
-        $queryBuilder->setLogicalAnd($INPUT->has('taggings') && $INPUT->str('taggings') === 'and');
-        if (isset($filter['ns'])) $queryBuilder->includeNS($filter['ns']);
-        if (isset($filter['notns'])) $queryBuilder->excludeNS($filter['notns']);
-        if (isset($filter['tagger'])) $queryBuilder->setTagger($filter['tagger']);
-        if (isset($filter['pid'])) $queryBuilder->setPid($filter['pid']);
-
-        $queryBuilder->setField($type);
-
-        return $queryBuilder->getQuery();
+        return $this->queryDb($queryBuilder->getPages());
     }
 
     /**
-     * Converts namespaces into a wildcard form suitable for SQL queries
+     * Executes the query and returns the results as array
      *
-     * @param array $item
+     * @param helper_plugin_tagging_querybuilder $query
      * @return array
      */
-    protected function formatNS(array $item)
+    protected function queryDb($query)
     {
-        return array_map(function($ns) {
-            if (substr($ns, -1) !== ':') {
-                $ns .= ':';
-            }
-            return $ns . '*';
-        }, $item);
+        $db = $this->getDB();
+        if (!$db) {
+            return [];
+        }
+
+        $res = $db->query($query->getSql(), $query->getParameterValues());
+        $res = $db->res2arr($res);
+
+        $ret = [];
+        foreach ($res as $row) {
+            $ret[$row['item']] = $row['cnt'];
+        }
+        return $ret;
     }
 }

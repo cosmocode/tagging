@@ -303,9 +303,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             return;
         }
 
-        // use dummy filter instead of parsing the query into an intermediate format;
-        // the query builder will do the parsing itself
-        $pages = $hlp->findItems([],'pid');
+        $pages = $hlp->searchPages();
         if (!count($pages)) {
             return;
         }

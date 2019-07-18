@@ -169,9 +169,7 @@ class helper_plugin_tagging_test extends DokuWikiTest
         if (isset($filter['ns'])) $queryBuilder->includeNS($filter['ns']);
         if (isset($filter['notns'])) $queryBuilder->excludeNS($filter['notns']);
 
-
-
-        $actual = $queryBuilder->getPages();
+        $actual = $queryBuilder->getPages()->getSql();
         $this->assertEquals($this->toSingleLine($expected), $this->toSingleLine($actual));
     }
 

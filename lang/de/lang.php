@@ -36,4 +36,12 @@ $lang['search_any_label']      = 'ODER';
 $lang['js']['notags']          = 'Keine Schlagworte vergeben';
 $lang['js']['nopages']         = 'Keine Seiten mit diesem Schlagwort';
 $lang['js']['admin_change_tag'] = 'Schlagworte bearbeiten';
+$lang['js']['admin_confirm']   = 'Bestätigen';
+$lang['js']['admin_cancel']    = 'Abbrechen';
+$lang['js']['admin_rename']    = 'Umbenennen';
+$lang['js']['admin_delete']    = 'Löschen';
+$lang['js']['admin_warning_all']   = 'Achtung: die Aktion wird an ALLE Tags angewendet, ungeachtet der Filter in der Tabelle!';
+$lang['js']['admin_sure']      = 'Sind Sie sicher?';
+$lang['js']['admin_newtags']   = 'neuer Tag (oder kommagetrennte Liste)';
+
 $lang['tagjmp_error']          = 'Es konnte keine Seite mit Schlagwort %s gefunden werden';

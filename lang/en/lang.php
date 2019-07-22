@@ -35,5 +35,13 @@ $lang['search_any_label']          = 'OR';
 $lang['js']['notags']              = 'No tags, yet';
 $lang['js']['nopages']             = 'No pages with this tag, yet';
 $lang['js']['admin_change_tag']    = 'Change the tag';
+$lang['js']['admin_confirm']       = 'Confirm';
+$lang['js']['admin_cancel']        = 'Cancel';
+$lang['js']['admin_rename']        = 'Rename';
+$lang['js']['admin_delete']        = 'Delete';
+$lang['js']['admin_warning_all']   = 'Warning: this will be applied to ALL tags, regardless of table filters!';
+$lang['js']['admin_sure']          = 'Are you sure?';
+$lang['js']['admin_newtags']       = 'new tag name (or comma separated list to split into more tags)';
+
 
 $lang['tagjmp_error'] = 'Could not find any page tagged with %s';

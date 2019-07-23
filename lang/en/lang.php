@@ -6,6 +6,7 @@ $lang['menu'] = 'View and Change Tags';
 $lang['admin tag']                 = 'Tag name';
 $lang['admin occurrence']          = 'Occurrence';
 $lang['admin writtenas']           = 'Written as';
+$lang['admin namespaces']          = 'Namespaces';
 $lang['admin taggers']             = 'Used by';
 $lang['admin actions']             = 'Actions';
 $lang['admin save']                = 'Save';

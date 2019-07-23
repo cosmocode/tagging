@@ -9,6 +9,7 @@ $lang['menu']                  = 'Schlagwort-Einstellungen';
 $lang['admin tag']             = 'Schlagwort-Benennung';
 $lang['admin occurrence']      = 'Häufigkeit';
 $lang['admin writtenas']       = 'Geschrieben als';
+$lang['admin namespaces']      = 'Namensräume';
 $lang['admin taggers']         = 'Genutzt von';
 $lang['admin actions']         = 'Aktionen';
 $lang['admin save']            = 'Speichern';

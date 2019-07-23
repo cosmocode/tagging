@@ -30,11 +30,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $db->create_function('CLEANTAG', array($this, 'cleanTag'), 1);
         $db->create_function('GROUP_SORT',
             function ($group, $newDelimiter) {
-                $ex = explode(',', $group);
+                $ex = array_filter(explode(',', $group));
                 sort($ex);
 
                 return implode($newDelimiter, $ex);
             }, 2);
+        $db->create_function('GET_NS', 'getNS', 1);
 
         return $db;
     }
@@ -328,14 +329,19 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     /**
      * @param string $namespace empty for entire wiki
      *
+     * @param string $order_by
+     * @param bool $desc
+     * @param array $filters
      * @return array
      */
-    public function getAllTags($namespace = '', $order_by = 'tag', $desc = false) {
-        $order_fields = array('pid', 'tid', 'orig', 'taggers', 'count');
+    public function getAllTags($namespace = '', $order_by = 'tag', $desc = false, $filters = []) {
+        $order_fields = array('pid', 'tid', 'orig', 'taggers', 'ns', 'count');
         if (!in_array($order_by, $order_fields)) {
             msg('cannot sort by ' . $order_by . ' field does not exists', -1);
             $order_by = 'tag';
         }
+
+        list($having, $params) = $this->getFilterSql($filters);
 
         $db = $this->getDb();
 
@@ -343,16 +349,19 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                             CLEANTAG("tag") AS "tid",
                             GROUP_SORT(GROUP_CONCAT("tag"), \', \') AS "orig",
                             GROUP_SORT(GROUP_CONCAT("tagger"), \', \') AS "taggers",
+                            GROUP_SORT(GROUP_CONCAT(GET_NS("pid")), \', \') AS "ns",
                             COUNT(*) AS "count"
                         FROM "taggings"
                         WHERE "pid" GLOB ?
-                        GROUP BY "tid"
-                        ORDER BY ' . $order_by;
+                        GROUP BY "tid"';
+        $query .= $having;
+        $query .=      'ORDER BY ' . $order_by;
         if ($desc) {
             $query .= ' DESC';
         }
 
-        $res = $db->query($query, $this->globNamespace($namespace));
+        array_unshift($params, $this->globNamespace($namespace));
+        $res = $db->query($query, $params);
 
         return $db->res2arr($res);
     }
@@ -549,5 +558,28 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $ret[$row['item']] = $row['cnt'];
         }
         return $ret;
+    }
+
+    /**
+     * Construct the HAVING part of the search query
+     *
+     * @param array $filters
+     * @return array
+     */
+    protected function getFilterSql($filters)
+    {
+        $having = '';
+        $parts = [];
+        $params = [];
+        $filters = array_filter($filters);
+        if (!empty($filters)) {
+            $having = ' HAVING ';
+            foreach ($filters as $filter => $value) {
+                $parts[] = " $filter LIKE ? ";
+                $params[] = "%$value%";
+            }
+            $having .= implode(' AND ', $parts);
+        }
+        return [$having, $params];
     }
 }

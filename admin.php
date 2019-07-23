@@ -30,12 +30,6 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
     function handle() {
         global $ID, $INPUT;
 
-        //by default use current page namespace
-        if (!$INPUT->has('filter')) {
-            $INPUT->set('filter', getNS($ID));
-        }
-
-
         //by default sort by tag name
         if (!$INPUT->has('sort')) {
             $INPUT->set('sort', 'tid');
@@ -93,6 +87,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
             array('value' => $this->getLang('admin tag'), 'sort_by' => 'tid'),
             array('value' => $this->getLang('admin occurrence'), 'sort_by' => 'count'),
             array('value' => $this->getLang('admin writtenas'), 'sort_by' => 'orig'),
+            array('value' => $this->getLang('admin namespaces'), 'sort_by' => 'ns'),
             array('value' => $this->getLang('admin taggers'), 'sort_by' => 'taggers'),
             array('value' => $this->getLang('admin actions'), 'sort_by' => false),
         );
@@ -103,7 +98,9 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         if (isset($sort[1]) && $sort[1] === 'desc') {
             $desc = true;
         }
-        $tags = $this->hlp->getAllTags($INPUT->str('filter'), $order_by, $desc);
+        $filters = $INPUT->arr('tagging__filters');
+
+        $tags = $this->hlp->getAllTags($INPUT->str('filter'), $order_by, $desc, $filters);
 
         $form = new dokuwiki\Form\Form();
         $form->setHiddenField('do', 'admin');
@@ -147,16 +144,33 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
         }
         $form->addTagClose('tr');
 
+        /**
+         * Table filters for all sortable columns
+         */
+        $form->addTagOpen('tr');
+        foreach ($headers as $header) {
+            $form->addTagOpen('th');
+            if ($header['sort_by'] !== false) {
+                $field = $header['sort_by'];
+                $form->addTextInput("tagging__filters[$field]");
+            }
+            $form->addTagClose('th');
+        }
+        $form->addTagClose('tr');
+
+
         foreach ($tags as $taginfo) {
             $tagname = $taginfo['tid'];
             $taggers = $taginfo['taggers'];
             $written = $taginfo['orig'];
+            $ns = $taginfo['ns'];
 
             $form->addTagOpen('tr');
             $form->addHTML('<td><a class="tagslist" href="' .
                 $this->hlp->getTagSearchURL($tagname) . '">' . hsc($tagname) . '</a></td>');
             $form->addHTML('<td>' . $taginfo['count'] . '</td>');
             $form->addHTML('<td>' . hsc($written) . '</td>');
+            $form->addHTML('<td>' . hsc($ns) . '</td>');
             $form->addHTML('<td>' . hsc($taggers) . '</td>');
             // action buttons
             $form->addHTML('<td>');

@@ -398,7 +398,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         if (empty($formerTagName) || empty($newTagNames)) {
             msg($this->getLang("admin enter tag names"), -1);
-
             return;
         }
 
@@ -406,15 +405,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $newTagNames = explode(',', $newTagNames);
 
         $db = $this->getDB();
-
-        $res = $db->query('SELECT pid FROM taggings WHERE CLEANTAG(tag) = ?', $this->cleanTag($formerTagName));
-        $check = $db->res2arr($res);
-
-        if (empty($check)) {
-            msg($this->getLang("admin tag does not exists"), -1);
-
-            return;
-        }
 
         // non-admins can rename only their own tags
         if (!auth_isadmin()) {
@@ -425,15 +415,36 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $tagger = '';
         }
 
-        // TODO insert-and-delete transaction instead of update
-        foreach ($newTagNames as $tag) {
-            $query = "UPDATE taggings SET tag = ? WHERE CLEANTAG(tag) = ? AND GETACCESSLEVEL(pid) >= " . AUTH_EDIT;
-            $query .= $queryTagger;
-            $params = [$this->cleanTag($tag), $this->cleanTag($formerTagName)];
+        $insertQuery = 'INSERT INTO taggings ';
+        $insertQuery .= 'SELECT pid, ?, tagger, lang FROM taggings';
+        $where = ' WHERE CLEANTAG(tag) = ?';
+        $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_EDIT;
+        $where .= $queryTagger;
+
+        $db->query('BEGIN TRANSACTION');
+
+        // insert new tags first
+        foreach ($newTagNames as $newTag) {
+            $params = [$this->cleanTag($newTag), $this->cleanTag($formerTagName)];
             if ($tagger) array_push($params, $tagger);
-            $res = $db->query($query, $params);
-            $db->res2arr($res);
+            $res = $db->query($insertQuery . $where, $params);
+            if ($res === false) {
+                $db->query('ROLLBACK TRANSACTION');
+                return;
+            }
+            $db->res_close($res);
         }
+
+        // finally delete the old tags
+        $deleteQuery = 'DELETE FROM taggings';
+        $params = [$this->cleanTag($formerTagName)];
+        if ($tagger) array_push($params, $tagger);
+        if ($db->query($deleteQuery . $where, $params) === false) {
+            $db->query('ROLLBACK TRANSACTION');
+            return;
+        }
+
+        $db->query('COMMIT TRANSACTION');
 
         msg($this->getLang("admin renamed"), 1);
 

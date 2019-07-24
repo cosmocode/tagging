@@ -353,8 +353,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                             GROUP_SORT(GROUP_CONCAT("pid"), \', \') AS "pids",
                             COUNT(*) AS "count"
                         FROM "taggings"
-                        WHERE "pid" GLOB ?
-                        GROUP BY "tid"';
+                        WHERE "pid" GLOB ? AND GETACCESSLEVEL(pid) >= ' . AUTH_READ
+                        . ' GROUP BY "tid"';
         $query .= $having;
         $query .=      'ORDER BY ' . $order_by;
         if ($desc) {
@@ -392,17 +392,20 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * Renames a tag
      *
      * @param string $formerTagName
-     * @param string $newTagName
+     * @param string $newTagNames
      */
-    public function renameTag($formerTagName, $newTagName) {
+    public function renameTag($formerTagName, $newTagNames) {
 
-        if (empty($formerTagName) || empty($newTagName)) {
+        if (empty($formerTagName) || empty($newTagNames)) {
             msg($this->getLang("admin enter tag names"), -1);
 
             return;
         }
 
-        $db = $this->getDb();
+        // enable splitting tags on rename
+        $newTagNames = explode(',', $newTagNames);
+
+        $db = $this->getDB();
 
         $res = $db->query('SELECT pid FROM taggings WHERE CLEANTAG(tag) = ?', $this->cleanTag($formerTagName));
         $check = $db->res2arr($res);
@@ -413,8 +416,24 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             return;
         }
 
-        $res = $db->query("UPDATE taggings SET tag = ? WHERE CLEANTAG(tag) = ?", $newTagName, $this->cleanTag($formerTagName));
-        $db->res2arr($res);
+        // non-admins can rename only their own tags
+        if (!auth_isadmin()) {
+            $queryTagger =' AND tagger = ?';
+            $tagger = $this->getUser();
+        } else {
+            $queryTagger = '';
+            $tagger = '';
+        }
+
+        // TODO insert-and-delete transaction instead of update
+        foreach ($newTagNames as $tag) {
+            $query = "UPDATE taggings SET tag = ? WHERE CLEANTAG(tag) = ? AND GETACCESSLEVEL(pid) >= " . AUTH_EDIT;
+            $query .= $queryTagger;
+            $params = [$this->cleanTag($tag), $this->cleanTag($formerTagName)];
+            if ($tagger) array_push($params, $tagger);
+            $res = $db->query($query, $params);
+            $db->res2arr($res);
+        }
 
         msg($this->getLang("admin renamed"), 1);
 
@@ -471,6 +490,11 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $args = array_map(array($this, 'cleanTag'), $tags);
         array_unshift($args, $this->globNamespace($namespace));
 
+        // non-admins can delete only their own tags
+        if (!auth_isadmin()) {
+            $queryBody .= ' AND tagger = ?';
+            array_push($args, $this->getUser());
+        }
 
         $affectedPagesQuery= 'SELECT DISTINCT pid ' . $queryBody;
         $resAffectedPages = $db->query($affectedPagesQuery, $args);
@@ -539,6 +563,28 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
+     * Syntax to allow users to manage tags on regular pages, respects ACLs
+     * @param string $ns
+     * @return string
+     */
+    public function manageTags($ns)
+    {
+        global $INPUT;
+
+        //by default sort by tag name
+        if (!$INPUT->has('sort')) {
+            $INPUT->set('sort', 'tid');
+        }
+
+        // initially set namespace filter to what is defined in syntax
+        if ($ns && !$INPUT->has('tagging__filters')) {
+            $INPUT->set('tagging__filters', ['ns' => $ns]);
+        }
+
+        return $this->html_table();
+    }
+
+    /**
      * Display tag management table
      */
     public function html_table() {
@@ -564,7 +610,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $tags = $this->getAllTags($INPUT->str('filter'), $order_by, $desc, $filters);
 
         $form = new dokuwiki\Form\Form();
-        $form->setHiddenField('do', 'admin');
         $form->setHiddenField('page', 'tagging');
         $form->setHiddenField('id', $ID);
         $form->setHiddenField('sort', $INPUT->str('sort'));

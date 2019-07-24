@@ -50,6 +50,11 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                     $data['ns'] = trim($matches[2]);
                 }
                 break;
+            case 'manage':
+                if (count($matches) > 2) {
+                    $data['manage'] = trim($matches[2]);
+                }
+                break;
         }
 
         return $data;
@@ -92,6 +97,11 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
             case 'input':
                 $renderer->nocache();
                 $renderer->doc .= $hlp->tpl_tags(false);
+                break;
+            case 'manage':
+                $renderer->nocache();
+                $ns = $data['manage'] ?: '';
+                $renderer->doc .= $hlp->manageTags($ns);
                 break;
         }
 

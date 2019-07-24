@@ -131,88 +131,22 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return array associative array in form of value => count
      */
     public function findItems($filter, $type, $limit = 0) {
-        $db = $this->getDB();
-        if (!$db) {
-            return array();
-        }
 
-        // create WHERE clause
-        $where = '1=1';
-        foreach ($filter as $field => $value) {
-            // compare clean tags only
-            if ($field === 'tag') {
-                $field = 'CLEANTAG(tag)';
-                $q = 'CLEANTAG(?)';
-            } else {
-                $q = '?';
-            }
+        global $INPUT;
 
-            if (substr($field, 0, 6) === 'notpid') {
-                $field = 'pid';
+        /** @var helper_plugin_tagging_querybuilder $queryBuilder */
+        $queryBuilder = new \helper_plugin_tagging_querybuilder();
 
-                // detect LIKE filters
-                if ($this->useLike($value)) {
-                    $where .= " AND $field NOT GLOB $q";
-                } else {
-                    $where .= " AND $field != $q";
-                }
-            } else {
-                // detect LIKE filters
-                if ($this->useLike($value)) {
-                    $where .= " AND $field GLOB $q";
-                } else {
-                    $where .= " AND $field = $q";
-                }
-            }
-        }
-        $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
+        $queryBuilder->setField($type);
+        $queryBuilder->setLimit($limit);
+        $queryBuilder->setTags($this->getTags($filter));
+        if (isset($filter['ns'])) $queryBuilder->includeNS($filter['ns']);
+        if (isset($filter['notns'])) $queryBuilder->excludeNS($filter['notns']);
+        if (isset($filter['tagger'])) $queryBuilder->setTagger($filter['tagger']);
+        if (isset($filter['pid'])) $queryBuilder->setPid($filter['pid']);
 
-        // group and order
-        if ($type === 'tag') {
-            $groupby = 'CLEANTAG(tag)';
-            $orderby = 'CLEANTAG(tag)';
-        } else {
-            $groupby = $type;
-            $orderby = "cnt DESC, $type";
-        }
+        return $this->queryDb($queryBuilder->getQuery());
 
-        // limit results
-        if ($limit) {
-            $limit = " LIMIT $limit";
-        } else {
-            $limit = '';
-        }
-
-        // create SQL
-        $sql = "SELECT $type AS item, COUNT(*) AS cnt
-                  FROM taggings
-                 WHERE $where
-              GROUP BY $groupby
-              ORDER BY $orderby
-                $limit
-              ";
-
-        // run query and turn into associative array
-        $res = $db->query($sql, array_values($filter));
-        $res = $db->res2arr($res);
-
-        $ret = array();
-        foreach ($res as $row) {
-            $ret[$row['item']] = $row['cnt'];
-        }
-
-        return $ret;
-    }
-
-    /**
-     * Check if the given string is a LIKE statement
-     *
-     * @param string $value
-     *
-     * @return bool
-     */
-    private function useLike($value) {
-        return strpos($value, '*') === 0 || strrpos($value, '*') === strlen($value) - 1;
     }
 
     /**
@@ -547,5 +481,73 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     public function renamePage($oldName, $newName) {
         $db = $this->getDb();
         $db->query('UPDATE taggings SET pid = ? WHERE pid = ?', $newName, $oldName);
+    }
+
+    /**
+     * Extracts tags from search query
+     *
+     * @param array $parsedQuery
+     * @return array
+     */
+    public function getTags($parsedQuery)
+    {
+        $tags = [];
+        if (isset($parsedQuery['phrases'][0])) {
+            $tags = $parsedQuery['phrases'];
+        } elseif (isset($parsedQuery['and'][0])) {
+            $tags = $parsedQuery['and'];
+        } elseif (isset($parsedQuery['tag'])) {
+            // handle autocomplete call
+            $tags[] = $parsedQuery['tag'];
+        }
+        return $tags;
+    }
+
+    /**
+     * Search for tagged pages
+     *
+     * @return array
+     */
+    public function searchPages()
+    {
+        global $INPUT;
+        global $QUERY;
+        $parsedQuery = ft_queryParser(new Doku_Indexer(), $QUERY);
+
+        /** @var helper_plugin_tagging_querybuilder $queryBuilder */
+        $queryBuilder = new \helper_plugin_tagging_querybuilder();
+
+        $queryBuilder->setField('pid');
+        $queryBuilder->setTags($this->getTags($parsedQuery));
+        $queryBuilder->setLogicalAnd($INPUT->str('taggings') === 'and');
+        if (isset($parsedQuery['ns'])) $queryBuilder->includeNS($parsedQuery['ns']);
+        if (isset($parsedQuery['notns'])) $queryBuilder->excludeNS($parsedQuery['notns']);
+        if (isset($parsedQuery['tagger'])) $queryBuilder->setTagger($parsedQuery['tagger']);
+        if (isset($parsedQuery['pid'])) $queryBuilder->setPid($parsedQuery['pid']);
+
+        return $this->queryDb($queryBuilder->getPages());
+    }
+
+    /**
+     * Executes the query and returns the results as array
+     *
+     * @param array $query
+     * @return array
+     */
+    protected function queryDb($query)
+    {
+        $db = $this->getDB();
+        if (!$db) {
+            return [];
+        }
+
+        $res = $db->query($query[0], $query[1]);
+        $res = $db->res2arr($res);
+
+        $ret = [];
+        foreach ($res as $row) {
+            $ret[$row['item']] = $row['cnt'];
+        }
+        return $ret;
     }
 }

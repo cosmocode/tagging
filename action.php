@@ -15,6 +15,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         );
 
         $controller->register_hook(
+            'FORM_SEARCH_OUTPUT', 'BEFORE', $this,
+            'addSwitchToSearchForm'
+        );
+
+        $controller->register_hook(
             'AJAX_CALL_UNKNOWN', 'BEFORE', $this,
             'handle_ajax_call_unknown'
         );
@@ -217,67 +222,101 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     }
 
     /**
+     * Add AND/OR switch to advanced search tools
+     *
+     * @param Doku_Event $event
+     * @param            $param
+     */
+    public function addSwitchToSearchForm(Doku_Event $event, $param)
+    {
+        global $INPUT;
+
+        /* @var \dokuwiki\Form\Form $searchForm */
+        $searchForm = $event->data;
+        $currElemPos = $searchForm->findPositionByAttribute('class', 'advancedOptions');
+
+        // set active setting
+        $active = '';
+        if ($INPUT->has('taggings')) {
+            $active = $INPUT->str('taggings');
+        }
+        $searchForm->setHiddenField('taggings', $active);
+
+        $searchForm->addTagOpen('div', ++$currElemPos)->addClass('toggle')->attr('aria-haspopup', 'true');
+
+        // popup toggler
+        $toggler = $searchForm->addTagOpen('div', ++$currElemPos)->addClass('current');
+
+        // current item
+        if ($active && $active === 'and') {
+            $currentLabel = $this->getLang('search_all_tags');
+            $toggler->addClass('changed');
+        } else {
+            $currentLabel = $this->getLang('search_any_tag');
+        }
+
+        $searchForm->addHTML($currentLabel, ++$currElemPos);
+        $searchForm->addTagClose('div', ++$currElemPos);
+
+        // options
+        $options = [
+            'or' => $this->getLang('search_any_tag'),
+            'and' => $this->getLang('search_all_tags'),
+            ];
+        $searchForm->addTagOpen('ul', ++$currElemPos)->attr('aria-expanded', 'false');
+        foreach ($options as $key => $label) {
+            $listItem = $searchForm->addTagOpen('li', ++$currElemPos);
+            if ($active && $key === $active) {
+                $listItem->addClass('active');
+            }
+            $link = $this->getSettingsLink($label, 'taggings', $key);
+            $searchForm->addHTML($link, ++$currElemPos);
+            $searchForm->addTagClose('li', ++$currElemPos);
+        }
+        $searchForm->addTagClose('ul', ++$currElemPos);
+
+        $searchForm->addTagClose('div', ++$currElemPos);
+    }
+    /**
      * Show tagged pages on searches
      *
      * @param $event
      * @param $param
      */
-    function echo_searchresults(Doku_Event &$event, $param) {
+    public function echo_searchresults(Doku_Event $event, $param) {
         global $ACT;
         global $QUERY;
+        global $INPUT;
 
         if ($ACT !== 'search') {
             return;
         }
 
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+
         // parse the search query and use the first found word as term
         $terms = ft_queryParser(idx_get_indexer(), $QUERY);
 
-        $tag = '';
-        if (isset($terms['phrases'][0])) {
-            $tag = $terms['phrases'][0];
-        } else {
-            if (isset($terms['and'][0])) {
-                $tag = $terms['and'][0];
-            }
-        }
+        $tag = $hlp->getTags($terms);
         if (!$tag) {
             return;
         }
 
-        // create filter from term and namespace
-        $filter = array('tag' => $tag);
-        if (isset($terms['ns'][0])) {
-            $filter['pid'] = $terms['ns'][0];
-            if (substr($filter['pid'], -1) !== ':') {
-                $filter['pid'] .= ':';
-            }
-            $filter['pid'] .= '*';
-        }
-        if (isset($terms['notns'][0])) {
-            $i = 0;
-            foreach ($terms['notns'] as $notns) {
-
-                if (substr($notns, -1) !== ':') {
-                    $notns .= ':';
-                }
-                $notns .= '*';
-                $filter['notpid' . $i] = $notns;
-                ++$i;
-            }
-
-        }
-
-        /** @var helper_plugin_tagging $hlp */
-        $hlp = plugin_load('helper', 'tagging');
-        $pages = $hlp->findItems($filter, 'pid');
+        $pages = $hlp->searchPages();
         if (!count($pages)) {
             return;
         }
 
         // create output HTML
+        // format tag search terms
+        $operator = ($INPUT->str('taggings') === 'and') ?
+            $this->getLang('search_all_label') :
+            $this->getLang('search_any_label');
+        $tagInfo = implode(' ' . $operator . ' ', $tag);
+
         $results = '<div class="search_quickresult">';
-        $results .= '<h2>' . $this->getLang('search_section_title') . ' "' . hsc($tag) . '"' . '</h2>';
+        $results .= '<h2>' . $this->getLang('search_section_title') . ' ' . hsc($tagInfo) . '' . '</h2>';
         $results .= '<ul class="search_quickhits">';
         global $ID;
         $oldID = $ID;
@@ -304,8 +343,6 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             // unclear what happened, let's just append
             $event->data .= $results;
         }
-
-
     }
 
     /**
@@ -322,5 +359,26 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
         $hlp->renamePage($src, $dst);
+    }
+
+    /**
+     * Returns a link that includes all parameters set by inbuilt search tools
+     *
+     * @param string $label
+     * @param string $param
+     * @param string $value
+     * @return string
+     */
+    protected function getSettingsLink($label, $param, $value)
+    {
+        global $QUERY;
+        $Indexer = idx_get_indexer();
+        $parsedQuery = ft_queryParser($Indexer, $QUERY);
+        $searchState = new \dokuwiki\Ui\SearchState($parsedQuery);
+        $linkTag =  $searchState->getSearchLink($label);
+
+        // manipulate the link string because there is yet no way for inbuilt search to accept plugins extending search queries
+        // FIXME current links have a strange format where href is set in single quotes and followed by a space so preg_replace would make more sense
+        return str_replace("' >", '&' .$param . '=' . $value ."'> ", $linkTag);
     }
 }

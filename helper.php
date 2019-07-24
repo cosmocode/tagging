@@ -301,7 +301,9 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $ret .= '<div id="tagging__edit_buttons_group">';
             $ret .= html_btn('tagging_edit', $INFO['id'], '', array());
             if (auth_isadmin()) {
-                $ret .= '<label>' . $this->getLang('toggle admin mode') . '<input type="checkbox" id="tagging__edit_toggle_admin" /></label>';
+                $ret .= '<label>'
+                    . $this->getLang('toggle admin mode')
+                    . '<input type="checkbox" id="tagging__edit_toggle_admin" /></label>';
             }
             $ret .= '</div>';
             $form = new dokuwiki\Form\Form();
@@ -312,7 +314,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                 'pid'    => $INFO['id'],
                 'tagger' => $this->getUser(),
             ), 'tag');
-            $form->addTextarea('tagging[tags]')->val(implode(', ', array_keys($tags)))->addClass('edit')->attr('rows', 4);
+            $form->addTextarea('tagging[tags]')
+                ->val(implode(', ', array_keys($tags)))
+                ->addClass('edit')
+                ->attr('rows', 4);
             $form->addButton('', $lang['btn_save'])->id('tagging__edit_save');
             $form->addButton('', $lang['btn_cancel'])->id('tagging__edit_cancel');
             $ret .= $form->toHTML();
@@ -474,7 +479,11 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $db = $this->getDb();
 
-        $res = $db->query('SELECT pid FROM taggings WHERE CLEANTAG(tag) = ? AND pid = ?', $this->cleanTag($formerTagName), $pid);
+        $res = $db->query(
+            'SELECT pid FROM taggings WHERE CLEANTAG(tag) = ? AND pid = ?',
+            $this->cleanTag($formerTagName),
+            $pid
+        );
         $check = $db->res2arr($res);
 
         if (empty($check)) {
@@ -482,9 +491,18 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         }
 
         if (empty($newTagName)) {
-            $res = $db->query('DELETE FROM taggings WHERE pid = ? AND CLEANTAG(tag) = ?', $pid, $this->cleanTag($formerTagName));
+            $res = $db->query(
+                'DELETE FROM taggings WHERE pid = ? AND CLEANTAG(tag) = ?',
+                $pid,
+                $this->cleanTag($formerTagName)
+            );
         } else {
-            $res = $db->query('UPDATE taggings SET tag = ? WHERE pid = ? AND CLEANTAG(tag) = ?', $newTagName, $pid, $this->cleanTag($formerTagName));
+            $res = $db->query(
+                'UPDATE taggings SET tag = ? WHERE pid = ? AND CLEANTAG(tag) = ?',
+                $newTagName,
+                $pid,
+                $this->cleanTag($formerTagName)
+            );
         }
         $db->res2arr($res);
 
@@ -671,7 +689,9 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                         $icon = 'arrow-down';
                     }
                 }
-                $form->addButtonHTML("fn[sort][$param]", $header['value'] . ' ' . inlineSVG(dirname(__FILE__) . "/images/$icon.svg"))
+                $form->addButtonHTML(
+                    "fn[sort][$param]",
+                    $header['value'] . ' ' . inlineSVG(__DIR__ . "/images/$icon.svg"))
                     ->addClass('plugin_tagging sort_button')
                     ->attr('title', $title);
             } else {
@@ -704,7 +724,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $pids = explode(',',$taginfo['pids']);
 
             $form->addTagOpen('tr');
-            $form->addHTML('<td><a class="tagslist" href="#" data-pids="' . $taginfo['pids'] . '">' . hsc($tagname) . '</a></td>');
+            $form->addHTML('<td>');
+            $form->addHTML('<a class="tagslist" href="#" data-pids="' . $taginfo['pids'] . '">');
+            $form->addHTML( hsc($tagname) . '</a>');
+            $form->addHTML('</td>');
             $form->addHTML('<td>' . $taginfo['count'] . '</td>');
             $form->addHTML('<td>' . hsc($written) . '</td>');
             $form->addHTML('<td>' . hsc($ns) . '</td>');
@@ -727,10 +750,18 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             }
 
             if ($userEdit) {
-                $form->addButtonHTML('fn[actions][rename][' . $taginfo['tid'] . ']', inlineSVG(dirname(__FILE__) . '/images/edit.svg'))
-                    ->addClass('plugin_tagging action_button')->attr('data-action', 'rename')->attr('data-tid', $taginfo['tid']);
-                $form->addButtonHTML('fn[actions][delete][' . $taginfo['tid'] . ']', inlineSVG(dirname(__FILE__) . '/images/delete.svg'))
-                    ->addClass('plugin_tagging action_button')->attr('data-action', 'delete')->attr('data-tid', $taginfo['tid']);
+                $form->addButtonHTML(
+                    'fn[actions][rename][' . $taginfo['tid'] . ']',
+                    inlineSVG(__DIR__ . '/images/edit.svg'))
+                    ->addClass('plugin_tagging action_button')
+                    ->attr('data-action', 'rename')
+                    ->attr('data-tid', $taginfo['tid']);
+                $form->addButtonHTML(
+                    'fn[actions][delete][' . $taginfo['tid'] . ']',
+                    inlineSVG(__DIR__ . '/images/delete.svg'))
+                    ->addClass('plugin_tagging action_button')
+                    ->attr('data-action', 'delete')
+                    ->attr('data-tid', $taginfo['tid']);
             }
 
             $form->addHTML('</td>');

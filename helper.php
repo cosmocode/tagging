@@ -401,8 +401,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             return;
         }
 
+        $keepFormerTag = false;
+
         // enable splitting tags on rename
-        $newTagNames = explode(',', $newTagNames);
+        $newTagNames = array_map(function ($tag) {
+            return $this->cleanTag($tag);
+        }, explode(',', $newTagNames));
 
         $db = $this->getDB();
 
@@ -425,7 +429,11 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         // insert new tags first
         foreach ($newTagNames as $newTag) {
-            $params = [$this->cleanTag($newTag), $this->cleanTag($formerTagName)];
+            if ($newTag === $this->cleanTag($formerTagName)) {
+                $keepFormerTag = true;
+                continue;
+            }
+            $params = [$newTag, $this->cleanTag($formerTagName)];
             if ($tagger) array_push($params, $tagger);
             $res = $db->query($insertQuery . $where, $params);
             if ($res === false) {
@@ -435,13 +443,15 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $db->res_close($res);
         }
 
-        // finally delete the old tags
-        $deleteQuery = 'DELETE FROM taggings';
-        $params = [$this->cleanTag($formerTagName)];
-        if ($tagger) array_push($params, $tagger);
-        if ($db->query($deleteQuery . $where, $params) === false) {
-            $db->query('ROLLBACK TRANSACTION');
-            return;
+        // finally delete the renamed tags
+        if (!$keepFormerTag) {
+            $deleteQuery = 'DELETE FROM taggings';
+            $params = [$this->cleanTag($formerTagName)];
+            if ($tagger) array_push($params, $tagger);
+            if ($db->query($deleteQuery . $where, $params) === false) {
+                $db->query('ROLLBACK TRANSACTION');
+                return;
+            }
         }
 
         $db->query('COMMIT TRANSACTION');

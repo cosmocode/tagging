@@ -350,6 +350,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                             GROUP_SORT(GROUP_CONCAT("tag"), \', \') AS "orig",
                             GROUP_SORT(GROUP_CONCAT("tagger"), \', \') AS "taggers",
                             GROUP_SORT(GROUP_CONCAT(GET_NS("pid")), \', \') AS "ns",
+                            GROUP_SORT(GROUP_CONCAT("pid"), \', \') AS "pids",
                             COUNT(*) AS "count"
                         FROM "taggings"
                         WHERE "pid" GLOB ?
@@ -535,6 +536,143 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         if (isset($parsedQuery['pid'])) $queryBuilder->setPid($parsedQuery['pid']);
 
         return $this->queryDb($queryBuilder->getPages());
+    }
+
+    /**
+     * Display tag management table
+     */
+    public function html_table() {
+        global $ID, $INPUT;
+
+        $headers = array(
+            array('value' => $this->getLang('admin tag'), 'sort_by' => 'tid'),
+            array('value' => $this->getLang('admin occurrence'), 'sort_by' => 'count'),
+            array('value' => $this->getLang('admin writtenas'), 'sort_by' => 'orig'),
+            array('value' => $this->getLang('admin namespaces'), 'sort_by' => 'ns'),
+            array('value' => $this->getLang('admin taggers'), 'sort_by' => 'taggers'),
+            array('value' => $this->getLang('admin actions'), 'sort_by' => false),
+        );
+
+        $sort = explode(',', $INPUT->str('sort'));
+        $order_by = $sort[0];
+        $desc = false;
+        if (isset($sort[1]) && $sort[1] === 'desc') {
+            $desc = true;
+        }
+        $filters = $INPUT->arr('tagging__filters');
+
+        $tags = $this->getAllTags($INPUT->str('filter'), $order_by, $desc, $filters);
+
+        $form = new dokuwiki\Form\Form();
+        $form->setHiddenField('do', 'admin');
+        $form->setHiddenField('page', 'tagging');
+        $form->setHiddenField('id', $ID);
+        $form->setHiddenField('sort', $INPUT->str('sort'));
+
+        /**
+         * Actions dialog
+         */
+        $form->addTagOpen('div')->id('tagging__action-dialog')->attr('style', "display:none;");
+        $form->addTagClose('div');
+
+        /**
+         * Tag pages dialog
+         */
+        $form->addTagOpen('div')->id('tagging__taggedpages-dialog')->attr('style', "display:none;");
+        $form->addTagClose('div');
+
+        /**
+         * Tag management table
+         */
+        $form->addTagOpen('table')->addClass('inline plugin_tagging');
+
+        /**
+         * Table headers
+         */
+        $form->addTagOpen('tr');
+        foreach ($headers as $header) {
+            $form->addTagOpen('th');
+            if ($header['sort_by'] !== false) {
+                $param = $header['sort_by'];
+                $icon = 'arrow-both';
+                $title = $this->getLang('admin sort ascending');
+                if ($header['sort_by'] === $order_by) {
+                    if ($desc === false) {
+                        $icon = 'arrow-up';
+                        $title = $this->getLang('admin sort descending');
+                        $param .= ',desc';
+                    } else {
+                        $icon = 'arrow-down';
+                    }
+                }
+                $form->addButtonHTML("fn[sort][$param]", $header['value'] . ' ' . inlineSVG(dirname(__FILE__) . "/images/$icon.svg"))
+                    ->addClass('plugin_tagging sort_button')
+                    ->attr('title', $title);
+            } else {
+                $form->addHTML($header['value']);
+            }
+            $form->addTagClose('th');
+        }
+        $form->addTagClose('tr');
+
+        /**
+         * Table filters for all sortable columns
+         */
+        $form->addTagOpen('tr');
+        foreach ($headers as $header) {
+            $form->addTagOpen('th');
+            if ($header['sort_by'] !== false) {
+                $field = $header['sort_by'];
+                $form->addTextInput("tagging__filters[$field]");
+            }
+            $form->addTagClose('th');
+        }
+        $form->addTagClose('tr');
+
+
+        foreach ($tags as $taginfo) {
+            $tagname = $taginfo['tid'];
+            $taggers = $taginfo['taggers'];
+            $written = $taginfo['orig'];
+            $ns = $taginfo['ns'];
+            $pids = explode(',',$taginfo['pids']);
+
+            $form->addTagOpen('tr');
+            $form->addHTML('<td><a class="tagslist" href="#" data-pids="' . $taginfo['pids'] . '">' . hsc($tagname) . '</a></td>');
+            $form->addHTML('<td>' . $taginfo['count'] . '</td>');
+            $form->addHTML('<td>' . hsc($written) . '</td>');
+            $form->addHTML('<td>' . hsc($ns) . '</td>');
+            $form->addHTML('<td>' . hsc($taggers) . '</td>');
+
+            /**
+             * action buttons
+             */
+            $form->addHTML('<td>');
+
+            // check ACLs
+            $userEdit = false;
+            /** @var \helper_plugin_sqlite $sqliteHelper */
+            $sqliteHelper = plugin_load('helper', 'sqlite');
+            foreach ($pids as $pid) {
+                if ($sqliteHelper->_getAccessLevel($pid) >= AUTH_EDIT) {
+                    $userEdit = true;
+                    continue;
+                }
+            }
+
+            if ($userEdit) {
+                $form->addButtonHTML('fn[actions][rename][' . $taginfo['tid'] . ']', inlineSVG(dirname(__FILE__) . '/images/edit.svg'))
+                    ->addClass('plugin_tagging action_button')->attr('data-action', 'rename')->attr('data-tid', $taginfo['tid']);
+                $form->addButtonHTML('fn[actions][delete][' . $taginfo['tid'] . ']', inlineSVG(dirname(__FILE__) . '/images/delete.svg'))
+                    ->addClass('plugin_tagging action_button')->attr('data-action', 'delete')->attr('data-tid', $taginfo['tid']);
+            }
+
+            $form->addHTML('</td>');
+            $form->addTagClose('tr');
+        }
+
+        $form->addTagClose('table');
+        return $form->toHTML();
     }
 
     /**

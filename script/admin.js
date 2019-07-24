@@ -7,6 +7,7 @@ jQuery(function () {
     };
 
     const $actionButtons = jQuery('button.action_button');
+    const $taggedPages = jQuery('a.tagslist');
 
     /**
      * Trigger a backend action via AJAX and refresh page on success
@@ -40,11 +41,11 @@ jQuery(function () {
      *
      * @type {*[]}
      */
-    const dialogButtons = [
+    const actionDialogButtons = [
         {
             text: LANG.plugins.tagging.admin_confirm,
             click: function () {
-                const actionData = dialog.dialog('option', 'data');
+                const actionData = actionDialog.dialog('option', 'data');
                 if (actionData.action === 'delete') {
                     callBackend({call: 'plugin_tagging_delete', tagging: {tid: [actionData.tid]}});
                 } else if (actionData.action === 'rename') {
@@ -56,7 +57,7 @@ jQuery(function () {
         {
             text: LANG.plugins.tagging.admin_cancel,
             click: function () {
-                dialog.dialog('close');
+                actionDialog.dialog('close');
             }
         },
     ];
@@ -66,35 +67,53 @@ jQuery(function () {
      *
      * @type {jQuery}
      */
-    const dialog = jQuery("#tagging__action-dialog").dialog({
+    const actionDialog = jQuery("#tagging__action-dialog").dialog({
         autoOpen: false,
         height: 400,
         width: 300,
         modal: true,
-        buttons: dialogButtons,
+        buttons: actionDialogButtons,
         close: function () {
-            dialog.html('');
+            actionDialog.html('');
         },
         open: function( event, ui ) {
-            dialogHtml();
+            actionDialogHtml();
+        }
+    });
+
+    /**
+     * Modal listing pages with a given tag
+     *
+     * @type {jQuery}
+     */
+    const taggedPagesDialog = jQuery("#tagging__taggedpages-dialog").dialog({
+        autoOpen: false,
+        height: 400,
+        width: 400,
+        modal: true,
+        close: function () {
+            taggedPagesDialog.html('');
+        },
+        open: function( event, ui ) {
+            taggedPagesgHtml();
         }
     });
 
     /**
      * Injects dialog contents that match the triggered action
      */
-    const dialogHtml = function() {
+    const actionDialogHtml = function() {
 
-        const actionData = dialog.dialog('option', 'data');
+        const actionData = actionDialog.dialog('option', 'data');
         let $renameForm;
 
         if (actionData.action === 'delete') {
-            dialog.append('<h1>' + LANG.plugins.tagging.admin_delete + ' ' + actionData.tid + '</h1>');
-            dialog.append('<p>' + LANG.plugins.tagging.admin_sure + '</p>');
+            actionDialog.append('<h1>' + LANG.plugins.tagging.admin_delete + ' ' + actionData.tid + '</h1>');
+            actionDialog.append('<p>' + LANG.plugins.tagging.admin_sure + '</p>');
         } else if (actionData.action === 'rename') {
-            dialog.append('<h1>' + LANG.plugins.tagging.admin_rename + ' ' + actionData.tid + '</h1>');
-            dialog.append('<p>' + LANG.plugins.tagging.admin_newtags + ' </p>');
-            dialog.append('<form id="tagging__rename"><input type="text" name="newtags" id="tagging__newtags"></form>');
+            actionDialog.append('<h1>' + LANG.plugins.tagging.admin_rename + ' ' + actionData.tid + '</h1>');
+            actionDialog.append('<p>' + LANG.plugins.tagging.admin_newtags + ' </p>');
+            actionDialog.append('<form id="tagging__rename"><input type="text" name="newtags" id="tagging__newtags"></form>');
 
             $renameForm = jQuery('#tagging__rename');
             $renameForm.on('submit', function( event ) {
@@ -103,7 +122,23 @@ jQuery(function () {
                 callBackend({call: 'plugin_tagging_rename', tagging: {oldValue: actionData.tid, newValue: newValue} });
             });
         }
-        dialog.append('<p class="warning">' + LANG.plugins.tagging.admin_warning_all + '</p>');
+        actionDialog.append('<p class="warning">' + LANG.plugins.tagging.admin_warning_all + '</p>');
+    };
+
+    /**
+     * Displays tagged pages
+     */
+    const taggedPagesgHtml = function() {
+
+        const data = taggedPagesDialog.dialog('option', 'data');
+        const pids = data.pids.split(/,\s*/);
+
+        taggedPagesDialog.append('<h1>Tagged pages</h1>');
+        taggedPagesDialog.append('<ul>');
+        pids.forEach(function (pid) {
+            taggedPagesDialog.append('<li>' + pid + '</li>');
+        });
+        taggedPagesDialog.append('</ul>');
     };
 
     /**
@@ -113,7 +148,18 @@ jQuery(function () {
         e.preventDefault();
         e.stopPropagation();
 
-        dialog.dialog('option', { data: jQuery(this).data() });
-        dialog.dialog('open');
+        actionDialog.dialog('option', { data: jQuery(this).data() });
+        actionDialog.dialog('open');
+    });
+
+    /**
+     * Tag links open a dialog window
+     */
+    $taggedPages.click(function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        taggedPagesDialog.dialog('option', { data: jQuery(this).data() });
+        taggedPagesDialog.dialog('open');
     });
 });

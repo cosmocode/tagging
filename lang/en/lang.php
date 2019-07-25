@@ -40,9 +40,9 @@ $lang['js']['admin_confirm']       = 'Confirm';
 $lang['js']['admin_cancel']        = 'Cancel';
 $lang['js']['admin_rename']        = 'Rename';
 $lang['js']['admin_delete']        = 'Delete';
-$lang['js']['admin_warning_all']   = 'Warning: this will be applied to ALL tags, regardless of table filters!';
+$lang['js']['admin_warning_all']   = 'Warning: Changes will be applied to ALL tags, regardless of table filters!';
 $lang['js']['admin_sure']          = 'Are you sure?';
-$lang['js']['admin_newtags']       = 'new tag name (or comma separated list to split into more tags)';
+$lang['js']['admin_newtags']       = 'Please enter the new tag name. You can provide multiple comma separated tags to split the tag into multiple.';
 
 
 $lang['tagjmp_error'] = 'Could not find any page tagged with %s';

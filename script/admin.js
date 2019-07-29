@@ -12,10 +12,13 @@ jQuery(function () {
     /**
      * Trigger a backend action via AJAX and refresh page on success
      *
-     * @param params
+     * @param {object} params Required "call" is the DokuWiki event name, plus optional data object(s)
+     * @param callback Function to call on success, reload page by default
      * @returns {*}
      */
-    const callBackend = function(params) {
+    const callBackend = function(params, callback = function (response) {
+        location.reload();
+    }) {
         const mergedParams = jQuery.extend(
             {},
             requestParams,
@@ -28,7 +31,7 @@ jQuery(function () {
             type    : 'POST'
         })
             .done(jQuery.proxy(function(response) {
-                location.reload();
+                callback(response);
             }, this))
             .fail(jQuery.proxy(function(xhr) {
                 var msg = typeof xhr === 'string' ? xhr : xhr.responseText || xhr.statusText || 'Unknown error';
@@ -72,6 +75,7 @@ jQuery(function () {
         height: 400,
         width: 300,
         modal: true,
+        title: LANG.plugins.tagging.admin_change_tag,
         buttons: actionDialogButtons,
         close: function () {
             actionDialog.html('');
@@ -91,11 +95,12 @@ jQuery(function () {
         height: 400,
         width: 400,
         modal: true,
+        title: LANG.plugins.tagging.admin_tagged_pages,
         close: function () {
             taggedPagesDialog.html('');
         },
         open: function( event, ui ) {
-            taggedPagesgHtml();
+            taggedPagesHtml();
         }
     });
 
@@ -108,12 +113,16 @@ jQuery(function () {
         let $renameForm;
 
         if (actionData.action === 'delete') {
-            actionDialog.append('<h1>' + LANG.plugins.tagging.admin_delete + ' ' + actionData.tid + '</h1>');
+            actionDialog.append('<h2>' + LANG.plugins.tagging.admin_delete + ' ' + actionData.tid + '</h2>');
             actionDialog.append('<p>' + LANG.plugins.tagging.admin_sure + '</p>');
         } else if (actionData.action === 'rename') {
-            actionDialog.append('<h1>' + LANG.plugins.tagging.admin_rename + ' ' + actionData.tid + '</h1>');
+            actionDialog.append('<h2>' + LANG.plugins.tagging.admin_rename + ' ' + actionData.tid + '</h2>');
             actionDialog.append('<p>' + LANG.plugins.tagging.admin_newtags + ' </p>');
-            actionDialog.append('<form id="tagging__rename"><input type="text" name="newtags" id="tagging__newtags"></form>');
+            actionDialog.append(
+                '<form id="tagging__rename">'
+                + '<input type="text" name="newtags" id="tagging__newtags" value="' + actionData.tid + '">'
+                + '</form>'
+            );
 
             $renameForm = jQuery('#tagging__rename');
             $renameForm.on('submit', function( event ) {
@@ -128,17 +137,14 @@ jQuery(function () {
     /**
      * Displays tagged pages
      */
-    const taggedPagesgHtml = function() {
+    const taggedPagesHtml = function() {
 
-        const data = taggedPagesDialog.dialog('option', 'data');
-        const pids = data.pids.split(/,\s*/);
+        const $data = taggedPagesDialog.dialog('option', 'data');
+        const callback = function(response) {
+            taggedPagesDialog.html(response)
+        };
 
-        taggedPagesDialog.append('<h1>Tagged pages</h1>');
-        taggedPagesDialog.append('<ul>');
-        pids.forEach(function (pid) {
-            taggedPagesDialog.append('<li>' + pid + '</li>');
-        });
-        taggedPagesDialog.append('</ul>');
+        callBackend({call: 'plugin_tagging_html_pages', tagging: {tid: $data['tid']}}, callback);
     };
 
     /**

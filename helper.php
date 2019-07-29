@@ -348,7 +348,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         list($having, $params) = $this->getFilterSql($filters);
 
-        $db = $this->getDb();
+        $db = $this->getDB();
 
         $query = 'SELECT    "pid",
                             CLEANTAG("tag") AS "tid",
@@ -623,6 +623,33 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
+     * HTML list of tagged pages
+     *
+     * @param string $tid
+     * @return string
+     */
+    public function getPagesHtml($tid)
+    {
+        $html = '';
+
+        $db = $this->getDB();
+        $sql = 'SELECT pid from taggings where tag = CLEANTAG(?)';
+        $res =  $db->query($sql, $tid);
+        $pages = $db->res2arr($res);
+
+        if ($pages) {
+            $html .= '<ul>';
+            foreach ($pages as $page) {
+                $pid = $page['pid'];
+                $html .= '<li><a href="' . wl($pid) . '" target="_blank">' . $pid . '</li>';
+            }
+            $html .= '</ul>';
+        }
+
+        return $html;
+    }
+
+    /**
      * Display tag management table
      */
     public function html_table() {
@@ -646,7 +673,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $tags = $this->getAllTags($INPUT->str('filter'), $order_by, $desc, $filters);
 
-        $form = new dokuwiki\Form\Form();
+        $form = new \dokuwiki\Form\Form();
+        // required in admin mode
         $form->setHiddenField('page', 'tagging');
         $form->setHiddenField('id', $ID);
         $form->setHiddenField('sort', $INPUT->str('sort'));
@@ -725,7 +753,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
             $form->addTagOpen('tr');
             $form->addHTML('<td>');
-            $form->addHTML('<a class="tagslist" href="#" data-pids="' . $taginfo['pids'] . '">');
+            $form->addHTML('<a class="tagslist" href="#" data-tid="' . $taginfo['tid'] . '">');
             $form->addHTML( hsc($tagname) . '</a>');
             $form->addHTML('</td>');
             $form->addHTML('<td>' . $taginfo['count'] . '</td>');

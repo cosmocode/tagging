@@ -66,6 +66,8 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             $this->autocomplete();
         } elseif ($event->data === 'plugin_tagging_admin_change') {
             $this->admin_change();
+        } elseif ($event->data === 'plugin_tagging_html_pages') {
+            $this->getPagesHtml();
         } elseif ($event->data === 'plugin_tagging_delete') {
             $this->deleteTag();
         } elseif ($event->data === 'plugin_tagging_rename') {
@@ -226,7 +228,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Admin: delete all occurrences of a tag
+     * Management: delete all occurrences of a tag
      */
     public function deleteTag()
     {
@@ -239,7 +241,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Admin: rename all occurrences of a tag
+     * Management: rename all occurrences of a tag
      */
     public function renameTag()
     {
@@ -249,6 +251,21 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
         $hlp->renameTag($data['oldValue'], $data['newValue']);
+    }
+
+    /**
+     * Tag dialog HTML: links to all pages with a given tag
+     *
+     * @return string
+     */
+    public function getPagesHtml()
+    {
+        global $INPUT;
+        $data = $INPUT->arr('tagging');
+
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+        echo $hlp->getPagesHtml($data['tid']);
     }
 
     /**

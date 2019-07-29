@@ -36,6 +36,7 @@ $lang['search_any_label']      = 'ODER';
 $lang['js']['notags']          = 'Keine Schlagworte vergeben';
 $lang['js']['nopages']         = 'Keine Seiten mit diesem Schlagwort';
 $lang['js']['admin_change_tag'] = 'Schlagworte bearbeiten';
+$lang['js']['admin_tagged_pages']  = 'Seiten mit Schlagwort';
 $lang['js']['admin_confirm']   = 'Bestätigen';
 $lang['js']['admin_cancel']    = 'Abbrechen';
 $lang['js']['admin_rename']    = 'Umbenennen';

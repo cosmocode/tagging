@@ -35,6 +35,7 @@ $lang['search_any_label']          = 'OR';
 $lang['js']['notags']              = 'No tags, yet';
 $lang['js']['nopages']             = 'No pages with this tag, yet';
 $lang['js']['admin_change_tag']    = 'Change the tag';
+$lang['js']['admin_tagged_pages']  = 'Tagged pages';
 $lang['js']['admin_confirm']       = 'Confirm';
 $lang['js']['admin_cancel']        = 'Cancel';
 $lang['js']['admin_rename']        = 'Rename';

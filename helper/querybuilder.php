@@ -21,8 +21,6 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     /** @var int */
     protected $limit;
     /** @var string */
-    protected $where;
-    /** @var string */
     protected $orderby;
     /** @var string */
     protected $groupby;
@@ -47,13 +45,12 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     /**
      * Processes all parts of the query for fetching tagged pages
      *
-     * Returns the query builder object
+     * Returns SQL and query parameter values
      *
      * @return array
      */
     public function getPages()
     {
-        $this->where = $this->getWhere();
         $this->groupby = 'pid';
         $this->orderby = "cnt DESC, pid";
         if ($this->tags && $this->logicalAnd) $this->having = ' HAVING cnt = ' . count($this->tags);
@@ -64,13 +61,12 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     /**
      * Processes all parts of the query for fetching tags
      *
-     * Returns the query builder object
+     * Returns SQL and query parameter values
      *
      * @return array
      */
     public function getTags()
     {
-        $this->where = $this->getWhere();
         $this->groupby = 'CLEANTAG(tag)';
         $this->orderby = 'CLEANTAG(tag)';
 
@@ -156,12 +152,12 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     protected function getSql()
     {
         $sql = "SELECT $this->field AS item, COUNT(*) AS cnt
-                  FROM taggings
-                 WHERE $this->where
-              GROUP BY $this->groupby
-              $this->having
-              ORDER BY $this->orderby
-              ";
+                FROM taggings
+                WHERE " . $this->getWhere() .
+                " GROUP BY $this->groupby
+                $this->having
+                ORDER BY $this->orderby
+                ";
 
         if ($this->limit) {
             $sql .= ' LIMIT ?';

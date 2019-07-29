@@ -340,7 +340,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return array
      */
     public function getAllTags($namespace = '', $order_by = 'tag', $desc = false, $filters = []) {
-        $order_fields = array('pid', 'tid', 'orig', 'taggers', 'ns', 'count');
+        $order_fields = array('pid', 'tid', 'taggers', 'ns', 'count');
         if (!in_array($order_by, $order_fields)) {
             msg('cannot sort by ' . $order_by . ' field does not exists', -1);
             $order_by = 'tag';
@@ -352,7 +352,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $query = 'SELECT    "pid",
                             CLEANTAG("tag") AS "tid",
-                            GROUP_SORT(GROUP_CONCAT("tag"), \', \') AS "orig",
                             GROUP_SORT(GROUP_CONCAT("tagger"), \', \') AS "taggers",
                             GROUP_SORT(GROUP_CONCAT(GET_NS("pid")), \', \') AS "ns",
                             GROUP_SORT(GROUP_CONCAT("pid"), \', \') AS "pids",
@@ -632,7 +631,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $headers = array(
             array('value' => $this->getLang('admin tag'), 'sort_by' => 'tid'),
             array('value' => $this->getLang('admin occurrence'), 'sort_by' => 'count'),
-            array('value' => $this->getLang('admin writtenas'), 'sort_by' => 'orig'),
             array('value' => $this->getLang('admin namespaces'), 'sort_by' => 'ns'),
             array('value' => $this->getLang('admin taggers'), 'sort_by' => 'taggers'),
             array('value' => $this->getLang('admin actions'), 'sort_by' => false),
@@ -709,7 +707,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $form->addTagOpen('th');
             if ($header['sort_by'] !== false) {
                 $field = $header['sort_by'];
-                $form->addTextInput("tagging__filters[$field]");
+                $input = $form->addTextInput("tagging__filters[$field]");
+                if ($field === 'count') {
+                    $input->addClass('narrow-col');
+                }
             }
             $form->addTagClose('th');
         }
@@ -719,7 +720,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         foreach ($tags as $taginfo) {
             $tagname = $taginfo['tid'];
             $taggers = $taginfo['taggers'];
-            $written = $taginfo['orig'];
             $ns = $taginfo['ns'];
             $pids = explode(',',$taginfo['pids']);
 
@@ -729,7 +729,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $form->addHTML( hsc($tagname) . '</a>');
             $form->addHTML('</td>');
             $form->addHTML('<td>' . $taginfo['count'] . '</td>');
-            $form->addHTML('<td>' . hsc($written) . '</td>');
             $form->addHTML('<td>' . hsc($ns) . '</td>');
             $form->addHTML('<td>' . hsc($taggers) . '</td>');
 

@@ -339,7 +339,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @param array $filters
      * @return array
      */
-    public function getAllTags($namespace = '', $order_by = 'tag', $desc = false, $filters = []) {
+    public function getAllTags($namespace = '', $order_by = 'tid', $desc = false, $filters = []) {
         $order_fields = array('pid', 'tid', 'taggers', 'ns', 'count');
         if (!in_array($order_by, $order_fields)) {
             msg('cannot sort by ' . $order_by . ' field does not exists', -1);
@@ -551,7 +551,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @param string $newName
      */
     public function renamePage($oldName, $newName) {
-        $db = $this->getDb();
+        $db = $this->getDB();
         $db->query('UPDATE taggings SET pid = ? WHERE pid = ?', $newName, $oldName);
     }
 
@@ -609,10 +609,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     {
         global $INPUT;
 
-        //by default sort by tag name
-        if (!$INPUT->has('sort')) {
-            $INPUT->set('sort', 'tid');
-        }
+        $this->setDefaultSort();
 
         // initially set namespace filter to what is defined in syntax
         if ($ns && !$INPUT->has('tagging__filters')) {
@@ -663,7 +660,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             array('value' => $this->getLang('admin actions'), 'sort_by' => false),
         );
 
-        $sort = explode(',', $INPUT->str('sort'));
+        $sort = explode(',', $this->getParam('sort'));
         $order_by = $sort[0];
         $desc = false;
         if (isset($sort[1]) && $sort[1] === 'desc') {
@@ -677,7 +674,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         // required in admin mode
         $form->setHiddenField('page', 'tagging');
         $form->setHiddenField('id', $ID);
-        $form->setHiddenField('sort', $INPUT->str('sort'));
+        $form->setHiddenField('[tagging]sort', $this->getParam('sort'));
 
         /**
          * Actions dialog
@@ -716,10 +713,11 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                     }
                 }
                 $form->addButtonHTML(
-                    "fn[sort][$param]",
+                    "tagging[sort]",
                     $header['value'] . ' ' . inlineSVG(__DIR__ . "/images/$icon.svg"))
                     ->addClass('plugin_tagging sort_button')
-                    ->attr('title', $title);
+                    ->attr('title', $title)
+                    ->val($param);
             } else {
                 $form->addHTML($header['value']);
             }
@@ -778,13 +776,13 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
             if ($userEdit) {
                 $form->addButtonHTML(
-                    'fn[actions][rename][' . $taginfo['tid'] . ']',
+                    'tagging[actions][rename][' . $taginfo['tid'] . ']',
                     inlineSVG(__DIR__ . '/images/edit.svg'))
                     ->addClass('plugin_tagging action_button')
                     ->attr('data-action', 'rename')
                     ->attr('data-tid', $taginfo['tid']);
                 $form->addButtonHTML(
-                    'fn[actions][delete][' . $taginfo['tid'] . ']',
+                    'tagging[actions][delete][' . $taginfo['tid'] . ']',
                     inlineSVG(__DIR__ . '/images/delete.svg'))
                     ->addClass('plugin_tagging action_button')
                     ->attr('data-action', 'delete')
@@ -797,6 +795,55 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $form->addTagClose('table');
         return $form->toHTML();
+    }
+
+    /**
+     * Returns all tagging parameters from the query string
+     *
+     * @return mixed
+     */
+    public function getParams()
+    {
+        global $INPUT;
+        return $INPUT->param('tagging', []);
+    }
+
+    /**
+     * Get a tagging parameter, empty string if not set
+     *
+     * @param string $name
+     * @return mixed
+     */
+    public function getParam($name)
+    {
+        $params = $this->getParams();
+        if ($params) {
+            return $params[$name] ?: '';
+        }
+    }
+
+    /**
+     * Sets a tagging parameter
+     *
+     * @param string $name
+     * @param string|array $value
+     */
+    public function setParam($name, $value)
+    {
+        global $INPUT;
+        $params = $this->getParams();
+        $params = array_merge($params, [$name => $value]);
+        $INPUT->set('tagging', $params);
+    }
+
+    /**
+     * Default sorting by tag id
+     */
+    public function setDefaultSort()
+    {
+        if (!$this->getParam('sort')) {
+            $this->setParam('sort', 'tid');
+        }
     }
 
     /**

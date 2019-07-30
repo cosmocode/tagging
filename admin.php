@@ -24,48 +24,17 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
 
     /**
      * Handle tag actions
-     *
-     * FIXME remove obsolete actions
      */
     function handle() {
-        global $ID, $INPUT;
-
-        //by default sort by tag name
-        if (!$INPUT->has('sort')) {
-            $INPUT->set('sort', 'tid');
-        }
-
-        //now starts functions handle
-        if (!$INPUT->has('fn')) {
+        if (!$this->hlp->getParams()) {
+            $this->hlp->setDefaultSort();
             return false;
         }
+
+        $this->hlp->setDefaultSort();
+
         if (!checkSecurityToken()) {
             return false;
-        }
-
-        // extract the command and any specific parameters
-        // submit button name is of the form - fn[cmd][param(s)]
-        $fn = $INPUT->param('fn');
-
-        if (is_array($fn)) {
-            $cmd = key($fn);
-            $param = is_array($fn[$cmd]) ? key($fn[$cmd]) : null;
-        } else {
-            $cmd = $fn;
-            $param = null;
-        }
-
-        switch ($cmd) {
-            case 'rename':
-                $this->hlp->renameTag($INPUT->str('old'), $INPUT->str('new'));
-                break;
-            case 'delete':
-                $this->hlp->deleteTags(array_keys($INPUT->arr('tags')), $INPUT->str('filter'));
-                break;
-            case 'sort':
-                $INPUT->set('sort', $param);
-                break;
-
         }
     }
 

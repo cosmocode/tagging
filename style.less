@@ -105,7 +105,7 @@ button.plugin_tagging.action_button {
     svg {
         width: 22px;
         height: 22px;
-        margin-right: 5px;
+        margin-right: 10px;
     }
 }
 
@@ -121,7 +121,17 @@ button.plugin_tagging.action_button {
     }
 }
 
-table .narrow-col {
-    width: 120px;
-    display: inline-block;
+table.plugin_tagging {
+    width: 100%;
+    table-layout: fixed;
+
+    .narrow-col {
+        width: 100px;
+    }
+    .full-col {
+        width: 100%;
+    }
+    .wide-col {
+        width: 300px;
+    }
 }

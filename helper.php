@@ -693,6 +693,16 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
          */
         $form->addTagOpen('table')->addClass('inline plugin_tagging');
 
+        $form->addHTML(
+            '<colgroup>
+                <col></col>
+                <col class="narrow-col"></col>
+                <col class="wide-col"></col>
+                <col></col>
+                <col class="narrow-col"></col>
+            </colgroup>'
+        );
+
         /**
          * Table headers
          */
@@ -734,9 +744,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             if ($header['sort_by'] !== false) {
                 $field = $header['sort_by'];
                 $input = $form->addTextInput("tagging__filters[$field]");
-                if ($field === 'count') {
-                    $input->addClass('narrow-col');
-                }
+                $input->addClass('full-col');
             }
             $form->addTagClose('th');
         }

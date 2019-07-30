@@ -794,7 +794,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         }
 
         $form->addTagClose('table');
-        return $form->toHTML();
+        return '<div class="table">' . $form->toHTML() . '</div>';
     }
 
     /**

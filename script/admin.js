@@ -16,9 +16,11 @@ jQuery(function () {
      * @param callback Function to call on success, reload page by default
      * @returns {*}
      */
-    const callBackend = function(params, callback = function (response) {
-        location.reload();
-    }) {
+    const callBackend = function(params, callback) {
+        callback = callback || function () {
+            location.reload();
+        };
+
         const mergedParams = jQuery.extend(
             {},
             requestParams,

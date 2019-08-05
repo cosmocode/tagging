@@ -75,7 +75,7 @@ jQuery(function () {
     const actionDialog = jQuery("#tagging__action-dialog").dialog({
         autoOpen: false,
         height: 400,
-        width: 300,
+        width: 500,
         modal: true,
         title: LANG.plugins.tagging.admin_change_tag,
         buttons: actionDialogButtons,
@@ -95,7 +95,7 @@ jQuery(function () {
     const taggedPagesDialog = jQuery("#tagging__taggedpages-dialog").dialog({
         autoOpen: false,
         height: 400,
-        width: 400,
+        width: 600,
         modal: true,
         title: LANG.plugins.tagging.admin_tagged_pages,
         close: function () {

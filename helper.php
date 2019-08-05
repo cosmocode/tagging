@@ -630,7 +630,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $html = '';
 
         $db = $this->getDB();
-        $sql = 'SELECT pid from taggings where tag = CLEANTAG(?)';
+        $sql = 'SELECT pid from taggings where CLEANTAG(tag) = CLEANTAG(?)';
         $res =  $db->query($sql, $tid);
         $pages = $db->res2arr($res);
 

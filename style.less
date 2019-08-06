@@ -76,7 +76,8 @@ ul.tagging_cloud {
     }
 }
 
-button.plugin_tagging.sort_button {
+button.plugin_tagging.sort_button,
+button.plugin_tagging.action_button {
     display: inline-block;
     margin: 0;
     padding: 0;
@@ -96,5 +97,41 @@ button.plugin_tagging.sort_button {
         vertical-align: middle;
         width: 10px;
         height: 10px;
+    }
+}
+
+button.plugin_tagging.action_button {
+    padding: 2px;
+    svg {
+        width: 22px;
+        height: 22px;
+        margin-right: 10px;
+    }
+}
+
+#tagging__action-dialog .warning {
+    color: #ff0000;
+    margin: 10px 0 10px 0;
+}
+
+#tagging__taggedpages-dialog {
+    ul {
+        margin: 10px 0 0 0;
+        padding: 0;
+    }
+}
+
+table.plugin_tagging {
+    width: 100%;
+    table-layout: fixed;
+
+    .narrow-col {
+        width: 100px;
+    }
+    .full-col {
+        width: 100%;
+    }
+    .wide-col {
+        width: 300px;
     }
 }

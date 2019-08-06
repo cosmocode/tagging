@@ -1,5 +1,0 @@
-====== Schlagworte suchen und bearbeiten ======
-
-Auf dieser Seite stehen alle im Wiki genutzten Schlagworte.
-Das Formular erlaubt einzelne Schlagworte umzubenennen.
-Schlagworte können verschmolzen werden, indem ein Schlagwort zu einem anderen existierenden Schlagwort umbenannt wird.

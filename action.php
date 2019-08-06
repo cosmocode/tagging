@@ -66,6 +66,12 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             $this->autocomplete();
         } elseif ($event->data === 'plugin_tagging_admin_change') {
             $this->admin_change();
+        } elseif ($event->data === 'plugin_tagging_html_pages') {
+            $this->getPagesHtml();
+        } elseif ($event->data === 'plugin_tagging_delete') {
+            $this->deleteTag();
+        } elseif ($event->data === 'plugin_tagging_rename') {
+            $this->renameTag();
         } else {
             $handled = false;
         }
@@ -219,6 +225,47 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             'tags_edit_value' => implode(', ', array_keys($userTags)),
             'html_cloud'      => $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), false, true),
         ));
+    }
+
+    /**
+     * Management: delete all occurrences of a tag
+     */
+    public function deleteTag()
+    {
+        global $INPUT;
+        $data = $INPUT->arr('tagging');
+
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+        $hlp->deleteTags($data['tid']);
+    }
+
+    /**
+     * Management: rename all occurrences of a tag
+     */
+    public function renameTag()
+    {
+        global $INPUT;
+        $data = $INPUT->arr('tagging');
+
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+        $hlp->renameTag($data['oldValue'], $data['newValue']);
+    }
+
+    /**
+     * Tag dialog HTML: links to all pages with a given tag
+     *
+     * @return string
+     */
+    public function getPagesHtml()
+    {
+        global $INPUT;
+        $data = $INPUT->arr('tagging');
+
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+        echo $hlp->getPagesHtml($data['tid']);
     }
 
     /**

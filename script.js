@@ -1,4 +1,5 @@
 /* DOKUWIKI:include script/editable.js */
+/* DOKUWIKI:include script/admin.js */
 
 jQuery(function () {
 

@@ -5,17 +5,20 @@ $lang['menu'] = 'View and Change Tags';
 
 $lang['admin tag']                 = 'Tag name';
 $lang['admin occurrence']          = 'Occurrence';
-$lang['admin writtenas']           = 'Written as';
-$lang['admin taggers']             = 'Used by';
+$lang['admin namespaces']          = 'Namespaces';
+$lang['admin taggers']             = 'Saved by';
+$lang['admin actions']             = 'Actions';
 $lang['admin save']                = 'Save';
 $lang['admin find tag']            = 'Find Tag';
 $lang['admin new name']            = 'New name';
 $lang['admin rename tag']          = 'Rename tag';
+$lang['admin rename']              = 'Rename';
 $lang['admin filter']              = 'Filter by namespace';
 $lang['admin enter tag names']     = 'Please enter the current and the new tag name';
 $lang['admin tag does not exists'] = 'The tag name you entered does not exist.';
 $lang['admin renamed']             = 'Your tag has been renamed';
 $lang['admin delete_selected']     = 'Delete Selected';
+$lang['admin delete']              = 'Delete';
 $lang['admin filter button']       = 'Filter';
 $lang['admin deleted']             = 'You have deleted %d tags on %d pages';
 $lang['admin sort ascending']      = 'Sort ascending';
@@ -32,5 +35,14 @@ $lang['search_any_label']          = 'OR';
 $lang['js']['notags']              = 'No tags, yet';
 $lang['js']['nopages']             = 'No pages with this tag, yet';
 $lang['js']['admin_change_tag']    = 'Change the tag';
+$lang['js']['admin_tagged_pages']  = 'Tagged pages';
+$lang['js']['admin_confirm']       = 'Confirm';
+$lang['js']['admin_cancel']        = 'Cancel';
+$lang['js']['admin_rename']        = 'Rename';
+$lang['js']['admin_delete']        = 'Delete';
+$lang['js']['admin_warning_all']   = 'Warning: Changes will be applied to ALL tags, regardless of table filters!';
+$lang['js']['admin_sure']          = 'Are you sure?';
+$lang['js']['admin_newtags']       = 'Please enter the new tag name. You can provide multiple comma separated tags to split the tag into multiple.';
+
 
 $lang['tagjmp_error'] = 'Could not find any page tagged with %s';

@@ -1,0 +1,3 @@
+===== Tag-Datenbank bereinigen =====
+
+Hier können Sie alle ungültigen Taggings löschen: Tags welche auf nicht existierende Seiten verweisen. Gültige Tags bleiben unversehrt.

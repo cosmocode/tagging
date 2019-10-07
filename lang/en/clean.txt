@@ -1,0 +1,3 @@
+===== Clean up tag database =====
+
+Here you can delete all invalid taggings (tags pointing to nonexistent pages). No valid taggings will be removed.

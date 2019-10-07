@@ -28,7 +28,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
     function handle() {
 
         if (!empty($_REQUEST['cmd']['clean'])) {
-            $this->hlp->deleteInvalidTaggings();
+            checkSecurityToken() && $this->hlp->deleteInvalidTaggings();
         }
 
         if (!$this->hlp->getParams()) {

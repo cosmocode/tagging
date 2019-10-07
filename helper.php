@@ -654,10 +654,19 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $headers = array(
             array('value' => $this->getLang('admin tag'), 'sort_by' => 'tid'),
-            array('value' => $this->getLang('admin occurrence'), 'sort_by' => 'count'),
-            array('value' => $this->getLang('admin namespaces'), 'sort_by' => 'ns'),
+            array('value' => $this->getLang('admin occurrence'), 'sort_by' => 'count')
+        );
+
+        if (!$this->conf['hidens']) {
+            array_push(
+                $headers,
+                ['value' => $this->getLang('admin namespaces'), 'sort_by' => 'ns']
+            );
+        }
+
+        array_push($headers,
             array('value' => $this->getLang('admin taggers'), 'sort_by' => 'taggers'),
-            array('value' => $this->getLang('admin actions'), 'sort_by' => false),
+            array('value' => $this->getLang('admin actions'), 'sort_by' => false)
         );
 
         $sort = explode(',', $this->getParam('sort'));
@@ -693,12 +702,13 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
          */
         $form->addTagOpen('table')->addClass('inline plugin_tagging');
 
+        $nscol = $this->conf['hidens'] ? '' : '<col class="wide-col"></col>';
         $form->addHTML(
             '<colgroup>
                 <col></col>
-                <col class="narrow-col"></col>
-                <col class="wide-col"></col>
-                <col></col>
+                <col class="narrow-col"></col>'
+                . $nscol .
+                '<col></col>
                 <col class="narrow-col"></col>
             </colgroup>'
         );
@@ -763,7 +773,9 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $form->addHTML( hsc($tagname) . '</a>');
             $form->addHTML('</td>');
             $form->addHTML('<td>' . $taginfo['count'] . '</td>');
-            $form->addHTML('<td>' . hsc($ns) . '</td>');
+            if (!$this->conf['hidens']) {
+                $form->addHTML('<td>' . hsc($ns) . '</td>');
+            }
             $form->addHTML('<td>' . hsc($taggers) . '</td>');
 
             /**

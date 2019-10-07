@@ -262,6 +262,37 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
+     * Display a List of Page Links
+     *
+     * @param array    $pids   list of pids => count
+     * @return string
+     */
+    public function html_page_list($pids) {
+        global $INFO;
+
+        $ret = '<div class="search_quickresult">';
+        $ret .= '<ul class="search_quickhits">';
+        
+        if (count($pids) === 0) {
+            // Produce valid XHTML (ul needs a child)
+            $this->setupLocale();
+            $ret .= '<li><div class="li">' . $this->lang['js']['nopages'] . '</div></li>';
+        } else {
+            foreach ($pids as $val => $size) {
+                $ret .= '<li><div class="li">';
+                $ret .= html_wikilink($val);
+                $ret .= '</div></li>';
+            }
+        }
+
+        $ret .= '</ul>';
+        $ret .= '</div>';
+        $ret .= '<div class="clearer"></div>';
+        
+        return $ret;
+    }
+
+    /**
      * Get the link to a search for the given tag
      *
      * @param string $tag search for this tag

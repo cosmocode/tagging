@@ -333,17 +333,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return string
      */
     public function html_page_list($pids) {
-        global $INFO;
-
         $ret = '<div class="search_quickresult">';
         $ret .= '<ul class="search_quickhits">';
-        
+
         if (count($pids) === 0) {
             // Produce valid XHTML (ul needs a child)
-            $this->setupLocale();
             $ret .= '<li><div class="li">' . $this->lang['js']['nopages'] . '</div></li>';
         } else {
-            foreach ($pids as $val => $size) {
+            foreach (array_keys($pids) as $val) {
                 $ret .= '<li><div class="li">';
                 $ret .= html_wikilink($val);
                 $ret .= '</div></li>';
@@ -353,7 +350,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $ret .= '</ul>';
         $ret .= '</div>';
         $ret .= '<div class="clearer"></div>';
-        
+
         return $ret;
     }
 

@@ -342,7 +342,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         } else {
             foreach (array_keys($pids) as $val) {
                 $ret .= '<li><div class="li">';
-                $ret .= html_wikilink($val);
+                $ret .= html_wikilink(":$val");
                 $ret .= '</div></li>';
             }
         }

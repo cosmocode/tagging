@@ -1003,7 +1003,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $query = 'SELECT    "pid",
                             GROUP_CONCAT(CLEANTAG("tag")) AS "tags"
                             FROM "taggings"
-                            WHERE PAGEEXISTS(pid) IS FALSE
+                            WHERE NOT PAGEEXISTS(pid)
                             GROUP BY pid
                  ';
         $res = $db->query($query);

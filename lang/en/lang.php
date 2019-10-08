@@ -4,6 +4,8 @@
 $lang['menu'] = 'View and Change Tags';
 
 $lang['admin tag']                 = 'Tag name';
+$lang['admin tags']                = 'Tags';
+$lang['admin nonexistent page']    = 'Tagged nonexistent page';
 $lang['admin occurrence']          = 'Occurrence';
 $lang['admin namespaces']          = 'Namespaces';
 $lang['admin taggers']             = 'Saved by';
@@ -23,6 +25,8 @@ $lang['admin filter button']       = 'Filter';
 $lang['admin deleted']             = 'You have deleted %d tags on %d pages';
 $lang['admin sort ascending']      = 'Sort ascending';
 $lang['admin sort descending']     = 'Sort descending';
+$lang['admin no invalid']          = 'No invalid tags found.';
+$lang['admin clean']               = 'Irrevocably delete all invalid taggings';
 $lang['toggle admin mode']         = 'Tag Admin';
 
 $lang['no_admin']                  = 'Error. Only admins can modify tags.';

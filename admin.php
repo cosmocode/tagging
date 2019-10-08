@@ -26,6 +26,11 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
      * Handle tag actions
      */
     function handle() {
+
+        if (!empty($_REQUEST['cmd']['clean'])) {
+            checkSecurityToken() && $this->hlp->deleteInvalidTaggings();
+        }
+
         if (!$this->hlp->getParams()) {
             $this->hlp->setDefaultSort();
             return false;
@@ -44,5 +49,7 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
     public function html() {
         echo $this->locale_xhtml('intro');
         echo $this->hlp->html_table();
+        echo $this->locale_xhtml('clean');
+        echo $this->hlp->html_clean();
     }
 }

@@ -1,4 +1,7 @@
 <?php
+
+use dokuwiki\Form\Form;
+
 /**
  * Tagging Plugin (hlper component)
  *
@@ -573,6 +576,19 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
+     * Delete taggings of nonexistent pages
+     */
+    public function deleteInvalidTaggings()
+    {
+        $db = $this->getDB();
+        $query = 'DELETE    FROM "taggings"
+                            WHERE PAGEEXISTS(pid) IS FALSE
+                 ';
+        $res = $db->query($query);
+        $db->res_close($res);
+    }
+
+    /**
      * Updates tags with a new page name
      *
      * @param string $oldName
@@ -846,6 +862,42 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
+     * Display tag cleaner
+     *
+     * @return string
+     */
+    public function html_clean()
+    {
+        $invalid = $this->getInvalidTaggings();
+
+        if (!$invalid) {
+            return '<p><strong>' . $this->getLang('admin no invalid') . '</strong></p>';
+        }
+
+        $form = new Form();
+        $form->setHiddenField('do', 'admin');
+        $form->setHiddenField('page', $this->getPluginName());
+        $form->addButton('cmd[clean]', $this->getLang('admin clean'));
+
+        $html = $form->toHTML();
+
+        $html .= '<div class="table"><table class="inline plugin_tagging">';
+        $html .= '<thead><tr><th>' .
+            $this->getLang('admin nonexistent page') .
+            '</th><th>' .
+            $this->getLang('admin tags') .
+            '</th></tr></thead><tbody>';
+
+        foreach ($invalid as $row) {
+            $html .= '<tr><td>' . $row['pid'] . '</td><td>' . $row['tags'] . '</td></tr>';
+        }
+
+        $html .= '</tbody></table></div>';
+
+        return $html;
+    }
+
+    /**
      * Returns all tagging parameters from the query string
      *
      * @return mixed
@@ -938,5 +990,23 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $having .= implode(' AND ', $parts);
         }
         return [$having, $params];
+    }
+
+    /**
+     * Returns taggings of nonexistent pages
+     *
+     * @return array
+     */
+    protected function getInvalidTaggings()
+    {
+        $db = $this->getDB();
+        $query = 'SELECT    "pid",
+                            GROUP_CONCAT(CLEANTAG("tag")) AS "tags"
+                            FROM "taggings"
+                            WHERE PAGEEXISTS(pid) IS FALSE
+                            GROUP BY pid
+                 ';
+        $res = $db->query($query);
+        return $db->res2arr($res);
     }
 }

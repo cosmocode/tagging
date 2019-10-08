@@ -7,6 +7,8 @@
  */
 $lang['menu']                  = 'Schlagwort-Einstellungen';
 $lang['admin tag']             = 'Schlagwort-Benennung';
+$lang['admin tags']            = 'Schlagworte';
+$lang['admin nonexistent page'] = 'Getaggte nicht existierende Seite';
 $lang['admin occurrence']      = 'Häufigkeit';
 $lang['admin namespaces']      = 'Namensräume';
 $lang['admin taggers']         = 'Gespeichert von';
@@ -26,6 +28,8 @@ $lang['admin filter button']   = 'Filter';
 $lang['admin deleted']         = 'Sie haben %d Schlagworte auf %d Seiten gelöscht';
 $lang['admin sort ascending']  = 'Aufsteigend sortieren';
 $lang['admin sort descending'] = 'Absteigend sortieren';
+$lang['admin no invalid']      = 'Keine ungültigen Tags gefunden.';
+$lang['admin clean']           = 'Alle ungültigen Taggings unwiederruflich löschen';
 $lang['toggle admin mode']     = 'Administrieren';
 $lang['no_admin']              = 'Fehler. Nur Admins können Schlagworte bearbeiten.';
 $lang['search_section_title']  = 'Seiten mit Schlagwort';

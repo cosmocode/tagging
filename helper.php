@@ -582,7 +582,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     {
         $db = $this->getDB();
         $query = 'DELETE    FROM "taggings"
-                            WHERE PAGEEXISTS(pid) IS FALSE
+                            WHERE NOT PAGEEXISTS(pid)
                  ';
         $res = $db->query($query);
         $db->res_close($res);

@@ -641,7 +641,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         } else {
             $queryBuilder->setTags($this->getTags($parsedQuery));
         }
-        $queryBuilder->setLogicalAnd($INPUT->str('taggings') === 'and');
+        $queryBuilder->setLogicalAnd($INPUT->str('tagging-logic') === 'and');
         if (isset($parsedQuery['ns'])) $queryBuilder->includeNS($parsedQuery['ns']);
         if (isset($parsedQuery['notns'])) $queryBuilder->excludeNS($parsedQuery['notns']);
         if (isset($parsedQuery['tagger'])) $queryBuilder->setTagger($parsedQuery['tagger']);

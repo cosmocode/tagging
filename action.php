@@ -5,6 +5,22 @@ if (!defined('DOKU_INC')) {
 }
 
 class action_plugin_tagging extends DokuWiki_Action_Plugin {
+
+    /**
+     * @var array
+     */
+    protected $tagFilter = [];
+
+    /**
+     * @var array
+     */
+    protected $allTags = [];
+
+    /**
+     * @var string
+     */
+    protected $originalQuery = '';
+
     /**
      * Register handlers
      */
@@ -12,6 +28,16 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $controller->register_hook(
             'TPL_CONTENT_DISPLAY', 'BEFORE', $this,
             'echo_searchresults'
+        );
+
+        $controller->register_hook(
+            'SEARCH_QUERY_FULLPAGE', 'BEFORE', $this,
+            'setupTagSearch'
+        );
+
+        $controller->register_hook(
+            'SEARCH_QUERY_FULLPAGE', 'AFTER', $this,
+            'filterSearchResults'
         );
 
         $controller->register_hook(
@@ -284,12 +310,15 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         // set active setting
         $active = '';
-        if ($INPUT->has('taggings')) {
-            $active = $INPUT->str('taggings');
+        if ($INPUT->has('tagging-logic')) {
+            $active = $INPUT->str('tagging-logic');
         }
-        $searchForm->setHiddenField('taggings', $active);
+        $searchForm->setHiddenField('tagging-logic', $active);
 
-        $searchForm->addTagOpen('div', ++$currElemPos)->addClass('toggle')->attr('aria-haspopup', 'true');
+        $searchForm->addTagOpen('div', ++$currElemPos)
+            ->addClass('toggle')
+            ->attr('aria-haspopup', 'true')
+            ->id('plugin__tagging-logic');
 
         // popup toggler
         $toggler = $searchForm->addTagOpen('div', ++$currElemPos)->addClass('current');
@@ -316,7 +345,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             if ($active && $key === $active) {
                 $listItem->addClass('active');
             }
-            $link = $this->getSettingsLink($label, 'taggings', $key);
+            $link = $this->getSettingsLink($label, 'tagging-logic', $key);
             $searchForm->addHTML($link, ++$currElemPos);
             $searchForm->addTagClose('li', ++$currElemPos);
         }
@@ -324,6 +353,83 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         $searchForm->addTagClose('div', ++$currElemPos);
     }
+
+    /**
+     * Extracts tags from query. Temporarily removes the tags
+     * from query to prevent running fulltext search on them as simple terms.
+     *
+     * @param Doku_Event $event
+     * @param $param
+     */
+    public function setupTagSearch(Doku_Event $event, $param)
+    {
+        global $QUERY;
+
+        // allTags will be accessed by individual search results in SEARCH_RESULT_FULLPAGE event
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+        $this->allTags = $hlp->getAllTagsByPage();
+
+        $q = &$event->data['query'];
+
+        if (strpos($q, '#') === false) {
+            return;
+        }
+
+        $this->originalQuery = $q;
+
+        // get (hash)tags from query
+        preg_match_all('/(?!#)\w+/', $q, $matches1);
+        if (isset($matches1[0])) $this->tagFilter += $matches1[0];
+
+        // remove tags from query before search is executed
+        $this->removeTagsFromQuery($q);
+    }
+
+    /**
+     * If tags are found in query, the results are filtered,
+     * or, with an empty query, tag search results are returned.
+     *
+     * @param Doku_Event $event
+     * @param $param
+     */
+    public function filterSearchResults(Doku_Event $event, $param)
+    {
+        global $QUERY;
+
+        if (!$this->tagFilter) {
+            return;
+        }
+
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+
+        // restore query with tags
+        if ($this->tagFilter) {
+            $QUERY = $this->originalQuery;
+        }
+
+        // search for tagged pages
+        $pages = $hlp->searchPages($this->tagFilter);
+        if (!$pages) {
+            $event->result = [];
+            return;
+        }
+
+        // tag search only, without additional terms
+        if (!trim($event->data['query'])) {
+            $event->result = $pages;
+        }
+
+        // apply filter
+        $tagged = array_keys($pages);
+        foreach ($event->result as $id => $count) {
+            if (!in_array($id, $tagged)) {
+                unset($event->result[$id]);
+            }
+        }
+    }
+
     /**
      * Show tagged pages on searches
      *
@@ -357,7 +463,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         // create output HTML
         // format tag search terms
-        $operator = ($INPUT->str('taggings') === 'and') ?
+        $operator = ($INPUT->str('tagging-logic') === 'and') ?
             $this->getLang('search_all_label') :
             $this->getLang('search_any_label');
         $tagInfo = implode(' ' . $operator . ' ', $tag);
@@ -427,5 +533,13 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         // manipulate the link string because there is yet no way for inbuilt search to accept plugins extending search queries
         // FIXME current links have a strange format where href is set in single quotes and followed by a space so preg_replace would make more sense
         return str_replace("' >", '&' .$param . '=' . $value ."'> ", $linkTag);
+    }
+
+    /**
+     * @param string $q
+     */
+    protected function removeTagsFromQuery(&$q)
+    {
+        $q = preg_replace('/#\w+/', '', $q);
     }
 }

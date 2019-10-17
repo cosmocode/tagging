@@ -35,4 +35,93 @@ jQuery(function () {
             }
         });
     }
+
+
+    /* **************************************************************************
+     * Search filter
+     * ************************************************************************ */
+
+    const $filterContainer = jQuery('#plugin__tagging-tags');
+    const $resultLinks = jQuery('div.search_fullpage_result dt a:not([class])');
+
+    /**
+     * Returns the filter ul
+     *
+     * @param tags
+     * @param [filters]
+     * @returns {jQuery}
+     */
+    function buildFilter(tags, filters) {
+        const lis = [];
+        i = 0;
+
+        // when tag search has no results, build the filter dropdown anyway but from tags in query
+        if (Object.keys(tags).length === 0 && filters.length > 0) {
+            for (const key of filters) {
+                tags[key] = 0;
+            }
+        }
+
+        for (const tag in tags) {
+            let checked = filters.includes(tag) ? 'checked="checked"' : '';
+
+            lis.push(` <li>
+                <input name="tagging[]" type="checkbox" value="${tag}" id="__tagging-${i}" ${checked}>
+                <label for="__tagging-${i}" title="${tag}">
+                    ${tag} (${tags[tag]})
+                </label>
+            </li>`);
+            i++;
+        }
+
+        $filterContainer.find('div.current').addClass('changed');
+
+        return jQuery('<ul aria-expanded="false">' + lis.join('') + '</ul>');
+    }
+
+    /**
+     * Collects the available tags from results list
+     *
+     * @returns {[]}
+     */
+    function getTagsFromResults() {
+        const tags = [];
+        $resultLinks.toArray().forEach(function(link) {
+            const text = jQuery(link).text();
+            if (text.charAt(0) === '#') {
+                const tag = text.replace('#', '');
+                tags.push(tag);
+            }
+        });
+
+        return tags.sort().reduce(function (allTags, tag) {
+            if (tag in allTags) {
+                allTags[tag]++;
+            }
+            else {
+                allTags[tag] = 1;
+            }
+            return allTags;
+        }, {});
+    }
+
+    /**
+     * @returns {*}
+     */
+    function getFiltersFromQuery() {
+        $q = jQuery('#dokuwiki__content input[name="q"]');
+
+        const terms = $q.val().split(' ');
+        let filters = terms.filter(function (term) {
+            return term.charAt(0) === '#';
+        });
+
+        return filters.map(function (tag) {
+            return tag.replace('#', '');
+        });
+    }
+
+    $ul = buildFilter(getTagsFromResults(), getFiltersFromQuery());
+    $filterContainer.append($ul);
+
 });

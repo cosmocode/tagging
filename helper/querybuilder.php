@@ -16,6 +16,13 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     protected $notns = [];
     /** @var string */
     protected $pid;
+
+    /**
+     * FIXME consolidate pid (current page query) and pids (global search query)
+     * @var array
+     */
+    protected $pids;
+
     /** @var string */
     protected $tagger = '';
     /** @var int */
@@ -137,6 +144,16 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
     }
 
     /**
+     * Limit search to certain pages
+     *
+     * @param array $pids
+     */
+    public function setPids($pids)
+    {
+        $this->pids = $pids;
+    }
+
+    /**
      * Limit results to this tagger
      * @param string $tagger
      */
@@ -180,6 +197,16 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
             $where .= $this->useLike($this->pid) ? ' GLOB' : ' =';
             $where .= '  ?';
             $this->values[] = $this->pid;
+        }
+
+        if ($this->pids) {
+            $where .= ' AND pid';
+            $where .=  ' IN(';
+            foreach ($this->pids as $pid) {
+                $where .= '  ?,';
+                $this->values[] = $pid;
+            }
+            $where = rtrim($where, ',') . ')';
         }
 
         if ($this->tagger) {

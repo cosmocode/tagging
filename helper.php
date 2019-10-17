@@ -622,9 +622,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     /**
      * Search for tagged pages
      *
+     * @param array|null $tagFiler
      * @return array
      */
-    public function searchPages()
+    public function searchPages($tagFiler = null)
     {
         global $INPUT;
         global $QUERY;
@@ -634,7 +635,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $queryBuilder = new \helper_plugin_tagging_querybuilder();
 
         $queryBuilder->setField('pid');
-        $queryBuilder->setTags($this->getTags($parsedQuery));
+
+        if ($tagFiler) {
+            $queryBuilder->setTags($tagFiler);
+        } else {
+            $queryBuilder->setTags($this->getTags($parsedQuery));
+        }
         $queryBuilder->setLogicalAnd($INPUT->str('taggings') === 'and');
         if (isset($parsedQuery['ns'])) $queryBuilder->includeNS($parsedQuery['ns']);
         if (isset($parsedQuery['notns'])) $queryBuilder->excludeNS($parsedQuery['notns']);

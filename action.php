@@ -41,6 +41,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         );
 
         $controller->register_hook(
+            'SEARCH_RESULT_FULLPAGE', 'AFTER', $this,
+            'tagResults'
+        );
+
+        $controller->register_hook(
             'FORM_SEARCH_OUTPUT', 'BEFORE', $this,
             'addSwitchToSearchForm'
         );
@@ -363,8 +368,6 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      */
     public function setupTagSearch(Doku_Event $event, $param)
     {
-        global $QUERY;
-
         // allTags will be accessed by individual search results in SEARCH_RESULT_FULLPAGE event
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
@@ -426,6 +429,24 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         foreach ($event->result as $id => $count) {
             if (!in_array($id, $tagged)) {
                 unset($event->result[$id]);
+            }
+        }
+    }
+
+    /**
+     * Add tag links to all search results
+     *
+     * @param Doku_Event $event
+     * @param $param
+     */
+    public function tagResults(Doku_Event $event, $param)
+    {
+        $page = $event->data['page'];
+        $tags = $this->allTags[$page] ?: null;
+        if ($tags) {
+            foreach ($tags as $tag) {
+                // links must be fixed in Javascript
+                $event->data['resultHeader'][] = $this->getSettingsLink('#' . $tag, 'q', '#' . $tag);
             }
         }
     }
@@ -522,15 +543,27 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      * @param string $value
      * @return string
      */
-    protected function getSettingsLink($label, $param, $value)
+    protected function getSettingsLink($label, $param = '', $value = '')
     {
         global $QUERY;
+
+        if ($param === 'q') {
+            $this->removeTagsFromQuery($QUERY);
+        }
+
         $Indexer = idx_get_indexer();
         $parsedQuery = ft_queryParser($Indexer, $QUERY);
+
+
         $searchState = new \dokuwiki\Ui\SearchState($parsedQuery);
         $linkTag =  $searchState->getSearchLink($label);
 
-        // manipulate the link string because there is yet no way for inbuilt search to accept plugins extending search queries
+        // manipulate the link string because there is yet no way for inbuilt search to allow plugins to extend search queries
+        if ($param === '') {
+            return $linkTag;
+        } elseif ($param === 'q') {
+            return str_replace('q=', 'q=' . urlencode($value), $linkTag);
+        }
         // FIXME current links have a strange format where href is set in single quotes and followed by a space so preg_replace would make more sense
         return str_replace("' >", '&' .$param . '=' . $value ."'> ", $linkTag);
     }

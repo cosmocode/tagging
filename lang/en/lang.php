@@ -36,6 +36,7 @@ $lang['search_any_tag']            = 'Tag search: any';
 $lang['search_all_tags']           = 'Tag search: all';
 $lang['search_all_label']          = 'AND';
 $lang['search_any_label']          = 'OR';
+$lang['search_filter_label']       = 'Tag filter';
 $lang['js']['notags']              = 'No tags, yet';
 $lang['js']['nopages']             = 'No pages with this tag, yet';
 $lang['js']['admin_change_tag']    = 'Change the tag';

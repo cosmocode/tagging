@@ -313,6 +313,18 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $searchForm = $event->data;
         $currElemPos = $searchForm->findPositionByAttribute('class', 'advancedOptions');
 
+        // the actual filter is built in Javascript
+        $searchForm->addTagOpen('div', ++$currElemPos)
+            ->addClass('toggle')
+            ->attr('aria-haspopup', 'true')
+            ->id('plugin__tagging-tags');
+        // this element needs to be rendered by the backend so that all JS events properly attach
+        $searchForm->addTagOpen('div', ++$currElemPos)
+            ->addClass('current');
+        $searchForm->addHTML($this->getLang('search_filter_label'), ++$currElemPos);
+        $searchForm->addTagClose('div', ++$currElemPos);
+        $searchForm->addTagClose('div', ++$currElemPos);
+
         // set active setting
         $active = '';
         if ($INPUT->has('tagging-logic')) {

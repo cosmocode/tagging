@@ -37,6 +37,7 @@ $lang['search_any_tag']        = 'Schlagwortsuche: mindestens ein Begriff';
 $lang['search_all_tags']       = 'Schlagwortsuche: alle Begriffe';
 $lang['search_all_label']      = 'UND';
 $lang['search_any_label']      = 'ODER';
+$lang['search_filter_label']   = 'Tags filtern';
 $lang['js']['notags']          = 'Keine Schlagworte vergeben';
 $lang['js']['nopages']         = 'Keine Seiten mit diesem Schlagwort';
 $lang['js']['admin_change_tag'] = 'Schlagworte bearbeiten';

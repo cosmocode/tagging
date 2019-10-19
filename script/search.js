@@ -106,10 +106,19 @@ jQuery(function () {
     }
 
     /**
-     * @returns {*}
+     * Returns query from the main search form, ignoring quicksearch.
+     *
+     * @returns {jQuery}
+     */
+    function getQueryInput() {
+        return jQuery('#dokuwiki__content input[name="q"]');
+    }
+
+    /**
+     * @returns [string]
      */
     function getFiltersFromQuery() {
-        $q = jQuery('#dokuwiki__content input[name="q"]');
+        $q = getQueryInput();
 
         const terms = $q.val().split(' ');
         let filters = terms.filter(function (term) {
@@ -121,7 +130,34 @@ jQuery(function () {
         });
     }
 
+    /**
+     * Called when a tag filter is updated. Manipulates query by adding or removing the selected tag.
+     *
+     * @param {string} tag
+     */
+    function updateTagsInQuery(tag) {
+        tag = '#' + tag;
+        const $q = getQueryInput();
+        const q = $q.val();
+
+        const isFilter = q.indexOf(tag) > -1;
+
+        if (isFilter) {
+            $q.val(q.replace(tag, ''));
+        } else {
+            $q.val(q + ' ' + tag);
+        }
+    }
+
     $ul = buildFilter(getTagsFromResults(), getFiltersFromQuery());
+
+    // attach query update handler to tag filter
+    // FIXME attach event listener on-the-fly while building the filter
+    $inputs = $ul.find('input');
+    $inputs.change(function () {
+        updateTagsInQuery(this.value);
+    });
+
     $filterContainer.append($ul);
 
 });

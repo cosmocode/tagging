@@ -47,13 +47,13 @@ jQuery(function () {
     /**
      * Returns the filter ul
      *
-     * @param tags
-     * @param [filters]
+     * @param {*} tags
+     * @param {string[]} filters
      * @returns {jQuery}
      */
     function buildFilter(tags, filters) {
         const lis = [];
-        i = 0;
+        let i = 0;
 
         // when tag search has no results, build the filter dropdown anyway but from tags in query
         if (Object.keys(tags).length === 0 && filters.length > 0) {
@@ -80,9 +80,9 @@ jQuery(function () {
     }
 
     /**
-     * Collects the available tags from results list
+     * Collects tags from results list
      *
-     * @returns {[]}
+     * @returns {*}
      */
     function getTagsFromResults() {
         const tags = [];
@@ -110,19 +110,17 @@ jQuery(function () {
      *
      * @returns {jQuery}
      */
-    function getQueryInput() {
+    function getQueryElement() {
         return jQuery('#dokuwiki__content input[name="q"]');
     }
 
     /**
-     * @returns [string]
+     * @returns {string[]}
      */
     function getFiltersFromQuery() {
-        $q = getQueryInput();
-
-        const terms = $q.val().split(' ');
-        let filters = terms.filter(function (term) {
-            return term.charAt(0) === '#';
+        const parts = getQueryElement().val().split(' ');
+        let filters = parts.filter(function (part) {
+            return part.charAt(0) === '#';
         });
 
         return filters.map(function (tag) {
@@ -135,29 +133,47 @@ jQuery(function () {
      *
      * @param {string} tag
      */
-    function updateTagsInQuery(tag) {
+    function toggleTag(tag) {
         tag = '#' + tag;
-        const $q = getQueryInput();
+        const $q = getQueryElement();
         const q = $q.val();
-
         const isFilter = q.indexOf(tag) > -1;
 
         if (isFilter) {
             $q.val(q.replace(tag, ''));
         } else {
-            $q.val(q + ' ' + tag);
+            $q.val(q.trim() + ' ' + tag);
         }
     }
 
-    $ul = buildFilter(getTagsFromResults(), getFiltersFromQuery());
+    /**
+     * Restore tags in search links
+     *
+     * @param {jQuery} $searchLinks
+     */
+    function addTagsToSearchLinks($searchLinks) {
+        const tags = getFiltersFromQuery();
+        if (!tags) {
+            return;
+        }
 
-    // attach query update handler to tag filter
-    // FIXME attach event listener on-the-fly while building the filter
+        $searchLinks.each(function () {
+            $link = jQuery(this);
+            const qRegex = /q=[^&]+/;
+            const qParam = $link[0]['href'].match(qRegex)[0];
+            $link[0]['href'] = $link[0]['href'].replace(qParam, qParam + encodeURIComponent(' #' + tags.join(' #')));
+        });
+    }
+
+    // tag filter
+    $ul = buildFilter(getTagsFromResults(), getFiltersFromQuery());
     $inputs = $ul.find('input');
     $inputs.change(function () {
-        updateTagsInQuery(this.value);
+        toggleTag(this.value);
     });
-
     $filterContainer.append($ul);
+
+    // tags in other search filters
+    addTagsToSearchLinks(jQuery('.advancedOptions a'));
 
 });

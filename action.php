@@ -370,13 +370,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         $searchForm->addTagClose('div', ++$currElemPos);
 
-        // finally restore query with tags
+        // restore query with tags in the search form
         if ($this->tagFilter) {
-            global $QUERY;
             /** @var \dokuwiki\Form\InputElement $q */
             $q = $searchForm->getElementAt($searchForm->findPositionByAttribute('name', 'q'));
             $q->val($this->originalQuery);
-            $QUERY = $this->originalQuery;
         }
     }
 
@@ -462,7 +460,6 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $tags = $this->allTags[$page] ?: null;
         if ($tags) {
             foreach ($tags as $tag) {
-                // links must be fixed in Javascript
                 $event->data['resultHeader'][] = $this->getSettingsLink('#' . $tag, 'q', '#' . $tag);
             }
         }
@@ -534,6 +531,9 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             // unclear what happened, let's just append
             $event->data .= $results;
         }
+
+        // all done, finally restore the original query
+        $this->restoreSearchQuery();
     }
 
     /**
@@ -554,6 +554,8 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
     /**
      * Returns a link that includes all parameters set by inbuilt search tools
+     * and an optional additional parameter.
+     * If the passed parameter is q, its value will be REPLACED.
      *
      * @param string $label
      * @param string $param
@@ -564,32 +566,39 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     {
         global $QUERY;
 
-        if ($param === 'q') {
-            $this->removeTagsFromQuery($QUERY);
-        }
-
         $Indexer = idx_get_indexer();
         $parsedQuery = ft_queryParser($Indexer, $QUERY);
-
-
         $searchState = new \dokuwiki\Ui\SearchState($parsedQuery);
         $linkTag =  $searchState->getSearchLink($label);
 
-        // manipulate the link string because there is yet no way for inbuilt search to allow plugins to extend search queries
+        // manipulate the link string because there is yet no way for inbuilt search to allow plugins
+        // to extend search queries
         if ($param === '') {
             return $linkTag;
         } elseif ($param === 'q') {
-            return str_replace('q=', 'q=' . urlencode($value), $linkTag);
+            return preg_replace('/q=[^&\'" ]?+/', 'q=' . urlencode($value), $linkTag);
         }
         // FIXME current links have a strange format where href is set in single quotes and followed by a space so preg_replace would make more sense
         return str_replace("' >", '&' .$param . '=' . $value ."'> ", $linkTag);
     }
 
     /**
+     * Remove tags from query
+     *
      * @param string $q
+     * @return string|string[]|null
      */
     protected function removeTagsFromQuery(&$q)
     {
         $q = preg_replace('/#\w+/', '', $q);
+    }
+
+    /**
+     * Restore original query on exit
+     */
+    protected function restoreSearchQuery()
+    {
+        global $QUERY;
+        $QUERY = $this->originalQuery;
     }
 }

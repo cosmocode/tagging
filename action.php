@@ -31,7 +31,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         );
 
         $controller->register_hook(
-            'SEARCH_QUERY_FULLPAGE', 'BEFORE', $this,
+            'TPL_ACT_RENDER', 'BEFORE', $this,
             'setupTagSearch'
         );
 
@@ -369,36 +369,48 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $searchForm->addTagClose('ul', ++$currElemPos);
 
         $searchForm->addTagClose('div', ++$currElemPos);
+
+        // finally restore query with tags
+        if ($this->tagFilter) {
+            global $QUERY;
+            /** @var \dokuwiki\Form\InputElement $q */
+            $q = $searchForm->getElementAt($searchForm->findPositionByAttribute('name', 'q'));
+            $q->val($this->originalQuery);
+            $QUERY = $this->originalQuery;
+        }
     }
 
     /**
-     * Extracts tags from query. Temporarily removes the tags
-     * from query to prevent running fulltext search on them as simple terms.
+     * Extracts tags from query. Temporarily removes them from query
+     * to prevent running fulltext search on them as simple terms.
      *
      * @param Doku_Event $event
      * @param $param
      */
     public function setupTagSearch(Doku_Event $event, $param)
     {
+        if ($event->data !== 'search') {
+            return;
+        }
+
         // allTags will be accessed by individual search results in SEARCH_RESULT_FULLPAGE event
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
         $this->allTags = $hlp->getAllTagsByPage();
 
-        $q = &$event->data['query'];
-
-        if (strpos($q, '#') === false) {
+        global $QUERY;
+        if (strpos($QUERY, '#') === false) {
             return;
         }
 
-        $this->originalQuery = $q;
+        $this->originalQuery = $QUERY;
 
         // get (hash)tags from query
-        preg_match_all('/(?!#)\w+/', $q, $matches1);
-        if (isset($matches1[0])) $this->tagFilter += $matches1[0];
+        preg_match_all('/(?:#)(\w+)/', $QUERY, $matches);
+        if (isset($matches[1])) $this->tagFilter += $matches[1];
 
         // remove tags from query before search is executed
-        $this->removeTagsFromQuery($q);
+        $this->removeTagsFromQuery($QUERY);
     }
 
     /**
@@ -410,19 +422,12 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      */
     public function filterSearchResults(Doku_Event $event, $param)
     {
-        global $QUERY;
-
         if (!$this->tagFilter) {
             return;
         }
 
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
-
-        // restore query with tags
-        if ($this->tagFilter) {
-            $QUERY = $this->originalQuery;
-        }
 
         // search for tagged pages
         $pages = $hlp->searchPages($this->tagFilter);

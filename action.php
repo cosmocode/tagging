@@ -379,8 +379,8 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Extracts tags from query. Temporarily removes them from query
-     * to prevent running fulltext search on them as simple terms.
+     * Extracts tags from query and temporarily removes them
+     * to prevent running fulltext search on tags as simple terms.
      *
      * @param Doku_Event $event
      * @param $param
@@ -391,7 +391,8 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             return;
         }
 
-        // allTags will be accessed by individual search results in SEARCH_RESULT_FULLPAGE event
+        // allTagsByPage will be accessed by individual search results in SEARCH_RESULT_FULLPAGE event
+        // and when displaying tag suggestions
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
         $this->allTagsByPage = $hlp->getAllTagsByPage();
@@ -405,7 +406,9 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         // get (hash)tags from query
         preg_match_all('/(?:#)(\w+)/', $QUERY, $matches);
-        if (isset($matches[1])) $this->tagFilter += $matches[1];
+        if (isset($matches[1])) {
+            $this->tagFilter += array_map([$hlp, 'cleanTag'], $matches[1]);
+        }
 
         // remove tags from query before search is executed
         $this->removeTagsFromQuery($QUERY);
@@ -489,12 +492,15 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         $allTags = [];
         foreach ($this->allTagsByPage as $page => $tags) {
-            $allTags = array_merge($allTags, array_diff($tags, $allTags));
+            $allTags = array_merge($allTags, $tags);
         }
+        $allTags = array_unique($allTags);
+
         $suggestedTags = [];
         foreach ($terms as $term) {
             $suggestedTags = array_merge($suggestedTags, preg_grep("/$term/i", $allTags));
         }
+        sort($suggestedTags);
 
         // create output HTML: tag search links
         $results = '<div class="search_quickresult">';

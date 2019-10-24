@@ -115,6 +115,8 @@ jQuery(function () {
     }
 
     /**
+     * Returns an array of all tags found in search form input
+     *
      * @returns {string[]}
      */
     function getFiltersFromQuery() {
@@ -159,8 +161,7 @@ jQuery(function () {
 
         $searchLinks.each(function () {
             $link = jQuery(this);
-            const qRegex = /q=[^&]+/;
-            const qParam = $link[0]['href'].match(qRegex)[0];
+            const qParam = $link[0]['href'].match(/q=[^&]*/)[0];
             $link[0]['href'] = $link[0]['href'].replace(qParam, qParam + encodeURIComponent(' #' + tags.join(' #')));
         });
     }

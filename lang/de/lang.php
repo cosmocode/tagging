@@ -33,6 +33,7 @@ $lang['admin clean']           = 'Alle ungültigen Taggings unwiederruflich lös
 $lang['toggle admin mode']     = 'Administrieren';
 $lang['no_admin']              = 'Fehler. Nur Admins können Schlagworte bearbeiten.';
 $lang['search_section_title']  = 'Seiten mit Schlagwort';
+$lang['search_suggestions']    = 'Passende Schlagworte';
 $lang['search_any_tag']        = 'Schlagwortsuche: mindestens ein Begriff';
 $lang['search_all_tags']       = 'Schlagwortsuche: alle Begriffe';
 $lang['search_all_label']      = 'UND';

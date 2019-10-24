@@ -32,6 +32,7 @@ $lang['toggle admin mode']         = 'Tag Admin';
 $lang['no_admin']                  = 'Error. Only admins can modify tags.';
 
 $lang['search_section_title']      = 'Pages tagged';
+$lang['search_suggestions']        = 'Matching tags';
 $lang['search_any_tag']            = 'Tag search: any';
 $lang['search_all_tags']           = 'Tag search: all';
 $lang['search_all_label']          = 'AND';

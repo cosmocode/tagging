@@ -14,7 +14,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     /**
      * @var array
      */
-    protected $allTags = [];
+    protected $allTagsByPage = [];
 
     /**
      * @var string
@@ -394,7 +394,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         // allTags will be accessed by individual search results in SEARCH_RESULT_FULLPAGE event
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
-        $this->allTags = $hlp->getAllTagsByPage();
+        $this->allTagsByPage = $hlp->getAllTagsByPage();
 
         global $QUERY;
         if (strpos($QUERY, '#') === false) {
@@ -457,7 +457,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     public function tagResults(Doku_Event $event, $param)
     {
         $page = $event->data['page'];
-        $tags = $this->allTags[$page] ?: null;
+        $tags = $this->allTagsByPage[$page] ?: null;
         if ($tags) {
             foreach ($tags as $tag) {
                 $event->data['resultHeader'][] = $this->getSettingsLink('#' . $tag, 'q', '#' . $tag);
@@ -466,15 +466,14 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Show tagged pages on searches
+     * Show tags that are similar to the terms used in search
      *
-     * @param $event
+     * @param Doku_Event $event
      * @param $param
      */
     public function echo_searchresults(Doku_Event $event, $param) {
         global $ACT;
         global $QUERY;
-        global $INPUT;
 
         if ($ACT !== 'search') {
             return;
@@ -483,40 +482,30 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
 
-        // parse the search query and use the first found word as term
-        $terms = ft_queryParser(idx_get_indexer(), $QUERY);
-
-        $tag = $hlp->getTags($terms);
-        if (!$tag) {
+        $terms = $hlp->extractFromQuery(ft_queryParser(idx_get_indexer(), $QUERY));
+        if (!$terms) {
             return;
         }
 
-        $pages = $hlp->searchPages();
-        if (!count($pages)) {
-            return;
+        $allTags = [];
+        foreach ($this->allTagsByPage as $page => $tags) {
+            $allTags = array_merge($allTags, array_diff($tags, $allTags));
+        }
+        $suggestedTags = [];
+        foreach ($terms as $term) {
+            $suggestedTags = array_merge($suggestedTags, preg_grep("/$term/i", $allTags));
         }
 
-        // create output HTML
-        // format tag search terms
-        $operator = ($INPUT->str('tagging-logic') === 'and') ?
-            $this->getLang('search_all_label') :
-            $this->getLang('search_any_label');
-        $tagInfo = implode(' ' . $operator . ' ', $tag);
-
+        // create output HTML: tag search links
         $results = '<div class="search_quickresult">';
-        $results .= '<h2>' . $this->getLang('search_section_title') . ' ' . hsc($tagInfo) . '' . '</h2>';
+        $results .= '<h2>' . $this->getLang('search_suggestions')  .'</h2>';
         $results .= '<ul class="search_quickhits">';
-        global $ID;
-        $oldID = $ID;
-        foreach ($pages as $page => $cnt) {
-            $ID = $page;
-            // skip nonexistent pages
-            if (!page_exists($ID)) continue;
+
+        foreach ($suggestedTags as $tag) {
             $results .= '<li><div class="li">';
-            $results .= html_wikilink($page);
+            $results .= $this->getSettingsLink('#' . $tag, 'q', '#' . $tag);
             $results .= '</div></li>';
         }
-        $ID = $oldID;
         $results .= '</ul>';
         $results .= '<div class="clearer"></div>';
         $results .= '</div>';

@@ -166,9 +166,11 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $ctag = utf8_stripspecials($this->cleanTag($tag));
         if ($ctag != utf8_strtolower($tag)) {
             $tag = '"' . $tag . '"';
+        } else {
+            $tag = "#$tag";
         }
 
-        $ret = '?do=search&sf=1&id=' . rawurlencode($tag);
+        $ret = '?do=search&sf=1&q=' . rawurlencode($tag);
         if ($ns) {
             $ret .= rawurlencode(' @' . $ns);
         }

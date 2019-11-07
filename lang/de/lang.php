@@ -50,5 +50,6 @@ $lang['js']['admin_delete']    = 'Löschen';
 $lang['js']['admin_warning_all']   = 'Achtung: die Aktion wird auf ALLE Tags angewendet, ungeachtet der Filter in der Tabelle!';
 $lang['js']['admin_sure']      = 'Sind Sie sicher?';
 $lang['js']['admin_newtags']   = 'Bitte geben Sie den neuen Tag ein. Sie können eine kommagetrennte Liste von Tags angeben, um den Tag aufzuteilen.';
+$lang['js']['search_nofilter'] = 'nichts gefunden';
 
 $lang['tagjmp_error']          = 'Es konnte keine Seite mit Schlagwort %s gefunden werden';

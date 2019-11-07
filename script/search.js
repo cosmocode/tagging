@@ -74,7 +74,11 @@ jQuery(function () {
             i++;
         }
 
-        $filterContainer.find('div.current').addClass('changed');
+        if (lis.length) {
+            $filterContainer.find('div.current').addClass('changed');
+        } else {
+            lis.push(`<li>${LANG.plugins.tagging.search_nofilter}</li>`);
+        }
 
         return jQuery('<ul aria-expanded="false">' + lis.join('') + '</ul>');
     }

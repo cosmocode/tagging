@@ -502,6 +502,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         }
         sort($suggestedTags);
 
+        if (!$suggestedTags) {
+            $this->originalQuery && $this->restoreSearchQuery();
+            return;
+        }
+
         // create output HTML: tag search links
         $results = '<div class="search_quickresult">';
         $results .= '<h2>' . $this->getLang('search_suggestions')  .'</h2>';

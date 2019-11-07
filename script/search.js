@@ -155,7 +155,7 @@ jQuery(function () {
      */
     function addTagsToSearchLinks($searchLinks) {
         const tags = getFiltersFromQuery();
-        if (!tags) {
+        if (tags.length === 0) {
             return;
         }
 

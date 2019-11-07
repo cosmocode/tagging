@@ -571,7 +571,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         if ($param === '') {
             return $linkTag;
         } elseif ($param === 'q') {
-            return preg_replace('/q=[^&\'" ]?+/', 'q=' . urlencode($value), $linkTag);
+            return preg_replace('/q=[^&\'" ]*/', 'q=' . urlencode($value), $linkTag);
         }
         // FIXME current links have a strange format where href is set in single quotes and followed by a space so preg_replace would make more sense
         return str_replace("' >", '&' .$param . '=' . $value ."'> ", $linkTag);

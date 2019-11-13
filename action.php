@@ -498,6 +498,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         $suggestedTags = [];
         foreach ($terms as $term) {
+            $term = str_replace('*', '', $term);
             $suggestedTags = array_merge($suggestedTags, preg_grep("/$term/i", $allTags));
         }
         sort($suggestedTags);

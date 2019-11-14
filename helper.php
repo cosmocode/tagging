@@ -69,7 +69,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return string
      */
     public function cleanTag($tag) {
-        $tag = str_replace(array(' ', '-', '_'), '', $tag);
+        $tag = str_replace(array(' ', '-', '_', '#'), '', $tag);
         $tag = utf8_strtolower($tag);
 
         return $tag;

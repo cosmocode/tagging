@@ -69,7 +69,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return string
      */
     public function cleanTag($tag) {
-        $tag = str_replace(array(' ', '-', '_'), '', $tag);
+        $tag = str_replace(array(' ', '-', '_', '#'), '', $tag);
         $tag = utf8_strtolower($tag);
 
         return $tag;
@@ -143,7 +143,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $queryBuilder->setField($type);
         $queryBuilder->setLimit($limit);
-        $queryBuilder->setTags($this->getTags($filter));
+        $queryBuilder->setTags($this->extractFromQuery($filter));
         if (isset($filter['ns'])) $queryBuilder->includeNS($filter['ns']);
         if (isset($filter['notns'])) $queryBuilder->excludeNS($filter['notns']);
         if (isset($filter['tagger'])) $queryBuilder->setTagger($filter['tagger']);
@@ -162,13 +162,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @return string
      */
     public function getTagSearchURL($tag, $ns = '') {
-        // wrap tag in quotes if non clean
-        $ctag = utf8_stripspecials($this->cleanTag($tag));
-        if ($ctag != utf8_strtolower($tag)) {
-            $tag = '"' . $tag . '"';
-        }
-
-        $ret = '?do=search&sf=1&id=' . rawurlencode($tag);
+        $ret = '?do=search&sf=1&q=' . rawurlencode('#' . $this->cleanTag($tag));
         if ($ns) {
             $ret .= rawurlencode(' @' . $ns);
         }
@@ -605,7 +599,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @param array $parsedQuery
      * @return array
      */
-    public function getTags($parsedQuery)
+    public function extractFromQuery($parsedQuery)
     {
         $tags = [];
         if (isset($parsedQuery['phrases'][0])) {
@@ -622,9 +616,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     /**
      * Search for tagged pages
      *
+     * @param array $tagFiler
      * @return array
      */
-    public function searchPages()
+    public function searchPages($tagFiler)
     {
         global $INPUT;
         global $QUERY;
@@ -634,8 +629,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $queryBuilder = new \helper_plugin_tagging_querybuilder();
 
         $queryBuilder->setField('pid');
-        $queryBuilder->setTags($this->getTags($parsedQuery));
-        $queryBuilder->setLogicalAnd($INPUT->str('taggings') === 'and');
+        $queryBuilder->setTags($tagFiler);
+        $queryBuilder->setLogicalAnd($INPUT->str('tagging-logic') === 'and');
         if (isset($parsedQuery['ns'])) $queryBuilder->includeNS($parsedQuery['ns']);
         if (isset($parsedQuery['notns'])) $queryBuilder->excludeNS($parsedQuery['notns']);
         if (isset($parsedQuery['tagger'])) $queryBuilder->setTagger($parsedQuery['tagger']);

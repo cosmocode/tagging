@@ -32,10 +32,12 @@ $lang['toggle admin mode']         = 'Tag Admin';
 $lang['no_admin']                  = 'Error. Only admins can modify tags.';
 
 $lang['search_section_title']      = 'Pages tagged';
+$lang['search_suggestions']        = 'Matching tags';
 $lang['search_any_tag']            = 'Tag search: any';
 $lang['search_all_tags']           = 'Tag search: all';
 $lang['search_all_label']          = 'AND';
 $lang['search_any_label']          = 'OR';
+$lang['search_filter_label']       = 'Tag filter';
 $lang['js']['notags']              = 'No tags, yet';
 $lang['js']['nopages']             = 'No pages with this tag, yet';
 $lang['js']['admin_change_tag']    = 'Change the tag';
@@ -47,6 +49,7 @@ $lang['js']['admin_delete']        = 'Delete';
 $lang['js']['admin_warning_all']   = 'Warning: Changes will be applied to ALL tags, regardless of table filters!';
 $lang['js']['admin_sure']          = 'Are you sure?';
 $lang['js']['admin_newtags']       = 'Please enter the new tag name. You can provide multiple comma separated tags to split the tag into multiple.';
+$lang['js']['search_nofilter']     = 'nothing found';
 
 
 $lang['tagjmp_error'] = 'Could not find any page tagged with %s';

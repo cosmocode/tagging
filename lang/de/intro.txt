@@ -1,0 +1,3 @@
+====== Tags anzeigen und ändern ======
+
+Diese Seite listet alle in Ihrem Wiki benutzten Tags auf. Sie können die Liste filtern und sortieren, sowie Tags umbenennen und entfernen. Klicken Sie auf einen Tag um zu sehen, auf welchen Seiten er verwendet wird. 

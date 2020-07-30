@@ -405,7 +405,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $this->originalQuery = $QUERY;
 
         // get (hash)tags from query
-        preg_match_all('/(?:#)(\w+)/', $QUERY, $matches);
+        preg_match_all('/(?:#)(\w+)/u', $QUERY, $matches);
         if (isset($matches[1])) {
             $this->tagFilter += array_map([$hlp, 'cleanTag'], $matches[1]);
         }
@@ -591,7 +591,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      */
     protected function removeTagsFromQuery(&$q)
     {
-        $q = preg_replace('/#\w+/', '', $q);
+        $q = preg_replace('/#\w+/u', '', $q);
     }
 
     /**

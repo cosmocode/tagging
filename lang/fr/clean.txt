@@ -1,0 +1,3 @@
+===== Nettoyage de la base de données d'étiquettes =====
+
+Ici, vous pouvez détruire tous les étiquetages invalides (les étiquettes pointant vers des pages inexistantes). Aucune étiquetage valide ne sera supprimé.

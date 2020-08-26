@@ -1,0 +1,3 @@
+====== Voir et changer les étiquettes ======
+
+Cette page liste toutes les étiquettes utilisées dans votre wiki. Vous pouvez filtrer et trier la liste et utiliser les actions pour suprrimer ou renommer une étiquette. Cliquez sur une étiquette pour voir une liste des des pages où elle est utilisée.

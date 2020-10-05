@@ -622,7 +622,9 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         if($event->data['view'] != 'page') return;
         // ToDo: only insert button if configured and if logged in
         // user has got the required permissions
-        array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\tagging\MenuItem()]);
+        if($this->getConf('showedittagsbutton')) {
+            array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\tagging\MenuItem()]);
+        }
     }
 
     protected function getTags() {

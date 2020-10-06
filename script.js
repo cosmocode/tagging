@@ -10,6 +10,9 @@ jQuery(function () {
         'sectok': JSINFO.sectok
     };
 
+    // Set on-click callback for edit dialog.
+    jQuery('.plugin_tagging__edit').click(plugin_tagging_edit);
+
     /**
      * Trigger a backend action via AJAX
      *
@@ -176,7 +179,6 @@ jQuery(function () {
     /**
      * Below follows code for the edit dialog
      */
-    jQuery('.plugin_tagging__edit').click(plugin_tagging_edit);
 
     /**
      * Menu item on-click function:
@@ -212,10 +214,9 @@ jQuery(function () {
         var table = '<div><table id="tag_list">';
         if (tags && tags.length > 0) {
             tags.forEach(function (tag) {
-                var htmlTag = jQuery(tag).html();
-                var button = '<a class="tagging_delete_button ui-button ui-widget ui-corner-all" href="javascript:void(0);" data-tag="' + htmlTag + '">'
+                var button = '<a class="tagging_delete_button ui-button ui-widget ui-corner-all" href="javascript:void(0);">'
                     + LANG.plugins.tagging.edit_dialog_button_delete + '</a>';
-                table += '<tr id="' + htmlTag + '"><td>' + tag + '</td><td>' + button + '</td></tr>';
+                table += '<tr><td>' + tag + '</td><td>' + button + '</td></tr>';
             });
         } else {
             table += '<tr><td>' + LANG.plugins.tagging.notags + '</td></tr>';

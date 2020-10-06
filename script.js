@@ -185,23 +185,13 @@ jQuery(function () {
      * Gets the tag list and creates the edit dialog.
      */
     function plugin_tagging_edit() {
-        jQuery.ajax({
-            url: DOKU_BASE + 'lib/exe/ajax.php',
-            type: 'POST',
-            data: {
-                call: 'plugin_tagging_get'
-            },
-            dataType: 'json',
-
-            success: function (data) {
-                tags = get_tags_from_response(data);
+        callBackend({call: 'plugin_tagging_get'},
+            function (response) {
+                tags = get_tags_from_response(response);
                 plugin_tagging_show_edit_dialog(tags);
             },
-
-            error: function (xhr, status, error) {
-            }
-        });
-
+            function (error) {
+            });
     }
 
     /**

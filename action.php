@@ -69,6 +69,10 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             'PLUGIN_MOVE_PAGE_RENAME', 'AFTER', $this,
             'update_moved_page'
         );
+
+        $controller->register_hook(
+            'MENU_ITEMS_ASSEMBLY', 'AFTER', $this,
+            'add_menu', array());
     }
 
     /**
@@ -103,6 +107,12 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             $this->deleteTag();
         } elseif ($event->data === 'plugin_tagging_rename') {
             $this->renameTag();
+        } elseif ($event->data === 'plugin_tagging_get') {
+            $this->getTags();
+        } elseif ($event->data === 'plugin_tagging_add_tag') {
+            $this->addTag();
+        } elseif ($event->data === 'plugin_tagging_remove_tag') {
+            $this->removeTag();
         } else {
             $handled = false;
         }
@@ -601,5 +611,155 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     {
         global $QUERY;
         $QUERY = $this->originalQuery;
+    }
+
+    /**
+     * Add tagging button to page tools menu
+     *
+     * @param Doku_Event $event
+     */
+    public function add_menu(Doku_Event $event) {
+        if($event->data['view'] != 'page') return;
+        // ToDo: only insert button if configured and if logged in
+        // user has got the required permissions
+        if($this->getConf('showedittagsbutton')) {
+            array_splice($event->data['items'], -1, 0, [new \dokuwiki\plugin\tagging\MenuItem()]);
+        }
+    }
+
+    protected function getTags() {
+        global $INFO;
+
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+
+        $filter = array('pid' => $INFO['id']);
+        if ($hlp->getConf('singleusermode')) {
+            $filter['tagger'] = 'auto';
+        }
+
+        $tags = $hlp->findItems($filter, 'tag');
+        $tags = implode(', ', array_keys($tags));
+        $tags = array('tags' => $tags);
+
+        header('Content-Type: application/json');
+        echo json_encode($tags);
+    }
+
+    /**
+     * Add single tag, return current tags
+     */
+    function addTag() {
+        global $INPUT;
+        global $INFO;
+
+        $error = false;
+
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+
+        $data = $INPUT->arr('tagging');
+        $id = $INPUT->str('id');
+        $tag = $INPUT->str('tag');
+        $user = $hlp->getUser();
+        $INFO['writable'] = auth_quickaclcheck($id) >= AUTH_EDIT; // we also need this in findItems
+
+        if (empty($id) || empty($tag) || empty($user)) {
+            $error = true;
+            $msg = 'missing parameters';
+        } else if ($INFO['writable'] && $hlp->getUser()) {
+            // Get saved tags
+            $filter = array('pid' => $INFO['id']);
+            if ($hlp->getConf('singleusermode')) {
+                $filter['tagger'] = 'auto';
+            }
+
+            $tags = $hlp->findItems($filter, 'tag');
+            $tags = array_keys($tags);
+
+            // Add new tag, if not yet existing
+            if (array_search($tag, $tags) === false) {
+                array_push($tags, $tag);
+                $hlp->replaceTags($id, $user, $tags);
+                $msg = 'added \''.$tag.'\' to page \''.$id.'\'';
+            } else {
+                $error = true;
+                $msg = 'tag already exists';
+            }
+        } else {
+            $error = true;
+            $msg = 'permission denied';
+        }
+
+        // Return JSON encoded list of current tags
+        $tags = $hlp->findItems($filter, 'tag');
+        $tags = implode(', ', array_keys($tags));
+        if ($error) {
+            $result = array('tags' => $tags, 'error' => $error, 'message' => $msg);
+        } else {
+            $result = array('tags' => $tags, 'error' => $error, 'message' => $msg);
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($result);
+    }
+
+    /**
+     * Remove single tag, return current tags
+     */
+    function removeTag() {
+        global $INPUT;
+        global $INFO;
+
+        $error = false;
+
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+
+        $data = $INPUT->arr('tagging');
+        $id = $INPUT->str('id');
+        $tag = $INPUT->str('tag');
+        $user = $hlp->getUser();
+        $INFO['writable'] = auth_quickaclcheck($id) >= AUTH_EDIT; // we also need this in findItems
+
+        if (empty($id) || empty($tag) || empty($user)) {
+            $error = true;
+            $msg = 'missing parameters';
+        } else if ($INFO['writable'] && $hlp->getUser()) {
+            // Get saved tags
+            $filter = array('pid' => $INFO['id']);
+            if ($hlp->getConf('singleusermode')) {
+                $filter['tagger'] = 'auto';
+            }
+
+            $tags = $hlp->findItems($filter, 'tag');
+            $tags = array_keys($tags);
+
+            // Remove tag, if existing
+            $key = array_search($tag, $tags);
+            if ($key !== false) {
+                unset($tags[$key]);
+                $hlp->replaceTags($id, $user, $tags);
+                $msg = 'removed \''.$tag.'\' from page \''.$id.'\'';
+            } else {
+                $error = true;
+                $msg = 'tag does not exist';
+            }
+        } else {
+            $error = true;
+            $msg = 'permission denied';
+        }
+
+        // Return JSON encoded list of current tags
+        $tags = $hlp->findItems($filter, 'tag');
+        $tags = implode(', ', array_keys($tags));
+        if ($error) {
+            $result = array('tags' => $tags, 'error' => $error, 'message' => $msg);
+        } else {
+            $result = array('tags' => $tags, 'error' => $error, 'message' => $msg);
+        }
+
+        header('Content-Type: application/json');
+        echo json_encode($result);
     }
 }

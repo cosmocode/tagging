@@ -4,6 +4,42 @@
 
 jQuery(function () {
 
+    const url = DOKU_BASE + 'lib/exe/ajax.php';
+    const requestParams = {
+        'id':     JSINFO.id,
+        'sectok': JSINFO.sectok
+    };
+
+    // Set on-click callback for edit dialog.
+    jQuery('.plugin_tagging__edit').click(plugin_tagging_edit);
+
+    /**
+     * Trigger a backend action via AJAX
+     *
+     * @param {object} params Required "call" is the DokuWiki event name, plus optional data object(s)
+     * @returns {*}
+     */
+    const callBackend = function(params, successCallback, failureCallback) {
+        const mergedParams = jQuery.extend(
+            {},
+            requestParams,
+            params
+        );
+
+        return jQuery.ajax({
+                url     : url,
+                data    : mergedParams,
+                type    : 'POST'
+            })
+            .done(jQuery.proxy(function(response) {
+                successCallback(response);
+            }, this))
+            .fail(jQuery.proxy(function(xhr) {
+                var msg = typeof xhr === 'string' ? xhr : xhr.responseText || xhr.statusText || 'Unknown error';
+                failureCallback(msg);
+            }, this));
+    };
+
     /**
      * Add JavaScript confirmation to the User Delete button
      */
@@ -139,4 +175,202 @@ jQuery(function () {
                 return false;
             }
         });
+
+    /**
+     * Below follows code for the edit dialog
+     */
+
+    /**
+     * Menu item on-click function:
+     * Gets the tag list and creates the edit dialog.
+     */
+    function plugin_tagging_edit() {
+        callBackend({call: 'plugin_tagging_get'},
+            function (response) {
+                tags = get_tags_from_response(response);
+                plugin_tagging_show_edit_dialog(tags);
+            },
+            function (error) {
+            });
+    }
+
+    /**
+     * Build HTML code for the tags list.
+     *
+     * @param {array} tags Array of tags
+     * @returns {string} HTML code
+     */
+    function edit_dialog_build_tag_list(tags) {
+        var table = '<div><table id="tag_list">';
+        if (tags && tags.length > 0) {
+            tags.forEach(function (tag) {
+                var button = '<a class="tagging_delete_button ui-button ui-widget ui-corner-all" href="javascript:void(0);">'
+                    + LANG.plugins.tagging.edit_dialog_button_delete + '</a>';
+                table += '<tr><td>' + tag + '</td><td>' + button + '</td></tr>';
+            });
+        } else {
+            table += '<tr><td>' + LANG.plugins.tagging.notags + '</td></tr>';
+        }
+        table += '</table></div>';
+
+        return table;
+    }
+
+    /**
+     * Create and show the edit tags dialog.
+     * Tags can be added and removed from the current page.
+     * Closing the dialog refreshes the browser page.
+     *
+     * @param {array} tags Array of tags
+     * @returns {string} HTML code
+     */
+    function plugin_tagging_show_edit_dialog(tags) {
+        var content = '<div id="tagging__edit_dialog" title="' + LANG.plugins.tagging.edit_dialog_title +'"></div>';
+
+        dialog = jQuery(content).dialog({
+            resizable: false,
+            width: 480,
+            height: 'auto',
+            modal: true,
+            buttons: {
+                Close: function() {
+                    jQuery(this).dialog('close');
+                }
+            },
+            close: function( event, ui ) {
+                jQuery(this).dialog('destroy');
+                location.reload();
+            }
+        });
+        jQuery(dialog).append('<p>' + LANG.plugins.tagging.edit_dialog_text_list + '</p>');
+
+        table = edit_dialog_build_tag_list(tags);
+        jQuery(dialog).append(table);
+
+        jQuery('.tagging_delete_button').button({
+            icon: "ui-icon-trash"
+        });
+
+        var button = '<a class="tagging_add_button ui-button ui-widget ui-corner-all" href="javascript:void(0);" >'
+            + LANG.plugins.tagging.edit_dialog_button_add + '</a>';
+        var input = '<label for="tagname">' + LANG.plugins.tagging.edit_dialog_label_add + '</label><br>'
+            + '<input type="text" id="new_tag_name" name="tagname">' + button;
+        jQuery(dialog).append(input);
+
+        jQuery('.tagging_add_button').button({
+            icon: "ui-icon-plus"
+        });
+
+        jQuery('.tagging_add_button').click(edit_dialog_add_tag);
+        jQuery('.tagging_delete_button').click(edit_dialog_delete_tag);
+
+        jQuery('#new_tag_name').keyup(function (event) {
+            if (event.which === 13) {
+                edit_dialog_add_tag();
+            } else {
+                setTimeout(edit_dialog_validate_input, 250);
+            }
+        });
+
+        return dialog;
+    }
+
+    /**
+     * Callback function for validation of the input field '#new_tag_name'.
+     *
+     * @returns {boolean} true if valid, false otherwise
+     */
+    function edit_dialog_validate_input() {
+        var tag = jQuery('#new_tag_name').val(),
+            valid = true;
+
+        if (tag.length > 0) {
+            var $cells = jQuery('#tag_list td:first-child');
+            for (var cell of $cells) {
+                if (tag === cell.textContent) {
+                    // Ignore duplicates.
+                    valid = false;
+                    break;
+                }
+            }
+        } else {
+            valid = false;
+        }
+
+        var input = jQuery('#new_tag_name');
+        if (valid) {
+            input.addClass('valid_input');
+            input.removeClass('invalid_input');
+        } else {
+            input.removeClass('valid_input');
+            input.addClass('invalid_input');
+        }
+
+        return valid;
+    }
+
+    /**
+     * The function updates the tag list in the edit dialog.
+     *
+     * @param {array} tags Array of tags
+     */
+    function edit_dialog_update_tags(tags) {
+        table = edit_dialog_build_tag_list(tags);
+        jQuery('#tag_list').replaceWith(table);
+        jQuery('.tagging_add_button').click(edit_dialog_add_tag);
+        jQuery('.tagging_delete_button').click(edit_dialog_delete_tag);
+    }
+
+    /**
+     * Reads tags from the given Jquery ajax response and returns
+     * them as an array (might be empty).
+     *
+     * @param {object} response Ajax response object
+     * @returns {array} Array of tags
+     */
+    function get_tags_from_response(response) {
+        if (response.tags && response.tags.length > 0) {
+            tags = response.tags.split(/,\s*/);
+        } else {
+            tags = [];
+        }
+        return tags;
+    }
+
+    /**
+     * Callback function for the add button.
+     * Adds a new tag.
+     */
+    function edit_dialog_add_tag() {
+        var tag = jQuery('#new_tag_name').val();
+
+        if (edit_dialog_validate_input()) {
+            // Clear input field
+            jQuery('#new_tag_name').val('');
+
+            result = callBackend({call: 'plugin_tagging_add_tag', tag: tag},
+                function (response) {
+                    tags = get_tags_from_response(response);
+                    edit_dialog_update_tags(tags);
+                },
+                function (error) {
+                });
+        }
+    }
+
+    /**
+     * Callback function for the delete button.
+     * Removes the clicked tag.
+     */
+    function edit_dialog_delete_tag() {
+        var tag = jQuery(this).closest("td").prev().html();
+
+        result = callBackend({call: 'plugin_tagging_remove_tag', tag: tag},
+            function (response) {
+                tags = get_tags_from_response(response);
+                edit_dialog_update_tags(tags);
+            },
+            function (error) {
+            });
+    }
 });

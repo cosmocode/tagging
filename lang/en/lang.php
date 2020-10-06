@@ -28,6 +28,7 @@ $lang['admin sort descending']     = 'Sort descending';
 $lang['admin no invalid']          = 'No invalid tags found.';
 $lang['admin clean']               = 'Irrevocably delete all invalid taggings';
 $lang['toggle admin mode']         = 'Tag Admin';
+$lang['edit_tags_button']          = 'Edit tags';
 
 $lang['no_admin']                  = 'Error. Only admins can modify tags.';
 
@@ -50,6 +51,10 @@ $lang['js']['admin_warning_all']   = 'Warning: Changes will be applied to ALL ta
 $lang['js']['admin_sure']          = 'Are you sure?';
 $lang['js']['admin_newtags']       = 'Please enter the new tag name. You can provide multiple comma separated tags to split the tag into multiple.';
 $lang['js']['search_nofilter']     = 'nothing found';
-
+$lang['js']['edit_dialog_title']   = 'Edit Tags';
+$lang['js']['edit_dialog_text_list'] = 'The following tags are set:';
+$lang['js']['edit_dialog_button_delete'] = 'Delete';
+$lang['js']['edit_dialog_button_add'] = 'Add';
+$lang['js']['edit_dialog_label_add']  = 'Add a new tag:';
 
 $lang['tagjmp_error'] = 'Could not find any page tagged with %s';

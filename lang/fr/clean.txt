@@ -1,0 +1,3 @@
+===== Nettoyer la base de données des étiquettes =====
+
+Vous pouvez ici supprimer tous les marquages invalides (étiquettes pointant vers des pages inexistantes). Aucun marquage valide ne sera supprimé.

@@ -69,6 +69,16 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             'PLUGIN_MOVE_PAGE_RENAME', 'AFTER', $this,
             'update_moved_page'
         );
+        //
+        $controller->register_hook(
+            'PLUGIN_ELASTICSEARCH_CREATEMAPPING', 'BEFORE', $this,
+            'elasticMapping'
+        );
+
+        $controller->register_hook(
+            'PLUGIN_ELASTICSEARCH_INDEXPAGE', 'BEFORE', $this,
+            'elasticIndexPage'
+        );
     }
 
     /**
@@ -551,6 +561,34 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
         $hlp->renamePage($src, $dst);
+    }
+
+    /**
+     * Add our own field mapping to Elasticsearch
+     *
+     * @param Doku_Event $event
+     */
+    public function elasticMapping(Doku_Event $event)
+    {
+        $event->data[] = ['tagging' => ['type' => 'keyword']];
+    }
+
+    /**
+     * Add taggings to Elastic index
+     *
+     * @param Doku_Event $event
+     */
+    public function elasticIndexPage(Doku_Event $event)
+    {
+        $data = &$event->data;
+
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+        $tags = $hlp->findItems(['pid' => $data['uri']], 'tag');
+
+        if ($tags) {
+            $data['tagging'] = array_keys($tags);
+        }
     }
 
     /**

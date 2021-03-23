@@ -171,7 +171,6 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         global $INPUT;
         global $INFO;
 
-
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
 
@@ -187,6 +186,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
                     PREG_SPLIT_NO_EMPTY
                 )
             );
+            $hlp->updateElasticState($id);
         }
 
         $tags = $hlp->findItems(array('pid' => $id), 'tag');
@@ -279,6 +279,14 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
         $hlp->deleteTags($data['tid']);
+
+        // update elasticsearch state for all relevant pages
+        $pids = $hlp->findItems(['tag' => $data['tid'][0]], 'pid');
+        if (!empty($pids)) {
+            foreach (array_keys($pids) as $pid) {
+                $hlp->updateElasticState($pid);
+            }
+        }
     }
 
     /**
@@ -292,6 +300,14 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
         $hlp->renameTag($data['oldValue'], $data['newValue']);
+
+        // update elasticsearch state for all relevant pages
+        $pids = $hlp->findItems(['tag' => $data['newValue']], 'pid');
+        if (!empty($pids)) {
+            foreach (array_keys($pids) as $pid) {
+                $hlp->updateElasticState($pid);
+            }
+        }
     }
 
     /**
@@ -586,9 +602,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $hlp = plugin_load('helper', 'tagging');
         $tags = $hlp->findItems(['pid' => $data['uri']], 'tag');
 
-        if ($tags) {
-            $data['tagging'] = array_keys($tags);
-        }
+        $data['tagging'] = array_keys($tags);
     }
 
     /**

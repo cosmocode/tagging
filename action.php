@@ -79,6 +79,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             'PLUGIN_ELASTICSEARCH_INDEXPAGE', 'BEFORE', $this,
             'elasticIndexPage'
         );
+
+        $controller->register_hook(
+            'PLUGIN_ELASTICSEARCH_FILTERS', 'BEFORE', $this,
+            'elasticSearchFilter'
+        );
     }
 
     /**
@@ -603,6 +608,21 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $tags = $hlp->findItems(['pid' => $data['uri']], 'tag');
 
         $data['tagging'] = array_keys($tags);
+    }
+
+    /**
+     * Add configuration for tagging filter in advanced search
+     * when using Elasticsearch plugin
+     *
+     * @param Doku_Event $event
+     */
+    public function elasticSearchFilter(Doku_Event $event)
+    {
+        $event->data['tagging'] = [
+            'label' => $this->getLang('search_filter_label'),
+            'fieldPath' => 'tagging',
+            'limit' => '100',
+        ];
     }
 
     /**

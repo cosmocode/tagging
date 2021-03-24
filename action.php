@@ -161,7 +161,8 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
                 continue;
             }
 
-            $id = array_pop(array_keys($pages));
+            $pages = array_keys($pages);
+            $id = array_pop($pages);
             send_redirect(wl($id, '', true, '&'));
         }
 
@@ -214,8 +215,7 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         header('Content-Type: application/json');
 
-        $json = new JSON();
-        echo $json->encode(array_combine($tags, $tags));
+        echo json_encode(array_combine($tags, $tags));
     }
 
     /**
@@ -229,44 +229,38 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         $hlp = plugin_load('helper', 'tagging');
 
         header('Content-Type: application/json');
-        $json = new JSON();
 
         if (!auth_isadmin()) {
-            echo $json->encode(array('status' => 'error', 'msg' => $this->getLang('no_admin')));
-
+            echo json_encode(array('status' => 'error', 'msg' => $this->getLang('no_admin')));
             return;
         }
 
         if (!checkSecurityToken()) {
-            echo $json->encode(array('status' => 'error', 'msg' => 'Security Token did not match. Possible CSRF attack.'));
-
+            echo json_encode(array('status' => 'error', 'msg' => 'Security Token did not match. Possible CSRF attack.'));
             return;
         }
 
         if (!$INPUT->has('id')) {
-            echo $json->encode(array('status' => 'error', 'msg' => 'No page id given.'));
-
+            echo json_encode(array('status' => 'error', 'msg' => 'No page id given.'));
             return;
         }
         $pid = $INPUT->str('id');
 
         if (!$INPUT->has('oldValue') || !$INPUT->has('newValue')) {
-            echo $json->encode(array('status' => 'error', 'msg' => 'No proper input. Give "oldValue" and "newValue"'));
-
+            echo json_encode(array('status' => 'error', 'msg' => 'No proper input. Give "oldValue" and "newValue"'));
             return;
         }
 
 
         list($err, $msg) = $hlp->modifyPageTag($pid, $INPUT->str('oldValue'), $INPUT->str('newValue'));
         if ($err) {
-            echo $json->encode(array('status' => 'error', 'msg' => $msg));
-
+            echo json_encode(array('status' => 'error', 'msg' => $msg));
             return;
         }
 
         $tags = $hlp->findItems(array('pid' => $pid), 'tag');
         $userTags = $hlp->findItems(array('pid' => $pid, 'tagger' => $hlp->getUser()), 'tag');
-        echo $json->encode(array(
+        echo json_encode(array(
             'status'          => 'ok',
             'tags_edit_value' => implode(', ', array_keys($userTags)),
             'html_cloud'      => $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), false, true),

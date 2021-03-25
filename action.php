@@ -32,7 +32,12 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
 
         $controller->register_hook(
             'TPL_ACT_RENDER', 'BEFORE', $this,
-            'setupTagSearch'
+            'setupTagSearchDoku'
+        );
+
+        $controller->register_hook(
+            'PLUGIN_ELASTICSEARCH_QUERY', 'BEFORE', $this,
+            'setupTagSearchElastic'
         );
 
         $controller->register_hook(
@@ -410,9 +415,9 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
      * @param Doku_Event $event
      * @param $param
      */
-    public function setupTagSearch(Doku_Event $event, $param)
+    public function setupTagSearchDoku(Doku_Event $event, $param)
     {
-        if ($event->data !== 'search') {
+        if ($event->data !== 'search' || !plugin_isdisabled('elasticsearch')) {
             return;
         }
 
@@ -436,6 +441,27 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
         }
 
         // remove tags from query before search is executed
+        $this->removeTagsFromQuery($QUERY);
+    }
+
+    /**
+     * Remove tags from query string and put them into $INPUT
+     * to be used as filter by Elasticsearch.
+     *
+     * @param Doku_Event $event
+     */
+    public function setupTagSearchElastic(Doku_Event $event)
+    {
+        global $QUERY;
+        if (strpos($QUERY, '#') === false) {
+            return;
+        }
+        // get (hash)tags from query
+        preg_match_all('/(?:#)(\w+)/u', $QUERY, $matches);
+        if (isset($matches[1])) {
+            global $INPUT;
+            $INPUT->set('tagging', array_merge($matches[1], $INPUT->arr('tagging')));
+        }
         $this->removeTagsFromQuery($QUERY);
     }
 

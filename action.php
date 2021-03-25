@@ -507,6 +507,8 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             return;
         }
 
+        if (!plugin_isdisabled('elasticsearch')) return;
+
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
 

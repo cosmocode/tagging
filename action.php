@@ -447,22 +447,34 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
     /**
      * Remove tags from query string and put them into $INPUT
      * to be used as filter by Elasticsearch.
+     * Also return new #tag values to be appended to the query.
      *
      * @param Doku_Event $event
      */
     public function setupTagSearchElastic(Doku_Event $event)
     {
         global $QUERY;
-        if (strpos($QUERY, '#') === false) {
-            return;
-        }
+        global $INPUT;
+
+        $taggingFilter = $INPUT->arr('tagging');
+
         // get (hash)tags from query
         preg_match_all('/(?:#)(\w+)/u', $QUERY, $matches);
         if (isset($matches[1])) {
-            global $INPUT;
-            $INPUT->set('tagging', array_merge($matches[1], $INPUT->arr('tagging')));
+            $INPUT->set('tagging', array_merge($matches[1], $taggingFilter));
         }
         $this->removeTagsFromQuery($QUERY);
+
+        // return tagging filter as hashtags to be appended to the original query (without doubles)
+        if ($taggingFilter) {
+            $additions = array_map(function ($tag) use ($matches) {
+                if (!isset($matches[1]) || !in_array($tag, $matches[1])) {
+                    return "#$tag";
+                }
+                return null;
+            }, $taggingFilter);
+            $event->data += array_filter($additions);
+        }
     }
 
     /**

@@ -89,6 +89,11 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             'PLUGIN_ELASTICSEARCH_FILTERS', 'BEFORE', $this,
             'elasticSearchFilter'
         );
+
+        $controller->register_hook(
+            'PLUGIN_ELASTICSEARCH_SEARCHFIELDS', 'BEFORE', $this,
+            'elasticSearchFields'
+        );
     }
 
     /**
@@ -657,6 +662,16 @@ class action_plugin_tagging extends DokuWiki_Action_Plugin {
             'fieldPath' => 'tagging',
             'limit' => '100',
         ];
+    }
+
+    /**
+     * Add tagging to the list of search fields
+     *
+     * @param Doku_Event $event
+     */
+    public function elasticSearchFields(Doku_Event $event)
+    {
+        array_push($event->data, 'tagging');
     }
 
     /**

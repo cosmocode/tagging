@@ -256,8 +256,10 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
             }
         }
 
-        $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
-
+        // bypass page access check when called by a command line tool
+        if (php_sapi_name() !== 'cli') {
+            $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
+        }
 
         return $where;
     }

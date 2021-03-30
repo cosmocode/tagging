@@ -62,6 +62,21 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     }
 
     /**
+     * If plugin elasticsearch is installed, inform it that we have just made changes
+     * to some data relevant to a page. The page should be re-indexed.
+     *
+     * @param string $id
+     */
+    public function updateElasticState($id)
+    {
+        /** @var \helper_plugin_elasticsearch_plugins $elasticHelper */
+        $elasticHelper = plugin_load('helper', 'elasticsearch_plugins');
+        if ($elasticHelper) {
+            $elasticHelper->updateRefreshState($id);
+        }
+    }
+
+    /**
      * Canonicalizes the tag to its lower case nospace form
      *
      * @param $tag

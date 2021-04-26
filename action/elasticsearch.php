@@ -69,6 +69,7 @@ class action_plugin_tagging_elasticsearch extends DokuWiki_Action_Plugin
     {
         $event->data['tagging'] = [
             'label' => $this->getLang('search_filter_label'),
+            'id' => 'plugin__tagging-tags',
             'fieldPath' => 'tagging',
             'limit' => '100',
         ];

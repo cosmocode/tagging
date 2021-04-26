@@ -171,12 +171,17 @@ jQuery(function () {
     }
 
     // tag filter
-    $ul = buildFilter(getTagsFromResults(), getFiltersFromQuery());
+    let $ul;
+    $ul = $filterContainer.find('ul');
+    if ($ul.length === 0) {
+        $ul = buildFilter(getTagsFromResults(), getFiltersFromQuery());
+        $filterContainer.append($ul);
+    }
+
     $inputs = $ul.find('input');
     $inputs.change(function () {
         toggleTag(this.value);
     });
-    $filterContainer.append($ul);
 
     // tags in other search filters
     addTagsToSearchLinks(jQuery('.advancedOptions a'));

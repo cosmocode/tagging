@@ -56,7 +56,9 @@ class action_plugin_tagging_elasticsearch extends DokuWiki_Action_Plugin
         $hlp = plugin_load('helper', 'tagging');
         $tags = $hlp->findItems(['pid' => $data['uri']], 'tag');
 
-        $data['tagging'] = array_keys($tags);
+        $data['tagging'] = array_map(function ($tag) use ($hlp) {
+            return $hlp->cleanTag($tag);
+        }, array_keys($tags));
     }
 
     /**

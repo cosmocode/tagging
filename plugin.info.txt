@@ -1,7 +1,7 @@
 base    tagging
 author  Adrian Lang
 email   dokuwiki@cosmocode.de
-date    2021-03-29
+date    2021-04-27
 name    Tagging Plugin
 desc    Allow users to annotate pages with tags, search for tags and show useful tag clouds.
 url     http://www.dokuwiki.org/plugin:tagging

@@ -89,11 +89,15 @@ class action_plugin_tagging_elasticsearch extends DokuWiki_Action_Plugin
         global $QUERY;
         global $INPUT;
 
+        /** @var helper_plugin_tagging $hlp */
+        $hlp = plugin_load('helper', 'tagging');
+
         $taggingFilter = $INPUT->arr('tagging');
 
         // get (hash)tags from query
         preg_match_all('/(?:#)(\w+)/u', $QUERY, $matches);
         if (isset($matches[1])) {
+            $matches[1] = array_map([$hlp, 'cleanTag'], $matches[1]);
             $INPUT->set('tagging', array_merge($matches[1], $taggingFilter));
         }
         \action_plugin_tagging_search::removeTagsFromQuery($QUERY);

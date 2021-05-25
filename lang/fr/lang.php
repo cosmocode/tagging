@@ -5,11 +5,11 @@
  *
  * @author Schplurtz le Déboulonné <Schplurtz@laposte.net>
  */
-$lang['menu']                  = 'Voir et changer les étiquettes';
+$lang['menu']                  = 'Voir et modifier les étiquettes';
 $lang['admin tag']             = 'Nom de l\'étiquette';
 $lang['admin tags']            = 'Étiquette';
 $lang['admin nonexistent page'] = 'Page non existante étiquettée';
-$lang['admin occurrence']      = 'Occurence';
+$lang['admin occurrence']      = 'Occurences';
 $lang['admin namespaces']      = 'Catégories';
 $lang['admin taggers']         = 'Enregistré par';
 $lang['admin actions']         = 'Actions';
@@ -33,8 +33,9 @@ $lang['admin clean']           = 'Irrévocablement détruire tous les étiquetag
 $lang['toggle admin mode']     = 'Administration des étiquettes';
 $lang['no_admin']              = 'Erreur. Seuls les administrateurs peuvent modifier les étiquettes.';
 $lang['search_section_title']  = 'Pages étiquetées';
-$lang['search_suggestions']    = 'Étiquettes correspondantes';
-$lang['search_all_tags']       = 'Recherche d\'étiquettes : toutes';
+$lang['search_suggestions']    = 'Étiquettes ressemblantes';
+$lang['search_all_tags']       = 'Toutes les étiquettes';
+$lang['search_any_tag']        = 'Au moins une étiquette';
 $lang['search_all_label']      = 'ET';
 $lang['search_any_label']      = 'OU';
 $lang['search_filter_label']   = 'Filtre d\'étiquette';

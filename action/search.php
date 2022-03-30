@@ -215,7 +215,7 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
     public function tagResults(Doku_Event $event, $param)
     {
         $page = $event->data['page'];
-        $tags = $this->allTagsByPage[$page] ?: null;
+        $tags = $this->allTagsByPage[$page] ?? null;
         if ($tags) {
             foreach ($tags as $tag) {
                 $event->data['resultHeader'][] = $this->getSettingsLink('#' . $tag, 'q', '#' . $tag);

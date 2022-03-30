@@ -257,7 +257,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
         }
 
         // bypass page access check when called by a command line tool
-        if (php_sapi_name() !== 'cli') {
+        if (php_sapi_name() !== 'cli' || defined('DOKU_UNITTEST')) {
             $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
         }
 

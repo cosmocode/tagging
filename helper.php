@@ -839,10 +839,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
             // check ACLs
             $userEdit = false;
-            /** @var \helper_plugin_sqlite $sqliteHelper */
-            $sqliteHelper = plugin_load('helper', 'sqlite');
             foreach ($pids as $pid) {
-                if ($sqliteHelper->_getAccessLevel($pid) >= AUTH_EDIT) {
+                if (auth_quickaclcheck($pid) >= AUTH_EDIT) {
                     $userEdit = true;
                     continue;
                 }

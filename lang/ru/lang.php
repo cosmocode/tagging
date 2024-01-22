@@ -3,6 +3,7 @@
 /**
  * @license    GPL 2 (http://www.gnu.org/licenses/gpl.html)
  *
+ * @author k04an <ne.k04an@ya.ru>
  * @author Aleksandr Selivanov <alexgearbox@yandex.ru>
  */
 $lang['menu']                  = 'Просмотр и изменение тегов';
@@ -19,10 +20,13 @@ $lang['admin new name']        = 'Новое название';
 $lang['admin rename tag']      = 'Переименовать тег';
 $lang['admin rename']          = 'Переименовать';
 $lang['admin filter']          = 'Фильтр по пространству имён';
+$lang['admin enter tag names'] = 'Введите текущее и новое название Тега';
+$lang['admin tag does not exists'] = 'Тега с таким названием не существует';
 $lang['admin renamed']         = 'Ваш тег переименован';
 $lang['admin delete_selected'] = 'Удалить веделенное';
 $lang['admin delete']          = 'Удалить';
 $lang['admin filter button']   = 'Фильтр';
+$lang['admin deleted']         = 'Вы удалили %d тег(ов) на %d странице(ах)';
 $lang['admin sort ascending']  = 'Сортировать по возрастанию';
 $lang['admin sort descending'] = 'Сортировать по убыванию';
 $lang['admin no invalid']      = 'Неверных тегов не найдено.';
@@ -30,8 +34,11 @@ $lang['admin clean']           = 'Безвозвратно удалить все
 $lang['toggle admin mode']     = 'Тег-редактор';
 $lang['no_admin']              = 'Ошибка. Только администраторы могу изменять теги.';
 $lang['search_section_title']  = 'Страницы с тегом';
+$lang['search_suggestions']    = 'Совпадающие Теги';
 $lang['search_any_tag']        = 'Поиск тега: любой';
 $lang['search_all_tags']       = 'Поиск тега: все';
+$lang['search_all_label']      = 'И';
+$lang['search_any_label']      = 'ИЛИ';
 $lang['search_filter_label']   = 'Фильтр по тегу';
 $lang['js']['notags']          = 'Тегов ещё нет.';
 $lang['js']['nopages']         = 'Страниц с этим тегом пока нет.';

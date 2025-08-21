@@ -34,7 +34,7 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
         $matches = array();
         preg_match('/{{tagging::(\w+)(?:>([^}\?]+))?(\?[0-9]+)?}}/', $match, $matches);
         $data['cmd'] = $matches[1];
-        $data['limit'] = (int)ltrim($matches[3], '?');
+        $data['limit'] = (int)ltrim($matches[3] ?: '', '?');
         if (!$data['limit']) {
             $data['limit'] = $this->getConf('cloudlimit');
         }
@@ -80,17 +80,17 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                     $data['user'] = $_SERVER['REMOTE_USER'];
                 }
                 $tags = $hlp->findItems(array('tagger' => $data['user']), 'tag', $data['limit']);
-                
+
                 $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
 
                 break;
             case 'tag':
                 $renderer->info['cache'] = false;
-                
+
                 $pids = $hlp->findItems(array('tag' => $data['tag']), 'pid', $data['limit']);
 
                 $renderer->doc .= $hlp->html_page_list($pids);
-               
+
                 break;
             case 'ns':
                 $renderer->info['cache'] = false;

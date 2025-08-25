@@ -1,44 +1,57 @@
 <?php
 
+use dokuwiki\Extension\ActionPlugin;
+use dokuwiki\Extension\EventHandler;
+use dokuwiki\Extension\Event;
+
 /**
  * Class action_plugin_tagging_elasticsearch
  */
-class action_plugin_tagging_elasticsearch extends DokuWiki_Action_Plugin
+class action_plugin_tagging_elasticsearch extends ActionPlugin
 {
-
-    public function register(Doku_Event_Handler $controller)
+    public function register(EventHandler $controller)
     {
         $controller->register_hook(
-            'PLUGIN_ELASTICSEARCH_CREATEMAPPING', 'BEFORE', $this,
+            'PLUGIN_ELASTICSEARCH_CREATEMAPPING',
+            'BEFORE',
+            $this,
             'elasticMapping'
         );
 
         $controller->register_hook(
-            'PLUGIN_ELASTICSEARCH_INDEXPAGE', 'BEFORE', $this,
+            'PLUGIN_ELASTICSEARCH_INDEXPAGE',
+            'BEFORE',
+            $this,
             'elasticIndexPage'
         );
 
         $controller->register_hook(
-            'PLUGIN_ELASTICSEARCH_FILTERS', 'BEFORE', $this,
+            'PLUGIN_ELASTICSEARCH_FILTERS',
+            'BEFORE',
+            $this,
             'elasticSearchFilter'
         );
 
         $controller->register_hook(
-            'PLUGIN_ELASTICSEARCH_SEARCHFIELDS', 'BEFORE', $this,
+            'PLUGIN_ELASTICSEARCH_SEARCHFIELDS',
+            'BEFORE',
+            $this,
             'elasticSearchFields'
         );
 
         $controller->register_hook(
-            'PLUGIN_ELASTICSEARCH_QUERY', 'BEFORE', $this,
+            'PLUGIN_ELASTICSEARCH_QUERY',
+            'BEFORE',
+            $this,
             'setupTagSearchElastic'
         );
     }
     /**
      * Add our own field mapping to Elasticsearch
      *
-     * @param Doku_Event $event
+     * @param Event $event
      */
-    public function elasticMapping(Doku_Event $event)
+    public function elasticMapping(Event $event)
     {
         $event->data[] = ['tagging' => ['type' => 'keyword']];
     }
@@ -46,9 +59,9 @@ class action_plugin_tagging_elasticsearch extends DokuWiki_Action_Plugin
     /**
      * Add taggings to Elastic index
      *
-     * @param Doku_Event $event
+     * @param Event $event
      */
-    public function elasticIndexPage(Doku_Event $event)
+    public function elasticIndexPage(Event $event)
     {
         $data = &$event->data;
 
@@ -56,18 +69,16 @@ class action_plugin_tagging_elasticsearch extends DokuWiki_Action_Plugin
         $hlp = plugin_load('helper', 'tagging');
         $tags = $hlp->findItems(['pid' => $data['uri']], 'tag');
 
-        $data['tagging'] = array_map(function ($tag) use ($hlp) {
-            return $hlp->cleanTag($tag);
-        }, array_keys($tags));
+        $data['tagging'] = array_map(fn($tag) => $hlp->cleanTag($tag), array_keys($tags));
     }
 
     /**
      * Add configuration for tagging filter in advanced search
      * when using Elasticsearch plugin
      *
-     * @param Doku_Event $event
+     * @param Event $event
      */
-    public function elasticSearchFilter(Doku_Event $event)
+    public function elasticSearchFilter(Event $event)
     {
         $event->data['tagging'] = [
             'label' => $this->getLang('search_filter_label'),
@@ -83,9 +94,9 @@ class action_plugin_tagging_elasticsearch extends DokuWiki_Action_Plugin
      * to be used as filter by Elasticsearch.
      * Also return new #tag values to be appended to the query.
      *
-     * @param Doku_Event $event
+     * @param Event $event
      */
-    public function setupTagSearchElastic(Doku_Event $event)
+    public function setupTagSearchElastic(Event $event)
     {
         global $QUERY;
         global $INPUT;
@@ -101,7 +112,7 @@ class action_plugin_tagging_elasticsearch extends DokuWiki_Action_Plugin
             $matches[1] = array_map([$hlp, 'cleanTag'], $matches[1]);
             $INPUT->set('tagging', array_merge($matches[1], $taggingFilter));
         }
-        \action_plugin_tagging_search::removeTagsFromQuery($QUERY);
+        action_plugin_tagging_search::removeTagsFromQuery($QUERY);
 
         // return tagging filter as hashtags to be appended to the original query (without doubles)
         if ($taggingFilter) {
@@ -118,10 +129,10 @@ class action_plugin_tagging_elasticsearch extends DokuWiki_Action_Plugin
     /**
      * Add tagging to the list of search fields
      *
-     * @param Doku_Event $event
+     * @param Event $event
      */
-    public function elasticSearchFields(Doku_Event $event)
+    public function elasticSearchFields(Event $event)
     {
-        array_push($event->data, 'tagging');
+        $event->data[] = 'tagging';
     }
 }

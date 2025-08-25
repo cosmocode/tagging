@@ -1,11 +1,16 @@
 <?php
 
+use dokuwiki\Extension\ActionPlugin;
+use dokuwiki\Extension\EventHandler;
+use dokuwiki\Extension\Event;
+use dokuwiki\Ui\SearchState;
+use dokuwiki\Form\InputElement;
+
 /**
  * Class action_plugin_tagging_search
  */
-class action_plugin_tagging_search extends DokuWiki_Action_Plugin
+class action_plugin_tagging_search extends ActionPlugin
 {
-
     /**
      * @var array
      */
@@ -24,32 +29,42 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
     /**
      * Register handlers
      *
-     * @param Doku_Event_Handler $controller
+     * @param EventHandler $controller
      */
-    public function register(Doku_Event_Handler $controller)
+    public function register(EventHandler $controller)
     {
         $controller->register_hook(
-            'TPL_CONTENT_DISPLAY', 'BEFORE', $this,
+            'TPL_CONTENT_DISPLAY',
+            'BEFORE',
+            $this,
             'echo_searchresults'
         );
 
         $controller->register_hook(
-            'TPL_ACT_RENDER', 'BEFORE', $this,
+            'TPL_ACT_RENDER',
+            'BEFORE',
+            $this,
             'setupTagSearchDoku'
         );
 
         $controller->register_hook(
-            'SEARCH_QUERY_FULLPAGE', 'AFTER', $this,
+            'SEARCH_QUERY_FULLPAGE',
+            'AFTER',
+            $this,
             'filterSearchResults'
         );
 
         $controller->register_hook(
-            'SEARCH_RESULT_FULLPAGE', 'AFTER', $this,
+            'SEARCH_RESULT_FULLPAGE',
+            'AFTER',
+            $this,
             'tagResults'
         );
 
         $controller->register_hook(
-            'FORM_SEARCH_OUTPUT', 'BEFORE', $this,
+            'FORM_SEARCH_OUTPUT',
+            'BEFORE',
+            $this,
             'addSwitchToSearchForm'
         );
     }
@@ -57,14 +72,14 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
     /**
      * Add AND/OR switch to advanced search tools
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param            $param
      */
-    public function addSwitchToSearchForm(Doku_Event $event, $param)
+    public function addSwitchToSearchForm(Event $event, $param)
     {
         global $INPUT;
 
-        /* @var \dokuwiki\Form\Form $searchForm */
+        /* @var dokuwiki\Form\Form $searchForm */
         $searchForm = $event->data;
         $currElemPos = $searchForm->findPositionByAttribute('class', 'advancedOptions');
 
@@ -96,7 +111,7 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
         $toggler = $searchForm->addTagOpen('div', ++$currElemPos)->addClass('current');
 
         // current item
-        if ($active && $active === 'and') {
+        if ($active === 'and') {
             $currentLabel = $this->getLang('search_all_tags');
             $toggler->addClass('changed');
         } else {
@@ -127,7 +142,7 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
 
         // restore query with tags in the search form
         if ($this->tagFilter) {
-            /** @var \dokuwiki\Form\InputElement $q */
+            /** @var InputElement $q */
             $q = $searchForm->getElementAt($searchForm->findPositionByAttribute('name', 'q'));
             $q->val($this->originalQuery);
         }
@@ -137,10 +152,10 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
      * Extracts tags from query and temporarily removes them
      * to prevent running fulltext search on tags as simple terms.
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param $param
      */
-    public function setupTagSearchDoku(Doku_Event $event, $param)
+    public function setupTagSearchDoku(Event $event, $param)
     {
         if ($event->data !== 'search' || !plugin_isdisabled('elasticsearch')) {
             return;
@@ -153,7 +168,7 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
         $this->allTagsByPage = $hlp->getAllTagsByPage();
 
         global $QUERY;
-        if (strpos($QUERY, '#') === false) {
+        if (!str_contains($QUERY, '#')) {
             return;
         }
 
@@ -173,10 +188,10 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
      * If tags are found in query, the results are filtered,
      * or, with an empty query, tag search results are returned.
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param $param
      */
-    public function filterSearchResults(Doku_Event $event, $param)
+    public function filterSearchResults(Event $event, $param)
     {
         if (!$this->tagFilter) {
             return;
@@ -209,10 +224,10 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
     /**
      * Add tag links to all search results
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param $param
      */
-    public function tagResults(Doku_Event $event, $param)
+    public function tagResults(Event $event, $param)
     {
         $page = $event->data['page'];
         $tags = $this->allTagsByPage[$page] ?? null;
@@ -226,10 +241,11 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
     /**
      * Show tags that are similar to the terms used in search
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param $param
      */
-    public function echo_searchresults(Doku_Event $event, $param) {
+    public function echo_searchresults(Event $event, $param)
+    {
         global $ACT;
         global $QUERY;
 
@@ -248,7 +264,7 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
         }
 
         $allTags = [];
-        foreach ($this->allTagsByPage as $page => $tags) {
+        foreach ($this->allTagsByPage as $tags) {
             $allTags = array_merge($allTags, $tags);
         }
         $allTags = array_unique($allTags);
@@ -267,7 +283,7 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
 
         // create output HTML: tag search links
         $results = '<div class="search_quickresult">';
-        $results .= '<h2>' . $this->getLang('search_suggestions')  .'</h2>';
+        $results .= '<h2>' . $this->getLang('search_suggestions')  . '</h2>';
         $results .= '<ul class="search_quickhits">';
 
         foreach ($suggestedTags as $tag) {
@@ -330,7 +346,7 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
 
         $Indexer = idx_get_indexer();
         $parsedQuery = ft_queryParser($Indexer, $QUERY);
-        $searchState = new \dokuwiki\Ui\SearchState($parsedQuery);
+        $searchState = new SearchState($parsedQuery);
         $linkTag =  $searchState->getSearchLink($label);
 
         // manipulate the link string because there is yet no way for inbuilt search to allow plugins
@@ -340,8 +356,8 @@ class action_plugin_tagging_search extends DokuWiki_Action_Plugin
         } elseif ($param === 'q') {
             return preg_replace('/q=[^&\'" ]*/', 'q=' . urlencode($value), $linkTag);
         }
-        // FIXME current links have a strange format where href is set in single quotes and followed by a space so preg_replace would make more sense
-        return str_replace("' >", '&' .$param . '=' . $value ."'> ", $linkTag);
+        // FIXME current links have a strange format where href is set in single quotes
+        // and followed by a space so preg_replace would make more sense
+        return str_replace("' >", '&' . $param . '=' . $value . "'> ", $linkTag);
     }
-
 }

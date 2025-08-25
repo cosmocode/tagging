@@ -1,15 +1,14 @@
 <?php
-// must be run within Dokuwiki
-if (!defined('DOKU_INC')) {
-    die();
-}
 
-class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
+use dokuwiki\Extension\AdminPlugin;
 
+class admin_plugin_tagging extends AdminPlugin
+{
     /** @var helper_plugin_tagging */
     private $hlp;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->hlp = plugin_load('helper', 'tagging');
     }
 
@@ -18,35 +17,36 @@ class admin_plugin_tagging extends DokuWiki_Admin_Plugin {
      *
      * @return bool always false
      */
-    function forAdminOnly() {
+    public function forAdminOnly()
+    {
         return false;
     }
 
     /**
      * Handle tag actions
      */
-    function handle() {
+    public function handle()
+    {
 
         if (!empty($_REQUEST['cmd']['clean'])) {
-            checkSecurityToken() && $this->hlp->deleteInvalidTaggings();
+            if (checkSecurityToken()) {
+                $this->hlp->deleteInvalidTaggings();
+            }
         }
 
         if (!$this->hlp->getParams()) {
             $this->hlp->setDefaultSort();
-            return false;
+            return;
         }
 
         $this->hlp->setDefaultSort();
-
-        if (!checkSecurityToken()) {
-            return false;
-        }
     }
 
     /**
      * Draw the interface
      */
-    public function html() {
+    public function html()
+    {
         echo $this->locale_xhtml('intro');
         echo $this->hlp->html_table();
         echo $this->locale_xhtml('clean');

@@ -1,14 +1,17 @@
 <?php
 
+use dokuwiki\Extension\Plugin;
+use dokuwiki\Utf8\PhpString;
 use dokuwiki\Form\Form;
+use dokuwiki\Search\Indexer;
 
 /**
  * Tagging Plugin (hlper component)
  *
  * @license GPL 2
  */
-class helper_plugin_tagging extends DokuWiki_Plugin {
-
+class helper_plugin_tagging extends Plugin
+{
     /**
      * Gives access to the database
      *
@@ -16,7 +19,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return helper_plugin_sqlite|bool false if initialization fails
      */
-    public function getDB() {
+    public function getDB()
+    {
         static $db = null;
         if ($db !== null) {
             return $db;
@@ -30,14 +34,17 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             return false;
         }
         $db->init('tagging', __DIR__ . '/db/');
-        $db->create_function('CLEANTAG', array($this, 'cleanTag'), 1);
-        $db->create_function('GROUP_SORT',
+        $db->create_function('CLEANTAG', [$this, 'cleanTag'], 1);
+        $db->create_function(
+            'GROUP_SORT',
             function ($group, $newDelimiter) {
                 $ex = array_filter(explode(',', $group));
                 sort($ex);
 
                 return implode($newDelimiter, $ex);
-            }, 2);
+            },
+            2
+        );
         $db->create_function('GET_NS', 'getNS', 1);
 
         return $db;
@@ -50,7 +57,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return bool|string
      */
-    public function getUser() {
+    public function getUser()
+    {
         if (!isset($_SERVER['REMOTE_USER'])) {
             return false;
         }
@@ -83,11 +91,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return string
      */
-    public function cleanTag($tag) {
-        $tag = str_replace(array(' ', '-', '_', '#'), '', $tag);
-        $tag = utf8_strtolower($tag);
-
-        return $tag;
+    public function cleanTag($tag)
+    {
+        $tag = str_replace([' ', '-', '_', '#'], '', $tag);
+        return PhpString::strtolower($tag);
     }
 
     /**
@@ -97,7 +104,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return string
      */
-    public function globNamespace($namespace) {
+    public function globNamespace($namespace)
+    {
         return cleanId($namespace) . '*';
     }
 
@@ -112,7 +120,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return bool|SQLiteResult
      */
-    public function replaceTags($id, $user, $tags) {
+    public function replaceTags($id, $user, $tags)
+    {
         global $conf;
         /** @var helper_plugin_translation $trans */
         $trans = plugin_load('helper', 'translation');
@@ -124,13 +133,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $db = $this->getDB();
         $db->query('BEGIN TRANSACTION');
-        $queries = array(array('DELETE FROM taggings WHERE pid = ? AND tagger = ?', $id, $user));
+
+        $queries = [['DELETE FROM taggings WHERE pid = ? AND tagger = ?', $id, $user]];
         foreach ($tags as $tag) {
-            $queries[] = array('INSERT INTO taggings (pid, tagger, tag, lang) VALUES(?, ?, ?, ?)', $id, $user, $tag, $lang);
+            $queries[] = ['INSERT INTO taggings (pid, tagger, tag, lang) VALUES(?, ?, ?, ?)', $id, $user, $tag, $lang];
         }
 
         foreach ($queries as $query) {
-            if (!call_user_func_array(array($db, 'query'), $query)) {
+            if (!call_user_func_array([$db, 'query'], $query)) {
                 $db->query('ROLLBACK TRANSACTION');
 
                 return false;
@@ -149,12 +159,9 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return array associative array in form of value => count
      */
-    public function findItems($filter, $type, $limit = 0) {
-
-        global $INPUT;
-
-        /** @var helper_plugin_tagging_querybuilder $queryBuilder */
-        $queryBuilder = new \helper_plugin_tagging_querybuilder();
+    public function findItems($filter, $type, $limit = 0)
+    {
+        $queryBuilder = new helper_plugin_tagging_querybuilder();
 
         $queryBuilder->setField($type);
         $queryBuilder->setLimit($limit);
@@ -165,7 +172,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         if (isset($filter['pid'])) $queryBuilder->setPid($filter['pid']);
 
         return $this->queryDb($queryBuilder->getQuery());
-
     }
 
     /**
@@ -176,7 +182,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return string
      */
-    public function getTagSearchURL($tag, $ns = '') {
+    public function getTagSearchURL($tag, $ns = '')
+    {
         $ret = '?do=search&sf=1&q=' . rawurlencode('#' . $this->cleanTag($tag));
         if ($ns) {
             $ret .= rawurlencode(' @' . $ns);
@@ -193,16 +200,17 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @param array $tags list of tags => count
      * @param int   $levels
      *
-     * @return mixed
+     * @return array
      */
-    public function cloudData($tags, $levels = 10) {
+    public function cloudData($tags, $levels = 10)
+    {
         $min = min($tags);
         $max = max($tags);
 
         // calculate tresholds
-        $tresholds = array();
+        $tresholds = [];
         for ($i = 0; $i <= $levels; $i++) {
-            $tresholds[$i] = pow($max - $min + 1, $i / $levels) + $min - 1;
+            $tresholds[$i] = ($max - $min + 1) ** ($i / $levels) + $min - 1;
         }
 
         // assign weights
@@ -231,7 +239,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return string
      */
-    public function html_cloud($tags, $type, $func, $wrap = true, $return = false, $ns = '') {
+    public function html_cloud($tags, $type, $func, $wrap = true, $return = false, $ns = '')
+    {
         global $INFO;
 
         $hidden_str = $this->getConf('hiddenprefix');
@@ -249,9 +258,10 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $tags = $this->cloudData($tags);
             foreach ($tags as $val => $size) {
                 // skip hidden tags for users that can't edit
-                if ($type === 'tag' and
-                    $hidden_len and
-                    substr($val, 0, $hidden_len) == $hidden_str and
+                if (
+                    $type === 'tag' &&
+                    $hidden_len &&
+                    substr($val, 0, $hidden_len) == $hidden_str &&
                     !($this->getUser() && $INFO['writable'])
                 ) {
                     continue;
@@ -279,7 +289,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @param array    $pids   list of pids => count
      * @return string
      */
-    public function html_page_list($pids) {
+    public function html_page_list($pids)
+    {
         $ret = '<div class="search_quickresult">';
         $ret .= '<ul class="search_quickhits">';
 
@@ -309,7 +320,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return string
      */
-    protected function linkToSearch($tag, $ns = '') {
+    protected function linkToSearch($tag, $ns = '')
+    {
         return '<a href="' . hsc($this->getTagSearchURL($tag, $ns)) . '">' . $tag . '</a>';
     }
 
@@ -320,40 +332,36 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return string
      */
-    public function tpl_tags($print = true) {
+    public function tpl_tags($print = true)
+    {
         global $INFO;
         global $lang;
 
-        $filter = array('pid' => $INFO['id']);
+        $filter = ['pid' => $INFO['id']];
         if ($this->getConf('singleusermode')) {
             $filter['tagger'] = 'auto';
         }
 
         $tags = $this->findItems($filter, 'tag');
 
-        $ret = '';
-
-        $ret .= '<div class="plugin_tagging_edit">';
-        $ret .= $this->html_cloud($tags, 'tag', array($this, 'linkToSearch'), true, true);
+        $ret = '<div class="plugin_tagging_edit">';
+        $ret .= $this->html_cloud($tags, 'tag', [$this, 'linkToSearch'], true, true);
 
         if ($this->getUser() && $INFO['writable']) {
             $lang['btn_tagging_edit'] = $lang['btn_secedit'];
             $ret .= '<div id="tagging__edit_buttons_group">';
-            $ret .= html_btn('tagging_edit', $INFO['id'], '', array());
+            $ret .= html_btn('tagging_edit', $INFO['id'], '', []);
             if (auth_isadmin()) {
                 $ret .= '<label>'
                     . $this->getLang('toggle admin mode')
                     . '<input type="checkbox" id="tagging__edit_toggle_admin" /></label>';
             }
             $ret .= '</div>';
-            $form = new dokuwiki\Form\Form();
+            $form = new Form();
             $form->id('tagging__edit');
             $form->setHiddenField('tagging[id]', $INFO['id']);
             $form->setHiddenField('call', 'plugin_tagging_save');
-            $tags = $this->findItems(array(
-                'pid'    => $INFO['id'],
-                'tagger' => $this->getUser(),
-            ), 'tag');
+            $tags = $this->findItems(['pid'    => $INFO['id'], 'tagger' => $this->getUser()], 'tag');
             $form->addTextarea('tagging[tags]')
                 ->val(implode(', ', array_keys($tags)))
                 ->addClass('edit')
@@ -379,14 +387,15 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @param array $filters
      * @return array
      */
-    public function getAllTags($namespace = '', $order_by = 'tid', $desc = false, $filters = []) {
-        $order_fields = array('pid', 'tid', 'taggers', 'ns', 'count');
+    public function getAllTags($namespace = '', $order_by = 'tid', $desc = false, $filters = [])
+    {
+        $order_fields = ['pid', 'tid', 'taggers', 'ns', 'count'];
         if (!in_array($order_by, $order_fields)) {
             msg('cannot sort by ' . $order_by . ' field does not exists', -1);
             $order_by = 'tag';
         }
 
-        list($having, $params) = $this->getFilterSql($filters);
+        [$having, $params] = $this->getFilterSql($filters);
 
         $db = $this->getDB();
 
@@ -416,7 +425,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return array ['pid' => ['tag1','tag2','tag3']]
      */
-    public function getAllTagsByPage() {
+    public function getAllTagsByPage()
+    {
         $query = '
         SELECT pid, GROUP_CONCAT(tag) AS tags
         FROM taggings
@@ -425,9 +435,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $db = $this->getDb();
         $res = $db->query($query);
         return array_map(
-            function ($i) {
-                return explode(',', $i);
-            },
+            fn($i) => explode(',', $i),
             array_column($db->res2arr($res), 'tags', 'pid')
         );
     }
@@ -438,7 +446,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @param string $formerTagName
      * @param string $newTagNames
      */
-    public function renameTag($formerTagName, $newTagNames) {
+    public function renameTag($formerTagName, $newTagNames)
+    {
 
         if (empty($formerTagName) || empty($newTagNames)) {
             msg($this->getLang("admin enter tag names"), -1);
@@ -448,15 +457,13 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $keepFormerTag = false;
 
         // enable splitting tags on rename
-        $newTagNames = array_map(function ($tag) {
-            return $this->cleanTag($tag);
-        }, explode(',', $newTagNames));
+        $newTagNames = array_map(fn($tag) => $this->cleanTag($tag), explode(',', $newTagNames));
 
         $db = $this->getDB();
 
         // non-admins can rename only their own tags
         if (!auth_isadmin()) {
-            $queryTagger =' AND tagger = ?';
+            $queryTagger = ' AND tagger = ?';
             $tagger = $this->getUser();
         } else {
             $queryTagger = '';
@@ -478,7 +485,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                 continue;
             }
             $params = [$newTag, $this->cleanTag($formerTagName)];
-            if ($tagger) array_push($params, $tagger);
+            if ($tagger) $params[] = $tagger;
             $res = $db->query($insertQuery . $where, $params);
             if ($res === false) {
                 $db->query('ROLLBACK TRANSACTION');
@@ -491,7 +498,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         if (!$keepFormerTag) {
             $deleteQuery = 'DELETE FROM taggings';
             $params = [$this->cleanTag($formerTagName)];
-            if ($tagger) array_push($params, $tagger);
+            if ($tagger) $params[] = $tagger;
             if ($db->query($deleteQuery . $where, $params) === false) {
                 $db->query('ROLLBACK TRANSACTION');
                 return;
@@ -501,8 +508,6 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $db->query('COMMIT TRANSACTION');
 
         msg($this->getLang("admin renamed"), 1);
-
-        return;
     }
 
     /**
@@ -514,7 +519,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      *
      * @return array
      */
-    public function modifyPageTag($pid, $formerTagName, $newTagName) {
+    public function modifyPageTag($pid, $formerTagName, $newTagName)
+    {
 
         $db = $this->getDb();
 
@@ -526,7 +532,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $check = $db->res2arr($res);
 
         if (empty($check)) {
-            return array(true, $this->getLang('admin tag does not exists'));
+            return [true, $this->getLang('admin tag does not exists')];
         }
 
         if (empty($newTagName)) {
@@ -545,7 +551,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         }
         $db->res2arr($res);
 
-        return array(false, $this->getLang('admin renamed'));
+        return [false, $this->getLang('admin renamed')];
     }
 
     /**
@@ -554,7 +560,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @param array  $tags
      * @param string $namespace current namespace context as in getAllTags()
      */
-    public function deleteTags($tags, $namespace = '') {
+    public function deleteTags($tags, $namespace = '')
+    {
         if (empty($tags)) {
             return;
         }
@@ -565,16 +572,16 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $queryBody = 'FROM taggings WHERE pid GLOB ? AND (' .
             implode(' OR ', array_fill(0, count($tags), 'CLEANTAG(tag) = ?')) . ')';
-        $args = array_map(array($this, 'cleanTag'), $tags);
+        $args = array_map([$this, 'cleanTag'], $tags);
         array_unshift($args, $this->globNamespace($namespace));
 
         // non-admins can delete only their own tags
         if (!auth_isadmin()) {
             $queryBody .= ' AND tagger = ?';
-            array_push($args, $this->getUser());
+            $args[] = $this->getUser();
         }
 
-        $affectedPagesQuery= 'SELECT DISTINCT pid ' . $queryBody;
+        $affectedPagesQuery = 'SELECT DISTINCT pid ' . $queryBody;
         $resAffectedPages = $db->query($affectedPagesQuery, $args);
         $numAffectedPages = count($resAffectedPages->fetchAll());
 
@@ -603,7 +610,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * @param string $oldName
      * @param string $newName
      */
-    public function renamePage($oldName, $newName) {
+    public function renamePage($oldName, $newName)
+    {
         $db = $this->getDB();
         $db->query('UPDATE taggings SET pid = ? WHERE pid = ?', $newName, $oldName);
     }
@@ -638,10 +646,9 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     {
         global $INPUT;
         global $QUERY;
-        $parsedQuery = ft_queryParser(new Doku_Indexer(), $QUERY);
+        $parsedQuery = ft_queryParser(new Indexer(), $QUERY);
 
-        /** @var helper_plugin_tagging_querybuilder $queryBuilder */
-        $queryBuilder = new \helper_plugin_tagging_querybuilder();
+        $queryBuilder = new helper_plugin_tagging_querybuilder();
 
         $queryBuilder->setField('pid');
         $queryBuilder->setTags($tagFiler);
@@ -703,25 +710,20 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
     /**
      * Display tag management table
      */
-    public function html_table() {
+    public function html_table()
+    {
         global $ID, $INPUT;
 
-        $headers = array(
-            array('value' => $this->getLang('admin tag'), 'sort_by' => 'tid'),
-            array('value' => $this->getLang('admin occurrence'), 'sort_by' => 'count')
-        );
+        $headers = [
+            ['value' => $this->getLang('admin tag'), 'sort_by' => 'tid'],
+            ['value' => $this->getLang('admin occurrence'), 'sort_by' => 'count']
+        ];
 
         if (!$this->conf['hidens']) {
-            array_push(
-                $headers,
-                ['value' => $this->getLang('admin namespaces'), 'sort_by' => 'ns']
-            );
+            $headers[] = ['value' => $this->getLang('admin namespaces'), 'sort_by' => 'ns'];
         }
-
-        array_push($headers,
-            array('value' => $this->getLang('admin taggers'), 'sort_by' => 'taggers'),
-            array('value' => $this->getLang('admin actions'), 'sort_by' => false)
-        );
+        $headers[] = ['value' => $this->getLang('admin taggers'), 'sort_by' => 'taggers'];
+        $headers[] = ['value' => $this->getLang('admin actions'), 'sort_by' => false];
 
         $sort = explode(',', $this->getParam('sort'));
         $order_by = $sort[0];
@@ -733,7 +735,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
 
         $tags = $this->getAllTags($INPUT->str('filter'), $order_by, $desc, $filters);
 
-        $form = new \dokuwiki\Form\Form();
+        $form = new Form();
         // required in admin mode
         $form->setHiddenField('page', 'tagging');
         $form->setHiddenField('id', $ID);
@@ -756,14 +758,14 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
          */
         $form->addTagOpen('table')->addClass('inline plugin_tagging');
 
-        $nscol = $this->conf['hidens'] ? '' : '<col class="wide-col"></col>';
+        $nscol = $this->conf['hidens'] ? '' : '<col class="wide-col" />';
         $form->addHTML(
             '<colgroup>
-                <col></col>
-                <col class="narrow-col"></col>'
+                <col />
+                <col class="narrow-col" />'
                 . $nscol .
-                '<col></col>
-                <col class="narrow-col"></col>
+                '<col />
+                <col class="narrow-col" />
             </colgroup>'
         );
 
@@ -788,7 +790,8 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
                 }
                 $form->addButtonHTML(
                     "tagging[sort]",
-                    $header['value'] . ' ' . inlineSVG(__DIR__ . "/images/$icon.svg"))
+                    $header['value'] . ' ' . inlineSVG(__DIR__ . "/images/$icon.svg")
+                )
                     ->addClass('plugin_tagging sort_button')
                     ->attr('title', $title)
                     ->val($param);
@@ -819,12 +822,12 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             $tagname = $taginfo['tid'];
             $taggers = $taginfo['taggers'];
             $ns = $taginfo['ns'];
-            $pids = explode(',',$taginfo['pids']);
+            $pids = explode(',', $taginfo['pids']);
 
             $form->addTagOpen('tr');
             $form->addHTML('<td>');
             $form->addHTML('<a class="tagslist" href="#" data-tid="' . $taginfo['tid'] . '">');
-            $form->addHTML( hsc($tagname) . '</a>');
+            $form->addHTML(hsc($tagname) . '</a>');
             $form->addHTML('</td>');
             $form->addHTML('<td>' . $taginfo['count'] . '</td>');
             if (!$this->conf['hidens']) {
@@ -842,20 +845,22 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
             foreach ($pids as $pid) {
                 if (auth_quickaclcheck($pid) >= AUTH_EDIT) {
                     $userEdit = true;
-                    continue;
+                    break;
                 }
             }
 
             if ($userEdit) {
                 $form->addButtonHTML(
                     'tagging[actions][rename][' . $taginfo['tid'] . ']',
-                    inlineSVG(__DIR__ . '/images/edit.svg'))
+                    inlineSVG(__DIR__ . '/images/edit.svg')
+                )
                     ->addClass('plugin_tagging action_button')
                     ->attr('data-action', 'rename')
                     ->attr('data-tid', $taginfo['tid']);
                 $form->addButtonHTML(
                     'tagging[actions][delete][' . $taginfo['tid'] . ']',
-                    inlineSVG(__DIR__ . '/images/delete.svg'))
+                    inlineSVG(__DIR__ . '/images/delete.svg')
+                )
                     ->addClass('plugin_tagging action_button')
                     ->attr('data-action', 'delete')
                     ->attr('data-tid', $taginfo['tid']);
@@ -920,7 +925,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
      * Get a tagging parameter, empty string if not set
      *
      * @param string $name
-     * @return mixed
+     * @return string
      */
     public function getParam($name)
     {
@@ -928,6 +933,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         if ($params) {
             return $params[$name] ?: '';
         }
+        return '';
     }
 
     /**
@@ -941,6 +947,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         global $INPUT;
         $params = $this->getParams();
         $params = array_merge($params, [$name => $value]);
+
         $INPUT->set('tagging', $params);
     }
 
@@ -989,7 +996,7 @@ class helper_plugin_tagging extends DokuWiki_Plugin {
         $parts = [];
         $params = [];
         $filters = array_filter($filters);
-        if (!empty($filters)) {
+        if ($filters !== []) {
             $having = ' HAVING ';
             foreach ($filters as $filter => $value) {
                 $parts[] = " $filter LIKE ? ";

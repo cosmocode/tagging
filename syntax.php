@@ -1,38 +1,41 @@
 <?php
+
+use dokuwiki\Extension\SyntaxPlugin;
+use dokuwiki\File\PageResolver;
+
 /**
  * DokuWiki Plugin tagging (Syntax Component)
  *
  * @license GPL 2 http://www.gnu.org/licenses/gpl-2.0.html
  * @author  Adrian Lang <lang@cosmocode.de>
  */
-
-// must be run within Dokuwiki
-if (!defined('DOKU_INC')) {
-    die();
-}
-
-class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
-
-    function getType() {
+class syntax_plugin_tagging extends SyntaxPlugin
+{
+    public function getType()
+    {
         return 'substition';
     }
 
-    function getPType() {
+    public function getPType()
+    {
         return 'block';
     }
 
-    function getSort() {
+    public function getSort()
+    {
         return 13;
     }
 
-    function connectTo($mode) {
-        $this->Lexer->addSpecialPattern('{{tagging::\w+(?:>[^}\?]+)?(?:\?[0-9]+)?}}', $mode, 'plugin_tagging');
+    public function connectTo($mode)
+    {
+        $this->Lexer->addSpecialPattern('{{tagging::\w+(?:>[^}\?]+)?(?:\?\d+)?}}', $mode, 'plugin_tagging');
     }
 
-    function handle($match, $state, $pos, Doku_Handler $handler) {
-        $data = array();
-        $matches = array();
-        preg_match('/{{tagging::(\w+)(?:>([^}\?]+))?(\?[0-9]+)?}}/', $match, $matches);
+    public function handle($match, $state, $pos, Doku_Handler $handler)
+    {
+        $data = [];
+        $matches = [];
+        preg_match('/{{tagging::(\w+)(?:>([^}\?]+))?(\?\d+)?}}/', $match, $matches);
         $data['cmd'] = $matches[1];
         $data['limit'] = (int)ltrim($matches[3] ?: '', '?');
         if (!$data['limit']) {
@@ -65,7 +68,8 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
         return $data;
     }
 
-    function render($mode, Doku_Renderer $renderer, $data) {
+    public function render($mode, Doku_Renderer $renderer, $data)
+    {
         if ($mode !== 'xhtml') {
             return false;
         }
@@ -79,15 +83,15 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                 if (!isset($data['user'])) {
                     $data['user'] = $_SERVER['REMOTE_USER'];
                 }
-                $tags = $hlp->findItems(array('tagger' => $data['user']), 'tag', $data['limit']);
+                $tags = $hlp->findItems(['tagger' => $data['user']], 'tag', $data['limit']);
 
-                $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true);
+                $renderer->doc .= $hlp->html_cloud($tags, 'tag', [$hlp, 'linkToSearch'], true, true);
 
                 break;
             case 'tag':
                 $renderer->info['cache'] = false;
 
-                $pids = $hlp->findItems(array('tag' => $data['tag']), 'pid', $data['limit']);
+                $pids = $hlp->findItems(['tag' => $data['tag']], 'pid', $data['limit']);
 
                 $renderer->doc .= $hlp->html_page_list($pids);
 
@@ -99,13 +103,14 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
                     $data['ns'] = $INFO['namespace'];
                 }
                 global $ID;
-                $data['ns'] = resolve_id(getNS($ID), $data['ns'] . ':');
+                $resolver = new PageResolver($ID);
+                $data['ns'] = $resolver->resolveId($data['ns'] . ':');
                 if ($data['ns'] !== '') {
                     // Do not match nsbla, only ns:bla
                     $data['ns'] .= ':';
                 }
                 $tags = $hlp->findItems(['pid' => $hlp->globNamespace($data['ns'])], 'tag', $data['limit']);
-                $renderer->doc .= $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), true, true, $data['ns']);
+                $renderer->doc .= $hlp->html_cloud($tags, 'tag', [$hlp, 'linkToSearch'], true, true, $data['ns']);
 
                 break;
             case 'input':
@@ -122,5 +127,3 @@ class syntax_plugin_tagging extends DokuWiki_Syntax_Plugin {
         return true;
     }
 }
-
-// vim:ts=4:sw=4:et:enc=utf-8:

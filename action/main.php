@@ -1,33 +1,46 @@
 <?php
 
+use dokuwiki\Extension\ActionPlugin;
+use dokuwiki\Extension\Event;
+use dokuwiki\Extension\EventHandler;
+
 /**
  * Class action_plugin_tagging_main
  */
-class action_plugin_tagging_main extends DokuWiki_Action_Plugin {
-
+class action_plugin_tagging_main extends ActionPlugin
+{
     /**
      * Register handlers
      *
-     * @param Doku_Event_Handler $controller
+     * @param EventHandler $controller
      */
-    public function register(Doku_Event_Handler $controller) {
+    public function register(EventHandler $controller)
+    {
         $controller->register_hook(
-            'AJAX_CALL_UNKNOWN', 'BEFORE', $this,
+            'AJAX_CALL_UNKNOWN',
+            'BEFORE',
+            $this,
             'handle_ajax_call_unknown'
         );
 
         $controller->register_hook(
-            'ACTION_ACT_PREPROCESS', 'BEFORE', $this,
+            'ACTION_ACT_PREPROCESS',
+            'BEFORE',
+            $this,
             'handle_jump'
         );
 
         $controller->register_hook(
-            'DOKUWIKI_STARTED', 'AFTER', $this,
+            'DOKUWIKI_STARTED',
+            'AFTER',
+            $this,
             'js_add_security_token'
         );
 
         $controller->register_hook(
-            'PLUGIN_MOVE_PAGE_RENAME', 'AFTER', $this,
+            'PLUGIN_MOVE_PAGE_RENAME',
+            'AFTER',
+            $this,
             'update_moved_page'
         );
     }
@@ -35,10 +48,11 @@ class action_plugin_tagging_main extends DokuWiki_Action_Plugin {
     /**
      * Add sectok to JavaScript to secure ajax requests
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param            $param
      */
-    function js_add_security_token(Doku_Event $event, $param) {
+    public function js_add_security_token(Event $event, $param)
+    {
         global $JSINFO;
         $JSINFO['sectok'] = getSecurityToken();
     }
@@ -46,10 +60,11 @@ class action_plugin_tagging_main extends DokuWiki_Action_Plugin {
     /**
      * Handle our AJAX requests
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param            $param
      */
-    function handle_ajax_call_unknown(Doku_Event &$event, $param) {
+    public function handle_ajax_call_unknown(Event $event, $param)
+    {
         $handled = true;
 
         if ($event->data == 'plugin_tagging_save') {
@@ -78,16 +93,18 @@ class action_plugin_tagging_main extends DokuWiki_Action_Plugin {
     /**
      * Jump to a tag
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param            $param
      */
-    function handle_jump(Doku_Event &$event, $param) {
+    public function handle_jump(Event &$event, $param)
+    {
         if (act_clean($event->data) != 'tagjmp') {
             return;
         }
 
         $event->preventDefault();
         $event->stopPropagation();
+
         $event->data = 'show';
 
         global $INPUT;
@@ -98,7 +115,7 @@ class action_plugin_tagging_main extends DokuWiki_Action_Plugin {
         $hlp = plugin_load('helper', 'tagging');
 
         foreach ($tags as $tag) {
-            $filter = array('tag' => $tag);
+            $filter = ['tag' => $tag];
             if ($lang) {
                 $filter['lang'] = $lang;
             }
@@ -113,13 +130,14 @@ class action_plugin_tagging_main extends DokuWiki_Action_Plugin {
         }
 
         $tags = array_map('hsc', $tags);
-        msg(sprintf($this->getLang('tagjmp_error'), join(', ', $tags)), -1);
+        msg(sprintf($this->getLang('tagjmp_error'), implode(', ', $tags)), -1);
     }
 
     /**
      * Save new/changed tags
      */
-    function save() {
+    public function save()
+    {
         global $INPUT;
         global $INFO;
 
@@ -132,30 +150,34 @@ class action_plugin_tagging_main extends DokuWiki_Action_Plugin {
 
         if ($INFO['writable'] && $hlp->getUser()) {
             $hlp->replaceTags(
-                $id, $hlp->getUser(),
+                $id,
+                $hlp->getUser(),
                 preg_split(
-                    '/(\s*,\s*)|(\s*,?\s*\n\s*)/', $data['tags'], -1,
+                    '/(\s*,\s*)|(\s*,?\s*\n\s*)/',
+                    $data['tags'],
+                    -1,
                     PREG_SPLIT_NO_EMPTY
                 )
             );
             $hlp->updateElasticState($id);
         }
 
-        $tags = $hlp->findItems(array('pid' => $id), 'tag');
-        $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), false);
+        $tags = $hlp->findItems(['pid' => $id], 'tag');
+        $hlp->html_cloud($tags, 'tag', [$hlp, 'linkToSearch'], false);
     }
 
     /**
      * Return autocompletion data
      */
-    function autocomplete() {
+    public function autocomplete()
+    {
         global $INPUT;
 
         /** @var helper_plugin_tagging $hlp */
         $hlp = plugin_load('helper', 'tagging');
 
         $search = $INPUT->str('term');
-        $tags = $hlp->findItems(array('tag' => '*' . $hlp->getDB()->escape_string($search) . '*'), 'tag');
+        $tags = $hlp->findItems(['tag' => '*' . $hlp->getDB()->escape_string($search) . '*'], 'tag');
         arsort($tags);
         $tags = array_keys($tags);
 
@@ -168,7 +190,8 @@ class action_plugin_tagging_main extends DokuWiki_Action_Plugin {
      * Allow admins to change all tags (not only their own)
      * We change the tag for every user
      */
-    function admin_change() {
+    public function admin_change()
+    {
         global $INPUT;
 
         /** @var helper_plugin_tagging $hlp */
@@ -177,40 +200,40 @@ class action_plugin_tagging_main extends DokuWiki_Action_Plugin {
         header('Content-Type: application/json');
 
         if (!auth_isadmin()) {
-            echo json_encode(array('status' => 'error', 'msg' => $this->getLang('no_admin')));
+            echo json_encode(['status' => 'error', 'msg' => $this->getLang('no_admin')]);
             return;
         }
 
         if (!checkSecurityToken()) {
-            echo json_encode(array('status' => 'error', 'msg' => 'Security Token did not match. Possible CSRF attack.'));
+            echo json_encode(['status' => 'error', 'msg' => 'Security Token did not match. Possible CSRF attack.']);
             return;
         }
 
         if (!$INPUT->has('id')) {
-            echo json_encode(array('status' => 'error', 'msg' => 'No page id given.'));
+            echo json_encode(['status' => 'error', 'msg' => 'No page id given.']);
             return;
         }
         $pid = $INPUT->str('id');
 
         if (!$INPUT->has('oldValue') || !$INPUT->has('newValue')) {
-            echo json_encode(array('status' => 'error', 'msg' => 'No proper input. Give "oldValue" and "newValue"'));
+            echo json_encode(['status' => 'error', 'msg' => 'No proper input. Give "oldValue" and "newValue"']);
             return;
         }
 
 
-        list($err, $msg) = $hlp->modifyPageTag($pid, $INPUT->str('oldValue'), $INPUT->str('newValue'));
+        [$err, $msg] = $hlp->modifyPageTag($pid, $INPUT->str('oldValue'), $INPUT->str('newValue'));
         if ($err) {
-            echo json_encode(array('status' => 'error', 'msg' => $msg));
+            echo json_encode(['status' => 'error', 'msg' => $msg]);
             return;
         }
 
-        $tags = $hlp->findItems(array('pid' => $pid), 'tag');
-        $userTags = $hlp->findItems(array('pid' => $pid, 'tagger' => $hlp->getUser()), 'tag');
-        echo json_encode(array(
-            'status'          => 'ok',
+        $tags = $hlp->findItems(['pid' => $pid], 'tag');
+        $userTags = $hlp->findItems(['pid' => $pid, 'tagger' => $hlp->getUser()], 'tag');
+        echo json_encode([
+            'status' => 'ok',
             'tags_edit_value' => implode(', ', array_keys($userTags)),
-            'html_cloud'      => $hlp->html_cloud($tags, 'tag', array($hlp, 'linkToSearch'), false, true),
-        ));
+            'html_cloud' => $hlp->html_cloud($tags, 'tag', [$hlp, 'linkToSearch'], false, true)
+        ]);
     }
 
     /**
@@ -256,9 +279,7 @@ class action_plugin_tagging_main extends DokuWiki_Action_Plugin {
     }
 
     /**
-     * Tag dialog HTML: links to all pages with a given tag
-     *
-     * @return string
+     * Tag dialog HTML: print links to all pages with a given tag
      */
     public function getPagesHtml()
     {
@@ -273,10 +294,10 @@ class action_plugin_tagging_main extends DokuWiki_Action_Plugin {
     /**
      * Updates tagging database after a page has been moved/renamed by the move plugin
      *
-     * @param Doku_Event $event
+     * @param Event $event
      * @param $param
      */
-    public function update_moved_page(Doku_Event $event, $param)
+    public function update_moved_page(Event $event, $param)
     {
         $src = $event->data['src_id'];
         $dst = $event->data['dst_id'];

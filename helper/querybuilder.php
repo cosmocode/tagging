@@ -1,9 +1,12 @@
 <?php
+
+use dokuwiki\Extension\Plugin;
+
 /**
  * Tagging Plugin (helper component)
  */
-class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
-
+class helper_plugin_tagging_querybuilder extends Plugin
+{
     /** @var string */
     protected $field;
     /** @var bool */
@@ -257,7 +260,7 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
         }
 
         // bypass page access check when called by a command line tool
-        if (php_sapi_name() !== 'cli' || defined('DOKU_UNITTEST')) {
+        if (PHP_SAPI !== 'cli' || defined('DOKU_UNITTEST')) {
             $where .= ' AND GETACCESSLEVEL(pid) >= ' . AUTH_READ;
         }
 
@@ -270,8 +273,9 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
      * @param string $value
      * @return bool
      */
-    protected function useLike($value) {
-        return strpos($value, '*') === 0 || strrpos($value, '*') === strlen($value) - 1;
+    protected function useLike($value)
+    {
+        return str_starts_with($value, '*') || strrpos($value, '*') === strlen($value) - 1;
     }
 
     /**
@@ -282,9 +286,6 @@ class helper_plugin_tagging_querybuilder extends DokuWiki_Plugin {
      */
     protected function globNS(array $item)
     {
-        return array_map(function($ns) {
-            return cleanId($ns) . '*';
-        }, $item);
+        return array_map(fn($ns) => cleanId($ns) . '*', $item);
     }
-
 }

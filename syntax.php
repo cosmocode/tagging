@@ -37,7 +37,7 @@ class syntax_plugin_tagging extends SyntaxPlugin
         $matches = [];
         preg_match('/{{tagging::(\w+)(?:>([^}\?]+))?(\?\d+)?}}/', $match, $matches);
         $data['cmd'] = $matches[1];
-        $data['limit'] = (int)ltrim($matches[3] ?: '', '?');
+        $data['limit'] = (int)ltrim($matches[3] ?? '', '?');
         if (!$data['limit']) {
             $data['limit'] = $this->getConf('cloudlimit');
         }

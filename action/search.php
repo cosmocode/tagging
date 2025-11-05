@@ -272,7 +272,7 @@ class action_plugin_tagging_search extends ActionPlugin
         $suggestedTags = [];
         foreach ($terms as $term) {
             $term = str_replace('*', '', $term);
-            $suggestedTags = array_merge($suggestedTags, preg_grep("/$term/i", $allTags));
+            $suggestedTags = array_merge($suggestedTags, preg_grep('/' . preg_quote($term) . '/i', $allTags));
         }
         sort($suggestedTags);
 

@@ -4,6 +4,7 @@ use dokuwiki\Extension\Plugin;
 use dokuwiki\Utf8\PhpString;
 use dokuwiki\Form\Form;
 use dokuwiki\Search\Indexer;
+use dokuwiki\File\PageResolver;
 
 /**
  * Tagging Plugin (hlper component)
@@ -82,6 +83,28 @@ class helper_plugin_tagging extends Plugin
         if ($elasticHelper) {
             $elasticHelper->updateRefreshState($id);
         }
+    }
+
+    /**
+     * Resolve the ns filter
+     *
+     * @param array $data
+     * @return string
+     */
+    public function resolveNs(array $data)
+    {
+        if (!isset($data['ns'])) {
+            $data['ns'] = '.';
+        }
+        if ($data['ns'] === '*') {
+            $data['ns'] = '';
+        }
+
+        global $ID;
+        $resolver = new PageResolver($ID);
+        $data['ns'] = getNS($resolver->resolveId($data['ns'] . ':fakeIdNotResolvable')) ?: ':';
+
+        return $data['ns'];
     }
 
     /**
@@ -185,7 +208,7 @@ class helper_plugin_tagging extends Plugin
     public function getTagSearchURL($tag, $ns = '')
     {
         $ret = '?do=search&sf=1&q=' . rawurlencode('#' . $this->cleanTag($tag));
-        if ($ns) {
+        if ($ns && $ns !== ':') {
             $ret .= rawurlencode(' @' . $ns);
         }
 

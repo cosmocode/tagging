@@ -1,12 +1,16 @@
 <?php
 
+namespace dokuwiki\plugin\tagging\test;
+
+use DokuWikiTest;
+
 /**
  * Helper tests for the tagging plugin
  *
  * @group plugin_tagging
  * @group plugins
  */
-class helper_plugin_tagging_test extends DokuWikiTest
+class SearchTest extends DokuWikiTest
 {
     protected $pluginsEnabled = ['tagging', 'sqlite'];
 

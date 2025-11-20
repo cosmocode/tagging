@@ -1,7 +1,6 @@
 <?php
 
 use dokuwiki\Extension\SyntaxPlugin;
-use dokuwiki\File\PageResolver;
 
 /**
  * DokuWiki Plugin tagging (Syntax Component)
@@ -98,17 +97,9 @@ class syntax_plugin_tagging extends SyntaxPlugin
                 break;
             case 'ns':
                 $renderer->info['cache'] = false;
-                if (!isset($data['ns'])) {
-                    global $INFO;
-                    $data['ns'] = $INFO['namespace'];
-                }
-                global $ID;
-                $resolver = new PageResolver($ID);
-                $data['ns'] = $resolver->resolveId($data['ns'] . ':');
-                if ($data['ns'] !== '') {
-                    // Do not match nsbla, only ns:bla
-                    $data['ns'] .= ':';
-                }
+
+                $data['ns'] = $hlp->resolveNs($data);
+
                 $tags = $hlp->findItems(['pid' => $hlp->globNamespace($data['ns'])], 'tag', $data['limit']);
                 $renderer->doc .= $hlp->html_cloud($tags, 'tag', [$hlp, 'linkToSearch'], true, true, $data['ns']);
 

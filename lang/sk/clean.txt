@@ -1,0 +1,3 @@
+===== Čistenie databázy tagov =====
+
+Tu môžete odstrániť všetky neplatné tagovania (tagy odkazujúce na neexistujúce stránky). Žiadne platné tagovania sa neodstránia.

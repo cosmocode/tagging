@@ -1,0 +1,3 @@
+====== Zobrazenie a úprava tagov ======
+
+Táto stránka zobrazuje všetky používané tagy vo vašej wiki. Zoznam môžete filtrovať a zoraďovať a pomocou akcií tag premenovať alebo odstrániť. Kliknutím na tag zobrazíte zoznam stránok, kde sa používa.
